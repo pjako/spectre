@@ -392,7 +392,7 @@ class Application {
     _debugDrawManager.update(dt);
 
     // Update the mesh
-    _meshes[_meshIndex].update(dt, false);
+    _meshes[_meshIndex].update(dt, true, false);
 
     Mouse mouse = _gameLoop.mouse;
 
