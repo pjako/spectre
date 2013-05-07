@@ -30,9 +30,11 @@ class ApplicationControls {
   static String _controlContainerId = '#ui_wrap';
   /// Identifier for the container holding the model selection.
   static String _modelSelectionId = '#model_selection';
-/// Identifier for the show skeleton checkbox.
+  /// Identifier for the show skeleton checkbox.
+  static String _instanceCountId = '#instance_count';
+  /// Identifier for the SIMD Posing checkbox.
   static String _poseSimdId = '#pose_simd';
-/// Identifier for the show skeleton checkbox.
+  /// Identifier for the SIMD Skinning checkbox.
   static String _skinSimdId = '#skin_simd';
   /// Identifier for the show skeleton checkbox.
   static String _showSkeletonId = '#show_skeleton';
@@ -62,8 +64,14 @@ class ApplicationControls {
   ApplicationControls() {
     _controlContainer = query(_controlContainerId);
     _modelSelection = query(_modelSelectionId);
-
-    // Hook up the show skeleton button
+    
+    // Hook up the instances 
+    InputElement instanceCount = query(_instanceCountId);
+    _application.instanceCount = int.parse(instanceCount.value);
+    instanceCount.onChange.listen((_) {
+      _application.instanceCount = int.parse(instanceCount.value);
+    });
+    
     InputElement poseSimd = query(_poseSimdId);
     poseSimd.onChange.listen((_) {
       _application.useSimdPosing = poseSimd.checked;

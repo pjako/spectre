@@ -262,12 +262,14 @@ class Application {
   void _createCamera() {
     // Create the Camera
     _camera = new Camera();
+    _camera.zFar = 2000.0;
     _camera.position = new vec3(150.0, 60.0, 0.0);
     _camera.focusPosition = new vec3(0.0, 60.0, 0.0);
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
-    _cameraController.radius = 150.0;
+    _cameraController.radius = 250.0;
+    _cameraController.maxRadius = 1000.0; 
 
     // Create the mat4 holding the Model-View-Projection matrix
     _modelViewProjectionMatrix = new mat4.zero();
@@ -375,7 +377,7 @@ class Application {
   // Properties
   //---------------------------------------------------------------------
 
-  int instanceCount = 6;
+  int instanceCount = 1;
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
 
@@ -399,26 +401,6 @@ class Application {
   /// Uses the current change in time, [dt].
   final Stopwatch updateSw = new Stopwatch();
   void onUpdate(double dt) {
-    // Update the state of the CameraController
-    Keyboard keyboard = _gameLoop.keyboard;
-
-    if (keyboard.pressed(Keyboard.S)) {
-      useSimdSkinning = false;
-      print('using SIMD Skinning: useSimdSkinning');
-    } else if (keyboard.pressed(Keyboard.D)) {
-      useSimdSkinning = true;
-      print('using SIMD Skinning: useSimdSkinning');
-    }
-
-    if (keyboard.pressed(Keyboard.UP)) {
-      instanceCount++;
-      print('Instances $instanceCount');
-    }
-    if (keyboard.pressed(Keyboard.DOWN)) {
-      instanceCount--;
-      print('Instances $instanceCount');
-    }
-
     _debugDrawManager.update(dt);
 
     updateSw.reset();
@@ -429,13 +411,12 @@ class Application {
       _meshes[_meshIndex].update(0.0, useSimdPosing, useSimdSkinning);
     }
     updateSw.stop();
-    if (useSimdSkinning) {
-      //print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
+    /*if (useSimdSkinning) {
+      print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
     } else {
-      //print('DOUBLE: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
-    }
-
-
+      print('DOUBLE: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
+    }*/
+    
     Mouse mouse = _gameLoop.mouse;
 
     if (mouse.isDown(Mouse.LEFT) || _gameLoop.pointerLock.locked) {
@@ -507,6 +488,10 @@ class Application {
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
     _graphicsContext.setConstant('uNormalMatrix', _normalMatrixArray);
+    
+    const num TAU = Math.PI * 2;
+    final num PHI = (Math.sqrt(5) + 1) / 2;
+    const int SCALE_FACTOR = 25;
 
     // Set the mesh
     //
@@ -518,17 +503,17 @@ class Application {
       _graphicsContext.setIndexBuffer(mesh.indexArray);
       _graphicsContext.setInputLayout(_inputLayout);
       _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
-      if (instance > 8) {
-        modelMatrix[12] = (instance-8) * -60.0;
-        modelMatrix[14] = -80.0;
-      } else if (instance > 4) {
-        modelMatrix[12] = (instance-4) * -60.0;
-        modelMatrix[14] = -40.0;
-      } else {
-        modelMatrix[12] = (instance) * -60.0;
-        modelMatrix[14] = 0.0;
-      }
-      modelMatrix[13] = -40.0;
+      
+      final num theta = instance * TAU / PHI;
+      final num r = Math.sqrt(instance) * SCALE_FACTOR;
+      
+      modelMatrix[0] = 0.5;
+      modelMatrix[5] = 0.5;
+      modelMatrix[10] = 0.5;
+      
+      modelMatrix[12] = r * Math.cos(theta);
+      modelMatrix[14] = -r * Math.sin(theta);
+      modelMatrix[13] = -10.0;
 
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
       // Draw each part of the mesh
