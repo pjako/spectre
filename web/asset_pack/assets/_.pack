@@ -296,6 +296,17 @@
 
     }
   },
+ "walk7":{
+    "loadArguments":{
+
+    },
+    "url":"json/walk7.anim",
+    "type":"json",
+    "importArguments":{
+
+    }
+  },
+
   "minifigure":{
     "loadArguments":{
     },
