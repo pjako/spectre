@@ -168,10 +168,6 @@ class SkinnedMesh extends SpectreMesh {
   Float32List weightData;
   Int16List boneData;
 
-  // index: vertex id
-  // output: index into boneData and weightData.
-  Int32List vertexSkinningOffsets;
-
   Skeleton skeleton;
   PosedSkeleton posedSkeleton;
 
@@ -235,9 +231,9 @@ class SkinnedMesh extends SpectreMesh {
       for (int i = 4; i < _floatsPerVertex; i++) {
         vertexData[i] = baseVertexData[vertexBase+i];
       }
-      int skinningDataOffset = vertexSkinningOffsets[v];
+      int skinningDataOffset = v*4;
       Float32ListHelpers.zero(m);
-      while (boneData[skinningDataOffset] != -1) {
+      for (int i = 0; i < 4; ++i) {
         final int boneId = boneData[skinningDataOffset];
         final double weight = weightData[skinningDataOffset];
         Float32ListHelpers.addScale44(m,
@@ -272,9 +268,9 @@ class SkinnedMesh extends SpectreMesh {
     for (int v = 0; v < numVertices; v++) {
       vertexData4[1] = baseVertexData4[vertexBase+1];
       vertexData4[2] = baseVertexData4[vertexBase+2];
-      int skinningDataOffset = vertexSkinningOffsets[v];
+      int skinningDataOffset = v*4;
       Float32ListHelpers.zeroSIMD(m4);
-      while (boneData[skinningDataOffset] != -1) {
+      for (int i = 0; i < 4; ++i) {
         final int boneId = boneData[skinningDataOffset];
         final double weight = weightData[skinningDataOffset];
         Float32x4 weight4 = new Float32x4.splat(weight);
@@ -354,14 +350,12 @@ class SkinnedVertex {
 SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
   SkinnedMesh mesh = new SkinnedMesh(name, device);
 
-
-
   List attributes = json['attributes'];
   // static mesh data begins.
   attributes.forEach((a) {
     importAttribute(mesh, a);
   });
-  mesh._floatsPerVertex = attributes[0]['stride']~/4;;
+  mesh._floatsPerVertex = attributes[0]['stride']~/4;
 
   List vertices = json['vertices'];
   mesh.vertexData4 = new Float32x4List(json['vertices'].length~/4);
@@ -425,32 +419,37 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
     sortedVertexIndexes.sort((a,b) => int.parse(a) - int.parse(b));
     List<int> boneId = new List<int>();
     List<double> weights = new List<double>();
-    mesh.vertexSkinningOffsets = new Int32List(
-        mesh.vertexData.length ~/ mesh._floatsPerVertex);
     int outputIndex = 0;
     for (int i = 0; i < sortedVertexIndexes.length; i++) {
       final String vertexLabel = sortedVertexIndexes[i];
       final int vertexId = int.parse(vertexLabel);
       final List vertexWeights = perVertexWeights[vertexLabel];
-      int dataCursor = boneId.length;
       while (outputIndex < vertexId) {
-        boneId.add(-1);
-        weights.add(0.0);
-        mesh.vertexSkinningOffsets[outputIndex] = dataCursor++;
+        boneId
+          ..add(0)
+          ..add(0)
+          ..add(0)
+          ..add(0);
+        weights
+          ..add(0.0)
+          ..add(0.0)
+          ..add(0.0)
+          ..add(0.0);
         outputIndex++;
       }
-      mesh.vertexSkinningOffsets[outputIndex] = dataCursor;
       double totalWeight = 0.0;
-      for (int i = 0; i < vertexWeights.length; i += 2) {
-        boneId.add(vertexWeights[i]);
-        weights.add(vertexWeights[i+1].toDouble());
-        dataCursor++;
+      int j = 0;
+      for (; j < vertexWeights.length && j < 8; j += 2) {
+        boneId.add(vertexWeights[j].toInt());
+        weights.add(vertexWeights[j+1].toDouble());
       }
-      boneId.add(-1);
-      weights.add(0.0);
+      // Ensure we have 4 weights per bone
+      for(; j < 8; j += 2) {
+        boneId.add(0);
+        weights.add(0.0);
+      }
       outputIndex++;
     }
-    assert(outputIndex == mesh.vertexSkinningOffsets.length);
     assert(boneId.length == weights.length);
     mesh.boneData = new Int16List(boneId.length);
     mesh.weightData = new Float32List(boneId.length);

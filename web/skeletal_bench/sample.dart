@@ -146,9 +146,11 @@ class Application {
   /// The models all contain a normal and specular map. The [ShaderProgram] uses the
   /// normal map to add additional detail to the surface, and the specular map to
   /// provide a variable shininess, which is used in Phong lighting, across the mesh.
-  ShaderProgram _shaderProgram;
+  ShaderProgram _simpleShaderProgram;
+  ShaderProgram _skinnedShaderProgram;
   /// The [InputLayout] of the mesh.
   InputLayout _inputLayout;
+  InputLayout _skinnedInputLayout;
   /// The [SkinnedMesh]es being used by the application.
   List<SkinnedMesh> _meshes;
   /// The [Texture]s to use on the meshes.
@@ -291,10 +293,11 @@ class Application {
       // retains the state so there isn't a need to set them each time the
       // program is run. In fact its a drain on performance if the constants
       // are set to the same value each run
-      _shaderProgram = assetPack['normalMapShader'];
+      _simpleShaderProgram = assetPack['normalMapShader'];
+      _skinnedShaderProgram = assetPack['normalMapSkinnedShader'];
 
       // Apply the shader program and set the locations of the textures
-      _graphicsContext.setShaderProgram(_shaderProgram);
+      _graphicsContext.setShaderProgram(_simpleShaderProgram);
 
       // Load the individual models
       //
@@ -323,8 +326,9 @@ class Application {
         //
         // This specifies what unit to bind the textures to. This is decided during
         // compilation so just query the actual values.
-        int diffuseIndex  = _shaderProgram.samplers['uDiffuse'].textureUnit;
-        int specularIndex = _shaderProgram.samplers['uSpecular'].textureUnit;
+        // TODO: This may not align properly for both shaders
+        int diffuseIndex  = _simpleShaderProgram.samplers['uDiffuse'].textureUnit;
+        int specularIndex = _simpleShaderProgram.samplers['uSpecular'].textureUnit;
 
         for (int i = 0; i < modelCount; ++i) {
           // Get the matching AssetPack
@@ -363,8 +367,12 @@ class Application {
 
         // Setup the vertex layout
         _inputLayout = new InputLayout('InputLayout', _graphicsDevice);
-        _inputLayout.shaderProgram = _shaderProgram;
+        _inputLayout.shaderProgram = _simpleShaderProgram;
         _inputLayout.mesh = _meshes[0];
+        
+        _skinnedInputLayout = new InputLayout('SkinendInputLayout', _graphicsDevice);
+        _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
+        _skinnedInputLayout.mesh = _meshes[0];
 
         // Start the loop and show the UI
         _gameLoop.start();
@@ -380,6 +388,7 @@ class Application {
   int instanceCount = 1;
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
+  bool useGpuSkinning = false;
 
   /// The index of the [SkinnedMesh] to draw.
   int get meshIndex => _meshIndex;
@@ -481,7 +490,10 @@ class Application {
     _graphicsContext.setSamplers(0, _samplers);
 
     // Set the shader program
-    _graphicsContext.setShaderProgram(_shaderProgram);
+    if(useGpuSkinning)
+      _graphicsContext.setShaderProgram(_skinnedShaderProgram);
+    else
+      _graphicsContext.setShaderProgram(_simpleShaderProgram);
 
     // The matrices are the same for the drawing of each part of the mesh so
     // they only need to be set once.
@@ -500,9 +512,15 @@ class Application {
     for (int instance = 0; instance < instanceCount; instance++) {
       SkinnedMesh mesh = _meshes[_meshIndex];
       _graphicsContext.setVertexBuffers(0, [mesh.vertexArray]);
-      _graphicsContext.setIndexBuffer(mesh.indexArray);
-      _graphicsContext.setInputLayout(_inputLayout);
+      _graphicsContext.setIndexBuffer(mesh.indexArray);   
       _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+      
+      if(useGpuSkinning) {
+        _graphicsContext.setInputLayout(_skinnedInputLayout);
+        _graphicsContext.setConstant('uBoneMatrices', mesh.posedSkeleton.skinningTransforms);
+      }
+      else
+        _graphicsContext.setInputLayout(_inputLayout);
       
       final num theta = instance * TAU / PHI;
       final num r = Math.sqrt(instance) * SCALE_FACTOR;
@@ -516,6 +534,7 @@ class Application {
       modelMatrix[13] = -10.0;
 
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
+      
       // Draw each part of the mesh
       int meshCount = mesh.meshes.length;
       List<List<Texture2D>> meshTextures = _textures[_meshIndex];
