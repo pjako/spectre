@@ -370,7 +370,7 @@ class Application {
         _inputLayout.shaderProgram = _simpleShaderProgram;
         _inputLayout.mesh = _meshes[0];
         
-        _skinnedInputLayout = new InputLayout('SkinendInputLayout', _graphicsDevice);
+        _skinnedInputLayout = new InputLayout('SkinnedInputLayout', _graphicsDevice);
         _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
         _skinnedInputLayout.mesh = _meshes[0];
 
@@ -511,13 +511,13 @@ class Application {
     // buffer object. This means the VBO and IBO only needs to be set once
     for (int instance = 0; instance < instanceCount; instance++) {
       SkinnedMesh mesh = _meshes[_meshIndex];
-      _graphicsContext.setVertexBuffers(0, [mesh.vertexArray]);
+      _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
       _graphicsContext.setIndexBuffer(mesh.indexArray);   
       _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
       
       if(useGpuSkinning) {
         _graphicsContext.setInputLayout(_skinnedInputLayout);
-        _graphicsContext.setConstant('uBoneMatrices', mesh.posedSkeleton.skinningTransforms);
+        _graphicsContext.setConstant('uBoneMatrices[0]', mesh.posedSkeleton.skinningMatrices);
       }
       else
         _graphicsContext.setInputLayout(_inputLayout);

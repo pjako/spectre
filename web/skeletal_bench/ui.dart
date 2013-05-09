@@ -36,6 +36,8 @@ class ApplicationControls {
   static String _poseSimdId = '#pose_simd';
   /// Identifier for the SIMD Skinning checkbox.
   static String _skinSimdId = '#skin_simd';
+  /// Identifier for the GPU Skinning checkbox.
+  static String _skinGpuId = '#skin_gpu';
   /// Identifier for the show skeleton checkbox.
   static String _showSkeletonId = '#show_skeleton';
   /// Classname for an option
@@ -81,6 +83,12 @@ class ApplicationControls {
     InputElement skinSimd = query(_skinSimdId);
     skinSimd.onChange.listen((_) {
       _application.useSimdSkinning = skinSimd.checked;
+    });
+    
+    // Hook up the show skeleton button
+    InputElement skinGpu = query(_skinGpuId);
+    skinGpu.onChange.listen((_) {
+      _application.useGpuSkinning = skinGpu.checked;
     });
     
     // Hook up the show skeleton button

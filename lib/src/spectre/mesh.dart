@@ -27,9 +27,10 @@ class SpectreMeshAttribute {
   final int offset;
   final int stride;
   final bool normalized;
+  final int vboSlot;
 
   SpectreMeshAttribute(this.name, this.componentType, this.componentCount,
-                       this.offset, this.stride, this.normalized);
+                       this.offset, this.stride, this.normalized, [this.vboSlot = 0]);
 
   DeviceFormat get deviceFormat {
     assert(componentType == 'float');
@@ -47,7 +48,7 @@ class SpectreMeshAttribute {
     }
   }
 
-  String toString() => '$name $componentType$componentCount $offset $stride';
+  String toString() => '$name $componentType$componentCount $offset $stride $vboSlot';
 }
 
 abstract class SpectreMesh extends DeviceChild {

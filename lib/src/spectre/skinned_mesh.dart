@@ -145,6 +145,7 @@ class SkinnedMesh extends SpectreMesh {
       super(name, device) {
     _deviceVertexBuffer = new VertexBuffer(name, device);
     _deviceIndexBuffer = new IndexBuffer(name, device);
+    _deviceSkinningBuffer = new VertexBuffer('${name}_skinning', device);
     animations['null'] = new SkeletonAnimation('null', 0);
     currentAnimation = 'null';
   }
@@ -152,8 +153,10 @@ class SkinnedMesh extends SpectreMesh {
   void finalize() {
     _deviceVertexBuffer.dispose();
     _deviceIndexBuffer.dispose();
+    _deviceSkinningBuffer.dispose();
     _deviceVertexBuffer = null;
     _deviceIndexBuffer = null;
+    _deviceSkinningBuffer = null;
     count = 0;
   }
 
@@ -164,9 +167,13 @@ class SkinnedMesh extends SpectreMesh {
   int _floatsPerVertex;
   final Float32List globalInverseTransform = new Float32List(16);
 
-  // These are indexed together.
+  // These are indexed together
   Float32List weightData;
-  Int16List boneData;
+  Int32List boneData;
+  Float32List skinningData;
+  
+  VertexBuffer _deviceSkinningBuffer;
+  VertexBuffer get skinningArray => _deviceSkinningBuffer;
 
   Skeleton skeleton;
   PosedSkeleton posedSkeleton;
@@ -451,12 +458,20 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
       outputIndex++;
     }
     assert(boneId.length == weights.length);
-    mesh.boneData = new Int16List(boneId.length);
-    mesh.weightData = new Float32List(boneId.length);
+    mesh.boneData = new Int32List(boneId.length);
+    mesh.skinningData = new Float32List(boneId.length*2);
+    Float32List floatBoneData = new Float32List.view(mesh.skinningData.buffer, 0, boneId.length);
+    mesh.weightData = new Float32List.view(mesh.skinningData.buffer, boneId.length*4);
     for (int i = 0; i < boneId.length; i++) {
       mesh.boneData[i] = boneId[i];
+      floatBoneData[i] = boneId[i].toDouble(); // This is unfortunate, but it's the only way the GPU skinning will run fast on most cards.
       mesh.weightData[i] = weights[i];
     }
+    
+    // GPU-skinning specific attributes
+    mesh.attributes['vBoneIndices'] = new SpectreMeshAttribute('vBoneIndices', 'float', 4, 0, 16, false, 1);
+    mesh.attributes['vBoneWeights'] = new SpectreMeshAttribute('vBoneWeights', 'float', 4, boneId.length*4, 16, false, 1);
+    mesh.skinningArray.uploadData(mesh.skinningData, SpectreBuffer.UsageStatic);
   }
   return mesh;
 }

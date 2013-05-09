@@ -73,7 +73,7 @@ class InputLayout extends DeviceChild {
         missingAttributes.add(shaderProgramAttribute);
       } else {
         VertexAttribute element = new VertexAttribute(
-            0,
+            meshAttribute.vboSlot,
             shaderProgramAttribute.location,
             meshAttribute.offset,
             meshAttribute.stride,
