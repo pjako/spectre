@@ -191,6 +191,11 @@ class SkinnedMesh extends SpectreMesh {
   
   SkeletonPoser skeletonPoser = new SimpleSkeletonPoser();
   SkeletonPoser skeletonPoserSIMD = new SIMDSkeletonPoser();
+  
+  void update(double dt, bool useSimdPosing, bool useSimdSkinning) {
+    pose(dt, useSimdPosing);
+    skin(useSimdSkinning);
+  }
 
   void pose(double dt, bool useSimdPosing) {
     assert(_currentAnimation != null);
