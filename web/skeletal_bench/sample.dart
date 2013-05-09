@@ -388,11 +388,24 @@ class Application {
   int instanceCount = 1;
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
-  bool useGpuSkinning = false;
+  bool _useGpuSkinning = false;
+  
+  bool get useGpuSkinning => _useGpuSkinning;
+  set useGpuSkinning(bool value) {
+    if(_useGpuSkinning != value) {
+      _useGpuSkinning = value;
+      if(value)
+        _meshes[_meshIndex].resetToBindPose();
+    }
+  }
 
   /// The index of the [SkinnedMesh] to draw.
   int get meshIndex => _meshIndex;
-  set meshIndex(int value) { _meshIndex = value; }
+  set meshIndex(int value) { 
+    _meshIndex = value; 
+    if(_useGpuSkinning)
+      _meshes[_meshIndex].resetToBindPose();
+  }
 
   /// Whether debugging information should be drawn.
   ///
@@ -414,12 +427,22 @@ class Application {
 
     updateSw.reset();
     updateSw.start();
+    
     // Update the mesh
-    _meshes[_meshIndex].update(dt, useSimdPosing, useSimdSkinning);
+    _meshes[_meshIndex].pose(dt, useSimdPosing);
+    if (!useGpuSkinning)
+      _meshes[_meshIndex].skin(useSimdSkinning);
+    
     for (int i = 0; i < instanceCount-1; i++) {
-      _meshes[_meshIndex].update(0.0, useSimdPosing, useSimdSkinning);
+      _meshes[_meshIndex].pose(0.0, useSimdPosing);
+      if (!useGpuSkinning)
+        _meshes[_meshIndex].skin(useSimdSkinning);
     }
+    
     updateSw.stop();
+    
+    print('${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
+    
     /*if (useSimdSkinning) {
       print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
     } else {

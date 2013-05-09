@@ -24,7 +24,7 @@ uniform mat4 uModelViewProjectionMatrix;
 uniform mat4 uNormalMatrix;
 uniform mat4 uModelMatrix;
 
-uniform mat4 uBoneMatrices[64];
+uniform mat4 uBoneMatrices[128];
 
 //---------------------------------------------------------------------
 // Varying variables

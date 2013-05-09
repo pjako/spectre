@@ -192,7 +192,7 @@ class SkinnedMesh extends SpectreMesh {
   SkeletonPoser skeletonPoser = new SimpleSkeletonPoser();
   SkeletonPoser skeletonPoserSIMD = new SIMDSkeletonPoser();
 
-  void update(double dt, bool useSimdPosing, bool useSimdSkinning) {
+  void pose(double dt, bool useSimdPosing) {
     assert(_currentAnimation != null);
     _currentTime += dt * _currentAnimation.timeScale;
 
@@ -212,17 +212,20 @@ class SkinnedMesh extends SpectreMesh {
       skeletonPoser.pose(skeleton, _currentAnimation, posedSkeleton,
           _currentTime);
     }
-    
+  }
+  
+  void skin(bool useSimdSkinning) {
     if (useSimdSkinning) {
       _updateVerticesSIMD();
     } else {
       _updateVertices();
     }
   }
+  
+  final Stopwatch sw = new Stopwatch();
 
   final Float32List m = new Float32List(16);
   final Float32List vertex = new Float32List(12);
-
   // Transform baseVertexData into vertexData based on bone hierarchy.
   void _updateVertices() {
     int numVertices = baseVertexData.length~/_floatsPerVertex;
@@ -266,7 +269,6 @@ class SkinnedMesh extends SpectreMesh {
   // Transform baseVertexData into vertexData based on bone hierarchy.
   final Float32x4List m4 = new Float32x4List(4);
   final Float32x4List vertex4 = new Float32x4List(3);
-  final Stopwatch sw = new Stopwatch();
   void _updateVerticesSIMD() {
     int numVertices = baseVertexData.length~/_floatsPerVertex;
     int vertexBase = 0;
@@ -294,6 +296,18 @@ class SkinnedMesh extends SpectreMesh {
     }
     sw.stop();
     //print('SIMD: ${sw.elapsedMicroseconds}');
+    vertexArray.uploadSubData(0, vertexData);
+  }
+  
+  // Set the vertices to the bind pose.
+  // This resets a skinned mesh for GPU skinning
+  void resetToBindPose() {
+    int numVertices = baseVertexData.length~/_floatsPerVertex;
+    int vertexBase = 0;
+    for (int v = 0; v < numVertices; v++) {
+      vertexData4[vertexBase] = baseVertexData4[vertexBase];
+      vertexBase += _floatsPerVertex ~/ 4;
+    }
     vertexArray.uploadSubData(0, vertexData);
   }
 }
