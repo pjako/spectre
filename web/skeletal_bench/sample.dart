@@ -146,9 +146,11 @@ class Application {
   /// The models all contain a normal and specular map. The [ShaderProgram] uses the
   /// normal map to add additional detail to the surface, and the specular map to
   /// provide a variable shininess, which is used in Phong lighting, across the mesh.
-  ShaderProgram _shaderProgram;
+  ShaderProgram _simpleShaderProgram;
+  ShaderProgram _skinnedShaderProgram;
   /// The [InputLayout] of the mesh.
   InputLayout _inputLayout;
+  InputLayout _skinnedInputLayout;
   /// The [SkinnedMesh]es being used by the application.
   List<SkinnedMesh> _meshes;
   /// The [Texture]s to use on the meshes.
@@ -262,12 +264,14 @@ class Application {
   void _createCamera() {
     // Create the Camera
     _camera = new Camera();
+    _camera.zFar = 2000.0;
     _camera.position = new vec3(150.0, 60.0, 0.0);
     _camera.focusPosition = new vec3(0.0, 60.0, 0.0);
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
-    _cameraController.radius = 150.0;
+    _cameraController.radius = 250.0;
+    _cameraController.maxRadius = 1000.0; 
 
     // Create the mat4 holding the Model-View-Projection matrix
     _modelViewProjectionMatrix = new mat4.zero();
@@ -289,10 +293,11 @@ class Application {
       // retains the state so there isn't a need to set them each time the
       // program is run. In fact its a drain on performance if the constants
       // are set to the same value each run
-      _shaderProgram = assetPack['normalMapShader'];
+      _simpleShaderProgram = assetPack['normalMapShader'];
+      _skinnedShaderProgram = assetPack['normalMapSkinnedShader'];
 
       // Apply the shader program and set the locations of the textures
-      _graphicsContext.setShaderProgram(_shaderProgram);
+      _graphicsContext.setShaderProgram(_simpleShaderProgram);
 
       // Load the individual models
       //
@@ -321,8 +326,9 @@ class Application {
         //
         // This specifies what unit to bind the textures to. This is decided during
         // compilation so just query the actual values.
-        int diffuseIndex  = _shaderProgram.samplers['uDiffuse'].textureUnit;
-        int specularIndex = _shaderProgram.samplers['uSpecular'].textureUnit;
+        // TODO: This may not align properly for both shaders
+        int diffuseIndex  = _simpleShaderProgram.samplers['uDiffuse'].textureUnit;
+        int specularIndex = _simpleShaderProgram.samplers['uSpecular'].textureUnit;
 
         for (int i = 0; i < modelCount; ++i) {
           // Get the matching AssetPack
@@ -361,8 +367,12 @@ class Application {
 
         // Setup the vertex layout
         _inputLayout = new InputLayout('InputLayout', _graphicsDevice);
-        _inputLayout.shaderProgram = _shaderProgram;
+        _inputLayout.shaderProgram = _simpleShaderProgram;
         _inputLayout.mesh = _meshes[0];
+        
+        _skinnedInputLayout = new InputLayout('SkinnedInputLayout', _graphicsDevice);
+        _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
+        _skinnedInputLayout.mesh = _meshes[0];
 
         // Start the loop and show the UI
         _gameLoop.start();
@@ -375,13 +385,27 @@ class Application {
   // Properties
   //---------------------------------------------------------------------
 
-  int instanceCount = 6;
+  int instanceCount = 1;
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
+  bool _useGpuSkinning = false;
+  
+  bool get useGpuSkinning => _useGpuSkinning;
+  set useGpuSkinning(bool value) {
+    if(_useGpuSkinning != value) {
+      _useGpuSkinning = value;
+      if(value)
+        _meshes[_meshIndex].resetToBindPose();
+    }
+  }
 
   /// The index of the [SkinnedMesh] to draw.
   int get meshIndex => _meshIndex;
-  set meshIndex(int value) { _meshIndex = value; }
+  set meshIndex(int value) { 
+    _meshIndex = value; 
+    if(_useGpuSkinning)
+      _meshes[_meshIndex].resetToBindPose();
+  }
 
   /// Whether debugging information should be drawn.
   ///
@@ -399,43 +423,32 @@ class Application {
   /// Uses the current change in time, [dt].
   final Stopwatch updateSw = new Stopwatch();
   void onUpdate(double dt) {
-    // Update the state of the CameraController
-    Keyboard keyboard = _gameLoop.keyboard;
-
-    if (keyboard.pressed(Keyboard.S)) {
-      useSimdSkinning = false;
-      print('using SIMD Skinning: useSimdSkinning');
-    } else if (keyboard.pressed(Keyboard.D)) {
-      useSimdSkinning = true;
-      print('using SIMD Skinning: useSimdSkinning');
-    }
-
-    if (keyboard.pressed(Keyboard.UP)) {
-      instanceCount++;
-      print('Instances $instanceCount');
-    }
-    if (keyboard.pressed(Keyboard.DOWN)) {
-      instanceCount--;
-      print('Instances $instanceCount');
-    }
-
     _debugDrawManager.update(dt);
 
     updateSw.reset();
     updateSw.start();
+    
     // Update the mesh
-    _meshes[_meshIndex].update(dt, useSimdPosing, useSimdSkinning);
+    _meshes[_meshIndex].pose(dt, useSimdPosing);
+    if (!useGpuSkinning)
+      _meshes[_meshIndex].skin(useSimdSkinning);
+    
     for (int i = 0; i < instanceCount-1; i++) {
-      _meshes[_meshIndex].update(0.0, useSimdPosing, useSimdSkinning);
+      _meshes[_meshIndex].pose(0.0, useSimdPosing);
+      if (!useGpuSkinning)
+        _meshes[_meshIndex].skin(useSimdSkinning);
     }
+    
     updateSw.stop();
-    if (useSimdSkinning) {
-      //print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
+    
+    print('${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
+    
+    /*if (useSimdSkinning) {
+      print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
     } else {
-      //print('DOUBLE: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
-    }
-
-
+      print('DOUBLE: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
+    }*/
+    
     Mouse mouse = _gameLoop.mouse;
 
     if (mouse.isDown(Mouse.LEFT) || _gameLoop.pointerLock.locked) {
@@ -500,13 +513,20 @@ class Application {
     _graphicsContext.setSamplers(0, _samplers);
 
     // Set the shader program
-    _graphicsContext.setShaderProgram(_shaderProgram);
+    if(useGpuSkinning)
+      _graphicsContext.setShaderProgram(_skinnedShaderProgram);
+    else
+      _graphicsContext.setShaderProgram(_simpleShaderProgram);
 
     // The matrices are the same for the drawing of each part of the mesh so
     // they only need to be set once.
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
     _graphicsContext.setConstant('uNormalMatrix', _normalMatrixArray);
+    
+    const num TAU = Math.PI * 2;
+    final num PHI = (Math.sqrt(5) + 1) / 2;
+    const int SCALE_FACTOR = 25;
 
     // Set the mesh
     //
@@ -514,23 +534,30 @@ class Application {
     // buffer object. This means the VBO and IBO only needs to be set once
     for (int instance = 0; instance < instanceCount; instance++) {
       SkinnedMesh mesh = _meshes[_meshIndex];
-      _graphicsContext.setVertexBuffers(0, [mesh.vertexArray]);
-      _graphicsContext.setIndexBuffer(mesh.indexArray);
-      _graphicsContext.setInputLayout(_inputLayout);
+      _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
+      _graphicsContext.setIndexBuffer(mesh.indexArray);   
       _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
-      if (instance > 8) {
-        modelMatrix[12] = (instance-8) * -60.0;
-        modelMatrix[14] = -80.0;
-      } else if (instance > 4) {
-        modelMatrix[12] = (instance-4) * -60.0;
-        modelMatrix[14] = -40.0;
-      } else {
-        modelMatrix[12] = (instance) * -60.0;
-        modelMatrix[14] = 0.0;
+      
+      if(useGpuSkinning) {
+        _graphicsContext.setInputLayout(_skinnedInputLayout);
+        _graphicsContext.setConstant('uBoneMatrices[0]', mesh.posedSkeleton.skinningMatrices);
       }
-      modelMatrix[13] = -40.0;
+      else
+        _graphicsContext.setInputLayout(_inputLayout);
+      
+      final num theta = instance * TAU / PHI;
+      final num r = Math.sqrt(instance) * SCALE_FACTOR;
+      
+      modelMatrix[0] = 0.5;
+      modelMatrix[5] = 0.5;
+      modelMatrix[10] = 0.5;
+      
+      modelMatrix[12] = r * Math.cos(theta);
+      modelMatrix[14] = -r * Math.sin(theta);
+      modelMatrix[13] = -10.0;
 
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
+      
       // Draw each part of the mesh
       int meshCount = mesh.meshes.length;
       List<List<Texture2D>> meshTextures = _textures[_meshIndex];

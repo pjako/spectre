@@ -6,6 +6,13 @@
     "type":"shaderProgram",
     "importArguments":{}
   },
+  "normalMapSkinnedShader":{
+    "loadArguments":{},
+    "name":"normalMapSkinnedShader",
+    "url":"normal_map_skinned.shader",
+    "type":"shaderProgram",
+    "importArguments":{}
+  },
   "config":{
     "loadArguments":{},
     "name":"config",
