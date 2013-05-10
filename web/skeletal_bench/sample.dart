@@ -373,6 +373,9 @@ class Application {
         _skinnedInputLayout = new InputLayout('SkinnedInputLayout', _graphicsDevice);
         _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
         _skinnedInputLayout.mesh = _meshes[0];
+        
+        // This forces the instances list to initialize now that we have the mesh loaded.
+        instanceCount = _instanceCount;
 
         // Start the loop and show the UI
         _gameLoop.start();
@@ -385,10 +388,31 @@ class Application {
   // Properties
   //---------------------------------------------------------------------
 
-  int instanceCount = 1;
+  int _instanceCount = 0;
+  int get instanceCount => _instanceCount;
+  set instanceCount(int value) {
+    _instanceCount = value;
+    
+    if(value < instances.length) {
+      instances = instances.sublist(0, value);
+      return;
+    }
+    
+    if(_meshes == null)
+      return;
+    
+    SkinnedMesh mesh = _meshes[meshIndex];
+    
+    while(instances.length < value) {
+      SkinnedMeshInstance instance = new SkinnedMeshInstance(mesh);
+      instance.currentTime = instances.length * 1.8; // Force every mesh to animate at different offsets
+      instances.add(instance);
+    }
+  }
+  List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
-  bool _useGpuSkinning = false;
+  bool _useGpuSkinning = true;
   
   bool get useGpuSkinning => _useGpuSkinning;
   set useGpuSkinning(bool value) {
@@ -429,7 +453,11 @@ class Application {
     updateSw.start();
     
     // Update the mesh
-    _meshes[_meshIndex].pose(dt, useSimdPosing);
+    for(SkinnedMeshInstance instance in instances) {
+      instance.update(dt, useSimdPosing);
+    }
+    
+    /*_meshes[_meshIndex].pose(dt, useSimdPosing);
     if (!useGpuSkinning)
       _meshes[_meshIndex].skin(useSimdSkinning);
     
@@ -437,11 +465,9 @@ class Application {
       _meshes[_meshIndex].pose(0.0, useSimdPosing);
       if (!useGpuSkinning)
         _meshes[_meshIndex].skin(useSimdSkinning);
-    }
+    }*/
     
     updateSw.stop();
-    
-    print('${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
     
     /*if (useSimdSkinning) {
       print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
@@ -527,20 +553,17 @@ class Application {
     const num TAU = Math.PI * 2;
     final num PHI = (Math.sqrt(5) + 1) / 2;
     const int SCALE_FACTOR = 25;
-
-    // Set the mesh
-    //
-    // Each submesh is contained within the same vertex buffer object and index
-    // buffer object. This means the VBO and IBO only needs to be set once
+    
     for (int instance = 0; instance < instanceCount; instance++) {
-      SkinnedMesh mesh = _meshes[_meshIndex];
+      SkinnedMeshInstance meshInstance = instances[instance];
+      SkinnedMesh mesh = meshInstance.mesh;
       _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
       _graphicsContext.setIndexBuffer(mesh.indexArray);   
       _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
       
       if(useGpuSkinning) {
         _graphicsContext.setInputLayout(_skinnedInputLayout);
-        _graphicsContext.setConstant('uBoneMatrices[0]', mesh.posedSkeleton.skinningMatrices);
+        _graphicsContext.setConstant('uBoneMatrices[0]', meshInstance.posedSkeleton.skinningMatrices);
       }
       else
         _graphicsContext.setInputLayout(_inputLayout);
@@ -568,7 +591,6 @@ class Application {
         _graphicsContext.drawIndexed(meshData['count'], meshData['offset']);
       }
     }
-
 
     // Render debugging information if requested
     if (_drawDebugInformation) {
