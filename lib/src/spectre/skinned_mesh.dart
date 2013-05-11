@@ -317,6 +317,59 @@ class SkinnedMesh extends SpectreMesh {
   }
 }
 
+class SkinnedMeshInstance {
+  SkinnedMesh mesh;
+  PosedSkeleton posedSkeleton;
+
+  // current time.
+  double _currentTime = 0.0;
+  double get currentTime => _currentTime;
+  set currentTime(double value) {
+    _currentTime = value;
+    if (_currentAnimation == null || _currentAnimation.runTime == 0.0) {
+      _currentTime = 0.0;
+    } else {
+      while (_currentTime >= _currentAnimation.runTime) {
+        _currentTime -= _currentAnimation.runTime;
+      }
+    }
+  }
+
+  SkeletonAnimation _currentAnimation;
+  String get currentAnimation => _currentAnimation.name;
+  set currentAnimation(String name) {
+    _currentAnimation = mesh.animations[name];
+    currentTime = 0.0;
+  }
+  
+  SkinnedMeshInstance(SkinnedMesh this.mesh) {
+    posedSkeleton = new PosedSkeleton(mesh.skeleton);
+    _currentAnimation = mesh._currentAnimation;
+  }
+  
+  void update(double dt, bool useSimd) {
+    currentTime += dt * _currentAnimation.timeScale;
+    
+    if(_currentAnimation == null)
+      return; // TODO: In this case the posedSkeleton should be set to all identity matricies
+
+    // Wrap.
+    if (_currentAnimation.runTime == 0.0) {
+      _currentTime = 0.0;
+    } else {
+      while (_currentTime >= _currentAnimation.runTime) {
+        _currentTime -= _currentAnimation.runTime;
+      }
+    }
+    
+    if(useSimd) {
+      mesh.skeletonPoserSIMD.pose(mesh.skeleton, _currentAnimation, posedSkeleton, _currentTime);
+    } else {
+      mesh.skeletonPoser.pose(mesh.skeleton, _currentAnimation, posedSkeleton, _currentTime);
+    }
+  }
+}
+
 void importMesh(SkinnedMesh mesh, Map json) {
   mesh.meshes.add(json);
 }
