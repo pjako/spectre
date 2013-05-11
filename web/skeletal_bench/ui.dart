@@ -92,10 +92,10 @@ class ApplicationControls {
     });
     
     // Hook up the show skeleton button
-    InputElement showSkeleton = query(_showSkeletonId);
+    /*InputElement showSkeleton = query(_showSkeletonId);
     showSkeleton.onChange.listen((_) {
       _application.drawDebugInformation = showSkeleton.checked;
-    });
+    });*/
   }
 
   //---------------------------------------------------------------------
