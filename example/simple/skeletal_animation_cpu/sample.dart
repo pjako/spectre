@@ -151,6 +151,8 @@ class Application {
   InputLayout _inputLayout;
   /// The [SkinnedMesh]es being used by the application.
   List<SkinnedMesh> _meshes;
+  /// Posed meshes.
+  List<SkinnedMeshInstance> _meshInstances;
   /// The [Texture]s to use on the meshes.
   ///
   /// Each mesh and their respective submeshes have [Texture]s to be set within the
@@ -307,6 +309,7 @@ class Application {
       Future.wait(requests).then((_) {
         // Create the list that holds the SkinnedMeshes
         _meshes = new List<SkinnedMesh>(modelCount);
+        _meshInstances = new List<SkinnedMeshInstance>(modelCount);
         // Create the list that holds the Textures
         _textures = new List<List<List<Texture2D>>>();
 
@@ -328,6 +331,7 @@ class Application {
           // Import the mesh
           _meshes[i] = importSkinnedMesh2('${modelName}_Mesh', _graphicsDevice, modelPack['mesh']);
           importAnimation(_meshes[i], modelPack['anim'][0]);
+          _meshInstances[i] = new SkinnedMeshInstance(_meshes[i]);
 
           // Get the textures to use on the mesh.
           //
@@ -392,7 +396,8 @@ class Application {
     _debugDrawManager.update(dt);
 
     // Update the mesh
-    _meshes[_meshIndex].update(dt, true, false);
+    _meshInstances[_meshIndex].update(dt, true);
+    _meshInstances[_meshIndex].skin(true);
 
     Mouse mouse = _gameLoop.mouse;
 
