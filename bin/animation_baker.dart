@@ -101,7 +101,7 @@ class SkeletalAnimation {
 
   Map toJson() {
     Map r = new Map();
-    r['name'] = name;
+    r['name'] = name != '' ? name : 'name';
     r['duration'] = duration;
     r['ticksPerSecond'] = ticksPerSecond;
     r['boneAnimations'] = bones.values.toList();
