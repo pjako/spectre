@@ -148,6 +148,7 @@ void _drawSkybox() {
 ShaderProgram _skinnedShaderProgram;
 InputLayout _skinnedInputLayout;
 SkinnedMesh _skinnedMesh;
+SkinnedMeshInstance _skinnedMeshInstance;
 RasterizerState _skinnedRasterizerState;
 DepthState _skinnedDepthState;
 int _depthGuard = 100;
@@ -187,6 +188,7 @@ void _setupSkinnedCharacter() {
   assert(_skinnedShaderProgram.linked == true);
   _skinnedMesh = importSkinnedMesh2('skinned', _graphicsDevice, _assetManager['demoAssets.hellknight']);
   importAnimation(_skinnedMesh, _assetManager['demoAssets.walk7'][0]);
+  _skinnedMeshInstance = new SkinnedMeshInstance(_skinnedMesh);
   _skinnedInputLayout = new InputLayout('skinned.il', _graphicsDevice);
   _skinnedInputLayout.mesh = _skinnedMesh;
   _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
@@ -199,9 +201,10 @@ void _setupSkinnedCharacter() {
 }
 
 void _drawSkinnedCharacter() {
-  _skinnedMesh.update(1.0/60.0, true, false);
+  _skinnedMeshInstance.update(1.0/60.0, true);
+  _skinnedMeshInstance.skin(true);
   _drawSkinnedBones(_skinnedMesh.skeleton.boneList[0],
-                    _skinnedMesh.posedSkeleton);
+                    _skinnedMeshInstance.posedSkeleton);
   var context = _graphicsDevice.context;
   context.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
   context.setShaderProgram(_skinnedShaderProgram);
