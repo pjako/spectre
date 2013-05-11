@@ -271,7 +271,7 @@ class Application {
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
     _cameraController.radius = 250.0;
-    _cameraController.maxRadius = 1000.0; 
+    _cameraController.maxRadius = 1000.0;
 
     // Create the mat4 holding the Model-View-Projection matrix
     _modelViewProjectionMatrix = new mat4.zero();
@@ -369,11 +369,11 @@ class Application {
         _inputLayout = new InputLayout('InputLayout', _graphicsDevice);
         _inputLayout.shaderProgram = _simpleShaderProgram;
         _inputLayout.mesh = _meshes[0];
-        
+
         _skinnedInputLayout = new InputLayout('SkinnedInputLayout', _graphicsDevice);
         _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
         _skinnedInputLayout.mesh = _meshes[0];
-        
+
         // This forces the instances list to initialize now that we have the mesh loaded.
         instanceCount = _instanceCount;
 
@@ -392,17 +392,17 @@ class Application {
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
     _instanceCount = value;
-    
+
     if(value < instances.length) {
       instances = instances.sublist(0, value);
       return;
     }
-    
+
     if(_meshes == null)
       return;
-    
+
     SkinnedMesh mesh = _meshes[meshIndex];
-    
+
     while(instances.length < value) {
       SkinnedMeshInstance instance = new SkinnedMeshInstance(mesh);
       instance.currentTime = instances.length * 1.8; // Force every mesh to animate at different offsets
@@ -413,7 +413,7 @@ class Application {
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
   bool _useGpuSkinning = true;
-  
+
   bool get useGpuSkinning => _useGpuSkinning;
   set useGpuSkinning(bool value) {
     if(_useGpuSkinning != value) {
@@ -425,8 +425,8 @@ class Application {
 
   /// The index of the [SkinnedMesh] to draw.
   int get meshIndex => _meshIndex;
-  set meshIndex(int value) { 
-    _meshIndex = value; 
+  set meshIndex(int value) {
+    _meshIndex = value;
     if(_useGpuSkinning)
       _meshes[_meshIndex].resetToBindPose();
   }
@@ -451,30 +451,14 @@ class Application {
 
     updateSw.reset();
     updateSw.start();
-    
+
     // Update the mesh
     for(SkinnedMeshInstance instance in instances) {
       instance.update(dt, useSimdPosing);
     }
-    
-    /*_meshes[_meshIndex].pose(dt, useSimdPosing);
-    if (!useGpuSkinning)
-      _meshes[_meshIndex].skin(useSimdSkinning);
-    
-    for (int i = 0; i < instanceCount-1; i++) {
-      _meshes[_meshIndex].pose(0.0, useSimdPosing);
-      if (!useGpuSkinning)
-        _meshes[_meshIndex].skin(useSimdSkinning);
-    }*/
-    
+
     updateSw.stop();
-    
-    /*if (useSimdSkinning) {
-      print('SIMD: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
-    } else {
-      print('DOUBLE: ${updateSw.elapsedMilliseconds} ${updateSw.elapsedMicroseconds~/instanceCount}');
-    }*/
-    
+
     Mouse mouse = _gameLoop.mouse;
 
     if (mouse.isDown(Mouse.LEFT) || _gameLoop.pointerLock.locked) {
@@ -549,38 +533,39 @@ class Application {
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
     _graphicsContext.setConstant('uNormalMatrix', _normalMatrixArray);
-    
+
     const num TAU = Math.PI * 2;
     final num PHI = (Math.sqrt(5) + 1) / 2;
     const int SCALE_FACTOR = 25;
-    
+
     for (int instance = 0; instance < instanceCount; instance++) {
       SkinnedMeshInstance meshInstance = instances[instance];
       SkinnedMesh mesh = meshInstance.mesh;
       _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
-      _graphicsContext.setIndexBuffer(mesh.indexArray);   
+      _graphicsContext.setIndexBuffer(mesh.indexArray);
       _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
-      
+
       if(useGpuSkinning) {
         _graphicsContext.setInputLayout(_skinnedInputLayout);
         _graphicsContext.setConstant('uBoneMatrices[0]', meshInstance.posedSkeleton.skinningMatrices);
-      }
-      else
+      } else {
+        meshInstance.skin(useSimdSkinning);
         _graphicsContext.setInputLayout(_inputLayout);
-      
+      }
+
       final num theta = instance * TAU / PHI;
       final num r = Math.sqrt(instance) * SCALE_FACTOR;
-      
+
       modelMatrix[0] = 0.5;
       modelMatrix[5] = 0.5;
       modelMatrix[10] = 0.5;
-      
+
       modelMatrix[12] = r * Math.cos(theta);
       modelMatrix[14] = -r * Math.sin(theta);
       modelMatrix[13] = -10.0;
 
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
-      
+
       // Draw each part of the mesh
       int meshCount = mesh.meshes.length;
       List<List<Texture2D>> meshTextures = _textures[_meshIndex];

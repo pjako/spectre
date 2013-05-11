@@ -171,12 +171,11 @@ class SkinnedMesh extends SpectreMesh {
   Float32List weightData;
   Int32List boneData;
   Float32List skinningData;
-  
+
   VertexBuffer _deviceSkinningBuffer;
   VertexBuffer get skinningArray => _deviceSkinningBuffer;
 
   Skeleton skeleton;
-  PosedSkeleton posedSkeleton;
 
   // current time.
   double _currentTime = 0.0;
@@ -188,51 +187,24 @@ class SkinnedMesh extends SpectreMesh {
   set currentAnimation(String name) {
     _currentAnimation = animations[name];
   }
-  
+
   SkeletonPoser skeletonPoser = new SimpleSkeletonPoser();
   SkeletonPoser skeletonPoserSIMD = new SIMDSkeletonPoser();
-  
-  void update(double dt, bool useSimdPosing, bool useSimdSkinning) {
-    pose(dt, useSimdPosing);
-    skin(useSimdSkinning);
-  }
 
-  void pose(double dt, bool useSimdPosing) {
-    assert(_currentAnimation != null);
-    _currentTime += dt * _currentAnimation.timeScale;
-
-    // Wrap.
-    if (_currentAnimation.runTime == 0.0) {
-      _currentTime = 0.0;
-    } else {
-      while (_currentTime >= _currentAnimation.runTime) {
-        _currentTime -= _currentAnimation.runTime;
-      }
-    }
-    
-    if(useSimdPosing) {
-      skeletonPoserSIMD.pose(skeleton, _currentAnimation, posedSkeleton,
-          _currentTime);
-    } else {
-      skeletonPoser.pose(skeleton, _currentAnimation, posedSkeleton,
-          _currentTime);
-    }
-  }
-  
-  void skin(bool useSimdSkinning) {
+  void skin(PosedSkeleton pose, bool useSimdSkinning) {
     if (useSimdSkinning) {
-      _updateVerticesSIMD();
+      _updateVerticesSIMD(pose);
     } else {
-      _updateVertices();
+      _updateVertices(pose);
     }
   }
-  
+
   final Stopwatch sw = new Stopwatch();
 
   final Float32List m = new Float32List(16);
   final Float32List vertex = new Float32List(12);
   // Transform baseVertexData into vertexData based on bone hierarchy.
-  void _updateVertices() {
+  void _updateVertices(PosedSkeleton pose) {
     int numVertices = baseVertexData.length~/_floatsPerVertex;
     int vertexBase = 0;
     sw.reset();
@@ -251,8 +223,7 @@ class SkinnedMesh extends SpectreMesh {
       for (int i = 0; i < 4; ++i) {
         final int boneId = boneData[skinningDataOffset];
         final double weight = weightData[skinningDataOffset];
-        Float32ListHelpers.addScale44(m,
-                                      posedSkeleton.skinningTransforms[boneId],
+        Float32ListHelpers.addScale44(m, pose.skinningTransforms[boneId],
                                       weight);
         skinningDataOffset++;
       }
@@ -262,19 +233,16 @@ class SkinnedMesh extends SpectreMesh {
       for (int i = 0; i < 4; i++) {
         vertexData[vertexBase+i] = vertex[i];
       }
-
-      //Expect.approxEquals(1.0, vertexData[vertexBase+3]);
       vertexBase += _floatsPerVertex;
     }
     sw.stop();
-    //print('double: ${sw.elapsedMicroseconds}');
     vertexArray.uploadSubData(0, vertexData);
   }
 
   // Transform baseVertexData into vertexData based on bone hierarchy.
   final Float32x4List m4 = new Float32x4List(4);
   final Float32x4List vertex4 = new Float32x4List(3);
-  void _updateVerticesSIMD() {
+  void _updateVerticesSIMD(PosedSkeleton pose) {
     int numVertices = baseVertexData.length~/_floatsPerVertex;
     int vertexBase = 0;
     sw.reset();
@@ -288,7 +256,7 @@ class SkinnedMesh extends SpectreMesh {
         final int boneId = boneData[skinningDataOffset];
         final double weight = weightData[skinningDataOffset];
         Float32x4 weight4 = new Float32x4.splat(weight);
-        Float32x4List boneMatrix = posedSkeleton.skinningTransforms4[boneId];
+        Float32x4List boneMatrix = pose.skinningTransforms4[boneId];
         m4[0] += boneMatrix[0] * weight4;
         m4[1] += boneMatrix[1] * weight4;
         m4[2] += boneMatrix[2] * weight4;
@@ -300,10 +268,9 @@ class SkinnedMesh extends SpectreMesh {
       vertexBase += _floatsPerVertex ~/ 4;
     }
     sw.stop();
-    //print('SIMD: ${sw.elapsedMicroseconds}');
     vertexArray.uploadSubData(0, vertexData);
   }
-  
+
   // Set the vertices to the bind pose.
   // This resets a skinned mesh for GPU skinning
   void resetToBindPose() {
@@ -341,15 +308,15 @@ class SkinnedMeshInstance {
     _currentAnimation = mesh.animations[name];
     currentTime = 0.0;
   }
-  
+
   SkinnedMeshInstance(SkinnedMesh this.mesh) {
     posedSkeleton = new PosedSkeleton(mesh.skeleton);
     _currentAnimation = mesh._currentAnimation;
   }
-  
+
   void update(double dt, bool useSimd) {
     currentTime += dt * _currentAnimation.timeScale;
-    
+
     if(_currentAnimation == null)
       return; // TODO: In this case the posedSkeleton should be set to all identity matricies
 
@@ -361,12 +328,16 @@ class SkinnedMeshInstance {
         _currentTime -= _currentAnimation.runTime;
       }
     }
-    
+
     if(useSimd) {
       mesh.skeletonPoserSIMD.pose(mesh.skeleton, _currentAnimation, posedSkeleton, _currentTime);
     } else {
       mesh.skeletonPoser.pose(mesh.skeleton, _currentAnimation, posedSkeleton, _currentTime);
     }
+  }
+
+  void skin(bool useSimd) {
+    mesh.skin(posedSkeleton, useSimd);
   }
 }
 
@@ -490,7 +461,6 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
       parentBone.children.add(childBone);
     }
   });
-  mesh.posedSkeleton = new PosedSkeleton(mesh.skeleton, bones.length);
 
   {
     Map perVertexWeights = json['vertexWeight'];
@@ -516,7 +486,6 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
           ..add(0.0);
         outputIndex++;
       }
-      double totalWeight = 0.0;
       int j = 0;
       for (; j < vertexWeights.length && j < 8; j += 2) {
         boneId.add(vertexWeights[j].toInt());
@@ -539,7 +508,7 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
       floatBoneData[i] = boneId[i].toDouble(); // This is unfortunate, but it's the only way the GPU skinning will run fast on most cards.
       mesh.weightData[i] = weights[i];
     }
-    
+
     // GPU-skinning specific attributes
     mesh.attributes['vBoneIndices'] = new SpectreMeshAttribute('vBoneIndices', 'float', 4, 0, 16, false, 1);
     mesh.attributes['vBoneWeights'] = new SpectreMeshAttribute('vBoneWeights', 'float', 4, boneId.length*4, 16, false, 1);
