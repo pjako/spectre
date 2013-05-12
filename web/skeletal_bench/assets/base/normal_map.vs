@@ -36,12 +36,13 @@ varying vec3 normal;
 
 void main()
 {
-  vec4 vPosition4 = vec4(vPosition, 1.0);
-  position = vec3(uModelViewMatrix * uModelMatrix * vPosition4);
+  vec4 vPosition4 = uModelMatrix * vec4(vPosition, 1.0);
+  position = vPosition4.xyz;
   
   texCoord = vTexCoord0;
   
-  normal = normalize(mat3(uNormalMatrix) * vNormal);
+  // This makes some assumtions that may not always hold true
+  normal = normalize(mat3(uModelMatrix) * vNormal);
   
-  gl_Position = uModelViewProjectionMatrix * uModelMatrix * vPosition4;
+  gl_Position = uModelViewProjectionMatrix * vPosition4;
 }

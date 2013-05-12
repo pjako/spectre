@@ -16,7 +16,7 @@
   "anim": {
     "loadArguments":{},
     "name":"anim",
-    "url":"walk7.anim",
+    "url":"idle2.anim",
     "type":"json",
     "importArguments":{}
   },

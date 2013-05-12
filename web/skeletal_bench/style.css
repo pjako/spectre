@@ -16,19 +16,23 @@ body {
   width: 200px;
   height:100%;
   position:absolute;
-  left:-200px;
+  left:-175px;
   top:0px;
   z-index:1;
-  transition:left 0.666s;
+  transition:left 0.333s;
 }
 
-#ui_wrap.hide {
+#ui_wrap:hover {
+  left:0px;
+}
+
+/*#ui_wrap.hide {
   left:-200px;
 }
 
 #ui_wrap.show {
   left:0px;
-}
+}*/
 
 #ui {
   display: -webkit-flex;

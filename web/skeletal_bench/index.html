@@ -11,43 +11,19 @@
     <div id="ui_wrap">
       <div id="ui">
         <div class="ui_group">
-          <h2>Models</h2>
-          <div id="model_selection"></div>
-        </div>
-        <div class="ui_group">
           <h2>Instances</h2>
           <div class="option">
             <input id="instance_count" type="number" value="10" min="1" max="1000"/>
+            </br>
+            <input id="instance_auto" type="checkbox" checked/>
+            <label for="instance_auto">Auto</label>
           </div>
         </div>
         <div class="ui_group">
           <h2>Animation</h2>
           <div class="option">
             <input id="pose_simd" type="checkbox" checked/>
-            <label for="pose_simd">SIMD Posing</label>
-          </div>
-          <div class="option">
-            <input id="skin_simd" type="checkbox" checked/>
-            <label for="skin_simd">SIMD Skininng</label>
-          </div>
-          <div class="option">
-            <input id="skin_gpu" type="checkbox" checked/>
-            <label for="skin_gpu">GPU Skininng</label>
-          </div>
-          <!--div class="option">
-            <input id="show_skeleton" type="checkbox" checked/>
-            <label for="show_skeleton">Show skeleton</label>
-          </div-->
-        </div>
-        <div class="ui_group bottom">
-          <h2>Controls</h2>
-          <div class="control_info">
-            <div class="input">W,A,S,D</div>
-            <div class="input_explanation">Movement</div>
-          </div>
-          <div class="control_info">
-            <div class="input">Escape</div>
-            <div class="input_explanation">Release mouse pointer</div>
+            <label for="pose_simd">Use SIMD</label>
           </div>
         </div>
       </div>
