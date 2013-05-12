@@ -32,14 +32,10 @@ class ApplicationControls {
   static String _modelSelectionId = '#model_selection';
   /// Identifier for the show skeleton checkbox.
   static String _instanceCountId = '#instance_count';
+  /// Identifier for the Auto instance count checkbox.
+  static String _instanceAutoId = '#instance_auto';
   /// Identifier for the SIMD Posing checkbox.
   static String _poseSimdId = '#pose_simd';
-  /// Identifier for the SIMD Skinning checkbox.
-  static String _skinSimdId = '#skin_simd';
-  /// Identifier for the GPU Skinning checkbox.
-  static String _skinGpuId = '#skin_gpu';
-  /// Identifier for the show skeleton checkbox.
-  static String _showSkeletonId = '#show_skeleton';
   /// Classname for an option
   static String _optionClassName = 'option';
   /// Classname for when the UI should be hidden.
@@ -74,72 +70,20 @@ class ApplicationControls {
       _application.instanceCount = int.parse(instanceCount.value);
     });
     
+    InputElement instanceAuto = query(_instanceAutoId);
+    instanceAuto.onChange.listen((_) {
+      _application.autoAdjustInstanceCount = instanceAuto.checked;
+    });
+    
     InputElement poseSimd = query(_poseSimdId);
     poseSimd.onChange.listen((_) {
       _application.useSimdPosing = poseSimd.checked;
     });
-    
-    // Hook up the show skeleton button
-    InputElement skinSimd = query(_skinSimdId);
-    skinSimd.onChange.listen((_) {
-      _application.useSimdSkinning = skinSimd.checked;
-    });
-    
-    // Hook up the show skeleton button
-    InputElement skinGpu = query(_skinGpuId);
-    skinGpu.onChange.listen((_) {
-      _application.useGpuSkinning = skinGpu.checked;
-    });
-    
-    // Hook up the show skeleton button
-    /*InputElement showSkeleton = query(_showSkeletonId);
-    showSkeleton.onChange.listen((_) {
-      _application.drawDebugInformation = showSkeleton.checked;
-    });*/
   }
 
   //---------------------------------------------------------------------
   // Public methods
   //---------------------------------------------------------------------
-
-  /// Add a model to the UI.
-  void addModel(String name, String iconPath) {
-    List children = _modelSelection.children;
-
-    // Get the current length as this will be the index to use
-    // when the model is selected
-    int index = children.length;
-
-    // Create the container
-    DivElement container = new DivElement();
-    container.classes.add(_optionClassName);
-
-    if (index == 0) {
-      container.classes.add(_selectedClassName);
-      container.classes.add(_disabledClassName);
-    }
-
-    // Add the ImageElement
-    ImageElement icon = new ImageElement();
-    icon.src = iconPath;
-
-    container.children.add(icon);
-
-    // Add a DivElement containing the name
-    DivElement nameElement = new DivElement();
-    nameElement.innerHtml = name;
-
-    container.children.add(nameElement);
-
-    // Add a callback for when the model is selected
-    container.onClick.listen((_) {
-      _selectModel(index);
-    });
-
-    // Attach the element
-    children.add(container);
-  }
-
   /// Show the controls.
   ///
   /// Uses a CSS animation to display the application controls.

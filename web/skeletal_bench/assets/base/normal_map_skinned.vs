@@ -21,7 +21,7 @@ uniform mat4 uModelViewMatrix;
 /// The Model-View-Projection matrix.
 uniform mat4 uModelViewProjectionMatrix;
 /// The normal matrix
-uniform mat4 uNormalMatrix;
+///uniform mat4 uNormalMatrix;
 uniform mat4 uModelMatrix;
 
 uniform mat4 uBoneMatrices[128];
@@ -50,12 +50,14 @@ mat4 accumulateSkinMatrix() {
 
 void main()
 {
-  vec4 vPosition4 = accumulateSkinMatrix() * vec4(vPosition, 1.0);
-  position = vec3(uModelViewMatrix * uModelMatrix * vPosition4);
+  mat4 skinMat = uModelMatrix * accumulateSkinMatrix();
+  vec4 vPosition4 = skinMat * vec4(vPosition, 1.0);
+  position = vPosition4.xyz;
   
   texCoord = vTexCoord0;
   
-  normal = normalize(mat3(uNormalMatrix) * vNormal);
+  // This makes some assumtions that may not always hold true
+  normal = normalize(mat3(skinMat) * vNormal);
   
-  gl_Position = uModelViewProjectionMatrix * uModelMatrix * vPosition4;
+  gl_Position = uModelViewProjectionMatrix * vPosition4;
 }

@@ -52,11 +52,11 @@ class Application {
   //---------------------------------------------------------------------
 
   /// The red value to clear the color buffer to.
-  static const double _redClearColor = 248.0 / 255.0;
+  static const double _redClearColor = 0.0;
   /// The green value to clear the color buffer to.
-  static const double _greenClearColor = 248.0 / 255.0;
+  static const double _greenClearColor = 0.0;
   /// The blue value to clear the color buffer to.
-  static const double _blueClearColor = 248.0 / 255.0;
+  static const double _blueClearColor = 0.0;
   /// The alpha value to clear the color buffer to.
   static const double _alphaClearColor = 1.0;
 
@@ -134,13 +134,11 @@ class Application {
   Float32List _modelViewMatrixArray;
   /// [Float32List] storage for the Model-View-Projection matrix.
   Float32List _modelViewProjectionMatrixArray;
-  /// [Float32List] storage for the normal matrix.
-  Float32List _normalMatrixArray;
 
   //---------------------------------------------------------------------
   // Mesh drawing variables
   //---------------------------------------------------------------------
-
+  
   /// The [ShaderProgram] to use to draw the mesh.
   ///
   /// The models all contain a normal and specular map. The [ShaderProgram] uses the
@@ -151,8 +149,11 @@ class Application {
   /// The [InputLayout] of the mesh.
   InputLayout _inputLayout;
   InputLayout _skinnedInputLayout;
+  InputLayout _floorInputLayout;
   /// The [SkinnedMesh]es being used by the application.
   List<SkinnedMesh> _meshes;
+  SingleArrayMesh _floor;
+  List<Texture2D> _floorTextures;
   /// The [Texture]s to use on the meshes.
   ///
   /// Each mesh and their respective submeshes have [Texture]s to be set within the
@@ -248,7 +249,7 @@ class Application {
     //
     // The ShaderProgram being used takes three textures, so create a list
     // containing the same SamplerState at all three locations.
-    _samplerState = new SamplerState.linearClamp('SamplerState', _graphicsDevice);
+    _samplerState = new SamplerState.linearWrap('SamplerState', _graphicsDevice);
     _samplers = [_samplerState, _samplerState, _samplerState];
 
     // By default the rendering pipeline has the depth buffer enabled and
@@ -279,7 +280,6 @@ class Application {
     // Create the Float32Lists that store the constant values for the matrices
     _modelViewMatrixArray = new Float32List(16);
     _modelViewProjectionMatrixArray = new Float32List(16);
-    _normalMatrixArray = new Float32List(16);
   }
 
   /// Load the resources held in the .pack files.
@@ -295,6 +295,8 @@ class Application {
       // are set to the same value each run
       _simpleShaderProgram = assetPack['normalMapShader'];
       _skinnedShaderProgram = assetPack['normalMapSkinnedShader'];
+      
+      _floorTextures = [assetPack['floorSpecular'], assetPack['floorDiffuse'], assetPack['floorNormal']];
 
       // Apply the shader program and set the locations of the textures
       _graphicsContext.setShaderProgram(_simpleShaderProgram);
@@ -336,9 +338,6 @@ class Application {
           String modelName = modelRequest['name'];
           AssetPack modelPack = _assetManager.root[modelName];
 
-          // Add the UI elements for the model
-          _applicationControls.addModel(modelPack['config']['name'], 'assets/${modelName}/icon.png');
-
           // Import the mesh
           _meshes[i] = importSkinnedMesh2('${modelName}_Mesh', _graphicsDevice, modelPack['mesh']);
           importAnimation(_meshes[i], modelPack['anim'][0]);
@@ -373,6 +372,8 @@ class Application {
         _skinnedInputLayout = new InputLayout('SkinnedInputLayout', _graphicsDevice);
         _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
         _skinnedInputLayout.mesh = _meshes[0];
+        
+        _createFloor();
 
         // This forces the instances list to initialize now that we have the mesh loaded.
         instanceCount = _instanceCount;
@@ -382,6 +383,33 @@ class Application {
         _applicationControls.show();
       });
     });
+  }
+  
+  void _createFloor() {
+    double size = 1500.0;
+    double uvScale = 25.0;
+    Float32List verts = new Float32List.fromList([
+      size, 0.0, size,    uvScale, uvScale,   0.0, 1.0, 0.0,  
+      size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
+      -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
+      
+      -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
+      size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
+      -size, 0.0,-size,   0.0, 0.0,           0.0, 1.0, 0.0,
+    ]);
+    _floor = new SingleArrayMesh('FloorMesh', _graphicsDevice);
+    _floor.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
+    
+    _floor.attributes['vPosition'] = new SpectreMeshAttribute('vPosition', 'float', 3,
+        0, 32, false);
+    _floor.attributes['vTexCoord0'] = new SpectreMeshAttribute('vTexCoord0', 'float', 2,
+        12, 32, false);
+    _floor.attributes['vNormal'] = new SpectreMeshAttribute('vNormal', 'float', 3,
+        20, 32, false);
+    
+    _floorInputLayout = new InputLayout('FloorInputLayout', _graphicsDevice);
+    _floorInputLayout.shaderProgram = _simpleShaderProgram;
+    _floorInputLayout.mesh = _floor;
   }
 
   //---------------------------------------------------------------------
@@ -410,6 +438,7 @@ class Application {
     }
   }
   List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
+  bool autoAdjustInstanceCount = true;
   bool useSimdPosing = true;
   bool useSimdSkinning = true;
   bool _useGpuSkinning = true;
@@ -494,9 +523,6 @@ class Application {
     // Copy the View matrix from the camera into the Float32List.
     _camera.copyViewMatrixIntoArray(_modelViewMatrixArray);
 
-    // Copy the Normal matrix from the camera into the Float32List.
-    _camera.copyNormalMatrixIntoArray(_normalMatrixArray);
-
     _debugDrawManager.addCircle(new vec3(0.0, 4.0, 0.0),
                                 new vec3(0.0, 1.0, 0.0),
                                 8.0, new vec4(1.0, 0.0, 0.0, 1.0));
@@ -521,18 +547,37 @@ class Application {
     _graphicsContext.setViewport(_viewport);
     _graphicsContext.setBlendState(_blendState);
     _graphicsContext.setSamplers(0, _samplers);
-
-    // Set the shader program
-    if(useGpuSkinning)
-      _graphicsContext.setShaderProgram(_skinnedShaderProgram);
-    else
-      _graphicsContext.setShaderProgram(_simpleShaderProgram);
-
+    
+    // Draw the floor
+    _graphicsContext.setShaderProgram(_simpleShaderProgram);
     // The matrices are the same for the drawing of each part of the mesh so
     // they only need to be set once.
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
-    _graphicsContext.setConstant('uNormalMatrix', _normalMatrixArray);
+    
+    _graphicsContext.setVertexBuffers(0, [_floor.vertexArray]);
+    _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+    _graphicsContext.setInputLayout(_floorInputLayout);
+    
+    modelMatrix[0] = 1.0;
+    modelMatrix[5] = 1.0;
+    modelMatrix[10] = 1.0;
+    
+    modelMatrix[12] = 0.0;
+    modelMatrix[14] = 0.0;
+    modelMatrix[13] = -10.0;
+    
+    _graphicsContext.setConstant('uModelMatrix', modelMatrix);
+    
+    _graphicsContext.setTextures(0, _floorTextures);
+    _graphicsContext.draw(6, 0);
+    
+    // Set the shader program
+    if(useGpuSkinning) {
+      _graphicsContext.setShaderProgram(_skinnedShaderProgram);
+      _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
+      _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
+    }
 
     const num TAU = Math.PI * 2;
     final num PHI = (Math.sqrt(5) + 1) / 2;

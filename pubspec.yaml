@@ -12,6 +12,6 @@ dependencies:
 dev_dependencies:
   unittest: any
   browser: any
+  hop: any
   game_loop:
     git: https://github.com/johnmccutchan/game_loop.git
-  hop: any
