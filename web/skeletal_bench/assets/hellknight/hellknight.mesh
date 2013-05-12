@@ -2,19 +2,19 @@
     "attributes": [
         {
             "format": "float2", 
-            "name": "TEXCOORD0", 
+            "name": "vTexCoord0", 
             "offset": 32, 
             "stride": 48
         }, 
         {
             "format": "float3", 
-            "name": "POSITION", 
+            "name": "vPosition", 
             "offset": 0, 
             "stride": 48
         }, 
         {
             "format": "float3", 
-            "name": "NORMAL", 
+            "name": "vNormal", 
             "offset": 16, 
             "stride": 48
         }
