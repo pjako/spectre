@@ -13,6 +13,27 @@
     "type":"shaderProgram",
     "importArguments":{}
   },
+  "floorDiffuse": {
+    "loadArguments":{},
+    "name":"floorDiffuse",
+    "url":"wand_boden_5.jpg",
+    "type":"tex2d",
+    "importArguments":{}
+  },
+  "floorNormal": {
+    "loadArguments":{},
+    "name":"floorNormal",
+    "url":"wand_boden_normal.jpg",
+    "type":"tex2d",
+    "importArguments":{}
+  },
+  "floorSpecular": {
+    "loadArguments":{},
+    "name":"floorSpecular",
+    "url":"wand_boden_5_bump.jpg",
+    "type":"tex2d",
+    "importArguments":{}
+  },
   "config":{
     "loadArguments":{},
     "name":"config",
