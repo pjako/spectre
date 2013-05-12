@@ -670,7 +670,6 @@ class Application {
 
     _graphicsContext.setConstant('uLightRadius', biggestRadius);
     _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
-    //_graphicsContext.setConstant('uLightRadius', _lightRadius);
     
     _graphicsContext.setVertexBuffers(0, [_floor.vertexArray]);
     _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
@@ -692,14 +691,11 @@ class Application {
     // Set the shader program
     if(useGpuSkinning) {
       _graphicsContext.setShaderProgram(_skinnedShaderProgram);
-      _graphicsContext.setConstant('lightRadius', biggestRadius);
+      _graphicsContext.setConstant('uLightRadius', biggestRadius);
       _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
       _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
       _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
-      _graphicsContext.setConstant('uLightRadius', _lightRadius);
     }
-
-
 
     for (int instance = 0; instance < instanceCount; instance++) {
       SkinnedMeshInstance meshInstance = instances[instance];
