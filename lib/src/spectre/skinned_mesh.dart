@@ -229,7 +229,6 @@ class SkinnedMesh extends SpectreMesh {
       }
       Float32ListHelpers.transform(vertex,
           baseVertexData, vertexBase, m);
-
       for (int i = 0; i < 4; i++) {
         vertexData[vertexBase+i] = vertex[i];
       }
@@ -463,55 +462,40 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
   });
 
   {
-    Map perVertexWeights = json['vertexWeight'];
-    List sortedVertexIndexes = perVertexWeights.keys.toList();
-    sortedVertexIndexes.sort((a,b) => int.parse(a) - int.parse(b));
-    List<int> boneId = new List<int>();
-    List<double> weights = new List<double>();
-    int outputIndex = 0;
-    for (int i = 0; i < sortedVertexIndexes.length; i++) {
-      final String vertexLabel = sortedVertexIndexes[i];
-      final int vertexId = int.parse(vertexLabel);
-      final List vertexWeights = perVertexWeights[vertexLabel];
-      while (outputIndex < vertexId) {
-        boneId
-          ..add(0)
-          ..add(0)
-          ..add(0)
-          ..add(0);
-        weights
-          ..add(0.0)
-          ..add(0.0)
-          ..add(0.0)
-          ..add(0.0);
-        outputIndex++;
-      }
-      int j = 0;
-      for (; j < vertexWeights.length && j < 8; j += 2) {
-        boneId.add(vertexWeights[j].toInt());
-        weights.add(vertexWeights[j+1].toDouble());
-      }
-      // Ensure we have 4 weights per bone
-      for(; j < 8; j += 2) {
-        boneId.add(0);
-        weights.add(0.0);
-      }
-      outputIndex++;
-    }
+    List boneId = json['vertexBones'];
+    List weights = json['vertexWeights'];
     assert(boneId.length == weights.length);
     mesh.boneData = new Int32List(boneId.length);
     mesh.skinningData = new Float32List(boneId.length*2);
-    Float32List floatBoneData = new Float32List.view(mesh.skinningData.buffer, 0, boneId.length);
-    mesh.weightData = new Float32List.view(mesh.skinningData.buffer, boneId.length*4);
+    Float32List floatBoneData = new Float32List.view(mesh.skinningData,
+                                                     0,
+                                                     boneId.length);
+    mesh.weightData = new Float32List.view(mesh.skinningData,
+                                           boneId.length*4);
     for (int i = 0; i < boneId.length; i++) {
-      mesh.boneData[i] = boneId[i];
-      floatBoneData[i] = boneId[i].toDouble(); // This is unfortunate, but it's the only way the GPU skinning will run fast on most cards.
-      mesh.weightData[i] = weights[i];
+      mesh.boneData[i] = boneId[i].toInt();
+      mesh.weightData[i] = weights[i].toDouble();
+
+      // This is unfortunate, but it's the only way GPU skinning will run fast
+      // on most cards.
+      floatBoneData[i] = boneId[i].toDouble();
     }
 
     // GPU-skinning specific attributes
-    mesh.attributes['vBoneIndices'] = new SpectreMeshAttribute('vBoneIndices', 'float', 4, 0, 16, false, 1);
-    mesh.attributes['vBoneWeights'] = new SpectreMeshAttribute('vBoneWeights', 'float', 4, boneId.length*4, 16, false, 1);
+    mesh.attributes['vBoneIndices'] = new SpectreMeshAttribute('vBoneIndices',
+                                                               'float',
+                                                               4,
+                                                               0,
+                                                               16,
+                                                               false,
+                                                               1);
+    mesh.attributes['vBoneWeights'] = new SpectreMeshAttribute('vBoneWeights',
+                                                               'float',
+                                                               4,
+                                                               boneId.length*4,
+                                                               16,
+                                                               false,
+                                                               1);
     mesh.skinningArray.uploadData(mesh.skinningData, SpectreBuffer.UsageStatic);
   }
   return mesh;

@@ -206,6 +206,10 @@ class Mesh {
         double s = weight[1].toDouble();
         MeshVertexBoneWeight boneWeight = new MeshVertexBoneWeight(boneName, s);
         vertices[vertexIndex].skinData.add(boneWeight);
+        if (vertices[vertexIndex].skinData.length > 4) {
+          throw new ArgumentError(
+              'Vertex $vertexIndex has more than 4 bone influences. File a Spectre bug.');
+        }
       }
     }
   }
@@ -441,21 +445,29 @@ class ModelBaker {
     outputMesh['primitive'] = 'triangles';
     outputMesh['vertices'] = vertexBuffer;
     outputMesh['indices'] = indexBuffer;
-    outputMesh['vertexWeight'] = new Map();
+    // Add up number of vertices
+    int totalVerts = 0;
+    meshes.forEach((Mesh mesh) {
+      totalVerts += mesh.vertices.length;
+    });
+    // Room for 4 bone influences (boneId+weight) per vertex.
+    outputMesh['vertexBones'] = new List<num>(totalVerts*4);
+    outputMesh['vertexWeights'] = new List<num>(totalVerts*4);
     meshes.forEach((Mesh mesh) {
       for (int v = 0; v < mesh.vertices.length; v++) {
         MeshVertex vertex = mesh.vertices[v];
-        String key = (v+mesh.baseVertex).toString();
-        if (vertex.skinData.length > 0) {
-          outputMesh['vertexWeight'][key] = new List();
-          vertex.skinData.forEach((MeshVertexBoneWeight sd) {
-            int boneIndex = boneTable[sd.boneName].boneIndex;
-            if (boneIndex < 0) {
-              throw new StateError('boneIndex invalid.');
-            }
-            outputMesh['vertexWeight'][key].add(boneIndex);
-            outputMesh['vertexWeight'][key].add(sd.weight);
-          });
+        int base = (v+mesh.baseVertex)*4;
+        int i;
+        for (i = 0; i < vertex.skinData.length; i++) {
+          MeshVertexBoneWeight sd = vertex.skinData[i];
+          int boneIndex = boneTable[sd.boneName].boneIndex;
+          outputMesh['vertexBones'][base+i] = boneIndex;
+          outputMesh['vertexWeights'][base+i] = sd.weight;
+        }
+        // Zero out the rest.
+        for (; i < 4; i++) {
+          outputMesh['vertexBones'][base+i] = 0;
+          outputMesh['vertexWeights'][base+i] = 0.0;
         }
       }
     });
