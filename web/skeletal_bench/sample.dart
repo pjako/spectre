@@ -53,7 +53,7 @@ class InstanceCountController {
   final List<int> instanceHistory = new List<int>(4);
   int cursor = 0;
   int lastMs = 0;
-  const int targetMicros = 16900;
+  const int targetMicros = 17900;
   int instanceCount;
   double continuousInstanceCount;
   InstanceCountController(this.setInstances, this.instanceCount) {
@@ -222,6 +222,7 @@ class Application {
   List<List<List<Texture2D>>> _textures;
   /// The index of the [SkinnedMesh] to draw.
   int _meshIndex = 0;
+  CanvasElement canvas;
 
   //---------------------------------------------------------------------
   // Construction
@@ -232,7 +233,7 @@ class Application {
   /// Creates an instance of the [Application] class.
   ///
   /// The application is hosted within the [CanvasElement] specified in [canvas].
-  Application(CanvasElement canvas) {
+  Application(this.canvas) {
     // Resize the canvas using the offsetWidth/offsetHeight.
     //
     // The canvas width/height is not being explictly specified in the markup,
@@ -712,10 +713,11 @@ class Application {
   /// This needs to occur whenever the underlying [CanvasElement] is resized,
   /// otherwise the rendered scene will be incorrect.
   void onResize(int width, int height) {
+    canvas.width = width;
+    canvas.height = height;
     // Resize the viewport
     _viewport.width = width;
     _viewport.height = height;
-
     // Change the aspect ratio of the camera
     _camera.aspectRatio = _viewport.aspectRatio;
   }
