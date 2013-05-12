@@ -439,6 +439,7 @@ class Application {
 
         // This forces the instances list to initialize now that we have the mesh loaded.
         instanceCount = _instanceCount;
+        flickerLightsToRadius(_lightRadius);
 
         // Start the loop and show the UI
         _gameLoop.start();
@@ -485,6 +486,9 @@ class Application {
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
     _instanceCount = value;
+    
+    if(_applicationControls != null)
+      _applicationControls.instanceCount = value;
 
     if(value < instances.length) {
       instances = instances.sublist(0, value);
@@ -515,6 +519,32 @@ class Application {
 
   bool useSimdSkinning = true;
   bool _useGpuSkinning = true;
+  
+  double _lightRadius = 75.0;
+  double get lightRadius => _lightRadius;
+  set lightRadius(double value) {
+    _lightRadius = value;
+  }
+  
+  double _lightIntensity = 1.0;
+  double _targetLightIntensity = 1.0;
+  bool _lightFlickering = true;
+  
+  double get lightIntensity => _lightIntensity;
+  set lightIntensity(double value) {
+    _targetLightIntensity = value;
+  }
+  
+  void flickerLightsToRadius(double radius, [Duration duration = const Duration(milliseconds: 1400)]) {
+    _lightFlickering = true;
+    
+    new Future.delayed(duration, () {
+      _lightRadius = radius;
+      _lightFlickering = false;
+      _lightIntensity = -10.0;
+      _targetLightIntensity = 1.0;
+    });
+  }
 
   bool get useGpuSkinning => _useGpuSkinning;
   set useGpuSkinning(bool value) {
@@ -543,7 +573,10 @@ class Application {
   //---------------------------------------------------------------------
   // Public methods
   //---------------------------------------------------------------------
-
+  
+  int _time = 0;
+  Math.Random _lightRandom = new Math.Random();
+  
   /// Updates the application.
   ///
   /// Uses the current change in time, [dt].
@@ -595,11 +628,13 @@ class Application {
 
     // Copy the View matrix from the camera into the Float32List.
     _camera.copyViewMatrixIntoArray(_modelViewMatrixArray);
-
-    _debugDrawManager.addCircle(new vec3(0.0, 4.0, 0.0),
-                                new vec3(0.0, 1.0, 0.0),
-                                8.0, new vec4(1.0, 0.0, 0.0, 1.0));
-    _debugDrawManager.addAxes(new mat4.identity(), 3.0);
+    
+    if (_lightFlickering) {
+      _time += (dt * 100.0).toInt();
+      _lightIntensity = _lightRandom.nextDouble() * 1.5 * ((_time % 120) / 120).roundToDouble();
+    } else {
+      _lightIntensity += (_targetLightIntensity - _lightIntensity) * 0.05;
+    }
   }
 
   /// Renders the scene.
@@ -632,7 +667,11 @@ class Application {
     // they only need to be set once.
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
-    _graphicsContext.setConstant('lightRadius', biggestRadius);
+
+    _graphicsContext.setConstant('uLightRadius', biggestRadius);
+    _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
+    //_graphicsContext.setConstant('uLightRadius', _lightRadius);
+    
     _graphicsContext.setVertexBuffers(0, [_floor.vertexArray]);
     _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
     _graphicsContext.setInputLayout(_floorInputLayout);
@@ -656,6 +695,8 @@ class Application {
       _graphicsContext.setConstant('lightRadius', biggestRadius);
       _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
       _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
+      _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
+      _graphicsContext.setConstant('uLightRadius', _lightRadius);
     }
 
 

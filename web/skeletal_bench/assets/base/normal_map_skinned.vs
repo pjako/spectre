@@ -20,11 +20,9 @@ attribute vec4 vBoneWeights;
 uniform mat4 uModelViewMatrix;
 /// The Model-View-Projection matrix.
 uniform mat4 uModelViewProjectionMatrix;
-/// The normal matrix
-///uniform mat4 uNormalMatrix;
 uniform mat4 uModelMatrix;
 
-uniform mat4 uBoneMatrices[128];
+uniform mat4 uBoneMatrices[110];
 
 //---------------------------------------------------------------------
 // Varying variables

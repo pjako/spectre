@@ -12,6 +12,11 @@ uniform sampler2D uNormal;
 uniform sampler2D uSpecular;
 uniform float lightRadius;
 
+/// Light Intensity
+uniform float uLightIntensity;
+/// Light Radius
+uniform float uLightRadius;
+
 //---------------------------------------------------------------------
 // Varying variables
 //
@@ -32,9 +37,9 @@ varying vec3 normal;
 /// The position of the light.
 vec3 lightPosition = vec3(-1.0, -1.0, -1.0);
 /// The intensity of the light.
-vec3 lightIntensity = vec3(0.7, 0.7, 0.7);
+vec3 lightColor = vec3(0.7, 0.7, 0.7);
 /// The intensity of the light.
-vec3 bounceIntensity = vec3(0.4, 0.4, 0.4);
+vec3 bounceColor = vec3(0.4, 0.4, 0.4);
 
 /// The ambient color.
 vec3 ka = vec3(0.2, 0.2, 0.2);
@@ -51,7 +56,7 @@ vec4 ads()
   float lightDist = distance(position.xz, vec2(0,0));
   
   // Light attenuation
-  float d = max(lightDist - lightRadius, 0.0) / lightRadius + 1.0;
+  float d = max(lightDist - uLightRadius, 0.0) / uLightRadius + 1.0;
   float distAttn = 1.0 / (d * d);
   
   vec3 n = normalize(normal);
@@ -63,17 +68,17 @@ vec4 ads()
   vec3 kd = kd4.rgb;
   vec3 ks = texture2D(uSpecular, texCoord).rgb;
 	
-  vec3 result = distAttn * lightIntensity * kd * max(dot(lightDirection, n), 0.0);
+  vec3 result = distAttn * lightColor * kd * max(dot(lightDirection, n), 0.0);
 
   // Fake a light bounce from the floor
-  result += distAttn * bounceIntensity * kd * max(dot(floorDirection, n), 0.0);
+  result += distAttn * bounceColor * kd * max(dot(floorDirection, n), 0.0);
 	
   /*vec3 result = distAttn * lightIntensity *
     (ka +
      kd * max(dot(s, n), 0.0) +
      ks * pow(max(dot(r, v), 0.0), shininess));*/
 
-  return vec4(result, kd4.a);
+  return vec4(result * uLightIntensity, kd4.a);
 }
 
 void main()
