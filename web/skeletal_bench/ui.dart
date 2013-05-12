@@ -18,7 +18,7 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
-part of skeletal_animation_cpu;
+part of skeletal_bench;
 
 /// Controls for the [Application].
 class ApplicationControls {
@@ -62,19 +62,19 @@ class ApplicationControls {
   ApplicationControls() {
     _controlContainer = query(_controlContainerId);
     _modelSelection = query(_modelSelectionId);
-    
-    // Hook up the instances 
+
+    // Hook up the instances
     InputElement instanceCount = query(_instanceCountId);
     _application.instanceCount = int.parse(instanceCount.value);
     instanceCount.onChange.listen((_) {
       _application.instanceCount = int.parse(instanceCount.value);
     });
-    
+
     InputElement instanceAuto = query(_instanceAutoId);
     instanceAuto.onChange.listen((_) {
       _application.autoAdjustInstanceCount = instanceAuto.checked;
     });
-    
+
     InputElement poseSimd = query(_poseSimdId);
     poseSimd.onChange.listen((_) {
       _application.useSimdPosing = poseSimd.checked;

@@ -44,6 +44,56 @@ part 'ui.dart';
 // Application
 //---------------------------------------------------------------------
 
+typedef AdjustInstances(int count);
+
+class InstanceCountController {
+  final Stopwatch autoAdjustWatch = new Stopwatch()..start();
+  final AdjustInstances setInstances;
+  final List<int> history = new List<int>(10);
+  int cursor = 0;
+  int lastMs = 0;
+  const int targetMs = 17;
+  int instanceCount;
+  InstanceCountController(this.setInstances, this.instanceCount) {
+    for (int i = 0; i < history.length; i++) {
+      history[i] = targetMs;
+    }
+  }
+
+  double average() {
+    double sum = 0.0;
+    for (int i = 0; i < history.length; i++) {
+      sum += history[i].toDouble();
+    }
+    return sum / history.length;
+  }
+
+  bool get tooSlow => average() > targetMs;
+
+  void recordSample() {
+    int ms = autoAdjustWatch.elapsedMilliseconds;
+    if (lastMs == 0) {
+      // First frame.
+      lastMs = ms;
+      return;
+    }
+    int delta = ms - lastMs;
+    lastMs = ms;
+    history[cursor] = delta;
+    cursor = (cursor+1)%history.length;
+    if (tooSlow) {
+      instanceCount--;
+      if (instanceCount < 1) {
+        instanceCount = 1;
+      }
+      setInstances(instanceCount);
+    } else {
+      instanceCount++;
+      setInstances(instanceCount);
+    }
+  }
+}
+
 /// The sample application.
 class Application {
 
@@ -138,7 +188,7 @@ class Application {
   //---------------------------------------------------------------------
   // Mesh drawing variables
   //---------------------------------------------------------------------
-  
+
   /// The [ShaderProgram] to use to draw the mesh.
   ///
   /// The models all contain a normal and specular map. The [ShaderProgram] uses the
@@ -167,7 +217,7 @@ class Application {
   //---------------------------------------------------------------------
 
   final Float32List modelMatrix = new Float32List(16);
-
+  InstanceCountController controller;
   /// Creates an instance of the [Application] class.
   ///
   /// The application is hosted within the [CanvasElement] specified in [canvas].
@@ -295,7 +345,7 @@ class Application {
       // are set to the same value each run
       _simpleShaderProgram = assetPack['normalMapShader'];
       _skinnedShaderProgram = assetPack['normalMapSkinnedShader'];
-      
+
       _floorTextures = [assetPack['floorSpecular'], assetPack['floorDiffuse'], assetPack['floorNormal']];
 
       // Apply the shader program and set the locations of the textures
@@ -372,7 +422,7 @@ class Application {
         _skinnedInputLayout = new InputLayout('SkinnedInputLayout', _graphicsDevice);
         _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
         _skinnedInputLayout.mesh = _meshes[0];
-        
+
         _createFloor();
 
         // This forces the instances list to initialize now that we have the mesh loaded.
@@ -381,32 +431,35 @@ class Application {
         // Start the loop and show the UI
         _gameLoop.start();
         _applicationControls.show();
+        controller = new InstanceCountController((count) {
+          instanceCount = count;
+        }, instanceCount);
       });
     });
   }
-  
+
   void _createFloor() {
     double size = 1500.0;
     double uvScale = 25.0;
     Float32List verts = new Float32List.fromList([
-      size, 0.0, size,    uvScale, uvScale,   0.0, 1.0, 0.0,  
+      size, 0.0, size,    uvScale, uvScale,   0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
-      
+
       -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0,-size,   0.0, 0.0,           0.0, 1.0, 0.0,
     ]);
     _floor = new SingleArrayMesh('FloorMesh', _graphicsDevice);
     _floor.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
-    
+
     _floor.attributes['vPosition'] = new SpectreMeshAttribute('vPosition', 'float', 3,
         0, 32, false);
     _floor.attributes['vTexCoord0'] = new SpectreMeshAttribute('vTexCoord0', 'float', 2,
         12, 32, false);
     _floor.attributes['vNormal'] = new SpectreMeshAttribute('vNormal', 'float', 3,
         20, 32, false);
-    
+
     _floorInputLayout = new InputLayout('FloorInputLayout', _graphicsDevice);
     _floorInputLayout.shaderProgram = _simpleShaderProgram;
     _floorInputLayout.mesh = _floor;
@@ -531,6 +584,7 @@ class Application {
 
   /// Renders the scene.
   void onRender() {
+    controller.recordSample();
     // Clear the color and depth buffer
     _graphicsContext.clearColorBuffer(
       _redClearColor,
@@ -540,6 +594,10 @@ class Application {
     );
     _graphicsContext.clearDepthBuffer(1.0);
 
+    const num TAU = Math.PI * 2;
+    final num PHI = (Math.sqrt(5) + 1) / 2;
+    const int SCALE_FACTOR = 25;
+    final biggestRadius = Math.sqrt(instanceCount) * SCALE_FACTOR;
     // Reset the graphics context
     _graphicsContext.reset();
 
@@ -547,41 +605,40 @@ class Application {
     _graphicsContext.setViewport(_viewport);
     _graphicsContext.setBlendState(_blendState);
     _graphicsContext.setSamplers(0, _samplers);
-    
+
     // Draw the floor
     _graphicsContext.setShaderProgram(_simpleShaderProgram);
     // The matrices are the same for the drawing of each part of the mesh so
     // they only need to be set once.
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
-    
+    _graphicsContext.setConstant('lightRadius', biggestRadius);
     _graphicsContext.setVertexBuffers(0, [_floor.vertexArray]);
     _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
     _graphicsContext.setInputLayout(_floorInputLayout);
-    
+
     modelMatrix[0] = 1.0;
     modelMatrix[5] = 1.0;
     modelMatrix[10] = 1.0;
-    
+
     modelMatrix[12] = 0.0;
     modelMatrix[14] = 0.0;
     modelMatrix[13] = -10.0;
-    
+
     _graphicsContext.setConstant('uModelMatrix', modelMatrix);
-    
+
     _graphicsContext.setTextures(0, _floorTextures);
     _graphicsContext.draw(6, 0);
-    
+
     // Set the shader program
     if(useGpuSkinning) {
       _graphicsContext.setShaderProgram(_skinnedShaderProgram);
+      _graphicsContext.setConstant('lightRadius', biggestRadius);
       _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
       _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
     }
 
-    const num TAU = Math.PI * 2;
-    final num PHI = (Math.sqrt(5) + 1) / 2;
-    const int SCALE_FACTOR = 25;
+
 
     for (int instance = 0; instance < instanceCount; instance++) {
       SkinnedMeshInstance meshInstance = instances[instance];

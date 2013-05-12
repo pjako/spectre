@@ -10,6 +10,7 @@ uniform sampler2D uDiffuse;
 uniform sampler2D uNormal;
 /// The specular sampler.
 uniform sampler2D uSpecular;
+uniform float lightRadius;
 
 //---------------------------------------------------------------------
 // Varying variables
@@ -42,7 +43,6 @@ float shininess = 16.0;
 
 vec3 lightDirection = normalize(vec3(0.25, 1.0, 0.0));
 vec3 floorDirection = normalize(vec3(0.25, -1.0, 0.0));
-float lightRadius = 100.0;
 
 /// Computes the lighting.
 vec4 ads()
