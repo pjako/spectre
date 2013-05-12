@@ -501,7 +501,9 @@ class Application {
       instance.currentTime = instances.length * 1.8; // Force every mesh to animate at different offsets
       instances.add(instance);
     }
+    query('#instanceCount').text = '$_instanceCount';
   }
+
   List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
   bool autoAdjustInstanceCount = true;
   bool _useSimdPosing = true;

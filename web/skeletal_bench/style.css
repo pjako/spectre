@@ -135,3 +135,12 @@ canvas {
   background: url(images/logo.png);
   z-index:1;
 }
+
+#instanceCount {
+  position: absolute;
+  color: #ff0000;
+  font-size: 28px;
+  left: 50%;
+  top: 40px;
+  z-index: 1;
+}
