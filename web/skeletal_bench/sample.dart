@@ -49,29 +49,36 @@ typedef AdjustInstances(int count);
 class InstanceCountController {
   final Stopwatch autoAdjustWatch = new Stopwatch()..start();
   final AdjustInstances setInstances;
-  final List<int> history = new List<int>(10);
+  final List<int> history = new List<int>(4);
+  final List<int> instanceHistory = new List<int>(4);
   int cursor = 0;
   int lastMs = 0;
-  const int targetMs = 17;
+  const int targetMicros = 16900;
   int instanceCount;
+  double continuousInstanceCount;
   InstanceCountController(this.setInstances, this.instanceCount) {
+    continuousInstanceCount = instanceCount.toDouble();
     for (int i = 0; i < history.length; i++) {
-      history[i] = targetMs;
+      history[i] = targetMicros;
+      instanceHistory[i] = instanceCount;
     }
   }
 
-  double average() {
-    double sum = 0.0;
+  int get previousCursor => (cursor-1) % history.length;
+  int get nextCursor => (cursor+1) % history.length;
+
+  void reset() {
     for (int i = 0; i < history.length; i++) {
-      sum += history[i].toDouble();
+      history[i] = targetMicros;
+      instanceHistory[i] = instanceCount;
     }
-    return sum / history.length;
+    cursor = 0;
+    lastMs = 0;
   }
 
-  bool get tooSlow => average() > targetMs;
 
   void recordSample() {
-    int ms = autoAdjustWatch.elapsedMilliseconds;
+    int ms = autoAdjustWatch.elapsedMicroseconds;
     if (lastMs == 0) {
       // First frame.
       lastMs = ms;
@@ -80,18 +87,22 @@ class InstanceCountController {
     int delta = ms - lastMs;
     lastMs = ms;
     history[cursor] = delta;
-    cursor = (cursor+1)%history.length;
-    if (tooSlow) {
-      instanceCount--;
-      if (instanceCount < 1) {
-        instanceCount = 1;
-      }
-      setInstances(instanceCount);
+    instanceHistory[cursor] = instanceCount;
+    if (delta < targetMicros) {
+      continuousInstanceCount = continuousInstanceCount + 0.2 * (1.0);
     } else {
-      instanceCount++;
-      setInstances(instanceCount);
+      continuousInstanceCount = continuousInstanceCount + 0.2 * (-1.0);
     }
+    if (continuousInstanceCount < 1.0) {
+      continuousInstanceCount = 1.0;
+    }
+    int nextInstanceCount = continuousInstanceCount.floor();
+    instanceCount = nextInstanceCount;
+    setInstances(nextInstanceCount);
+    cursor = nextCursor;
   }
+
+
 }
 
 /// The sample application.
@@ -492,7 +503,13 @@ class Application {
   }
   List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
   bool autoAdjustInstanceCount = true;
-  bool useSimdPosing = true;
+  bool _useSimdPosing = true;
+  set useSimdPosing(bool r) {
+    _useSimdPosing = r;
+    controller.reset();
+  }
+  bool get useSimdPosing => _useSimdPosing;
+
   bool useSimdSkinning = true;
   bool _useGpuSkinning = true;
 
