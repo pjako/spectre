@@ -67,6 +67,21 @@ class ApplicationControls {
     _modelSelection = query(_modelSelectionId);
     _counter = query(_counterId);
     
+    _counter.onTransitionEnd.listen((_) {
+      _counter.attributes['data-count'] = _displayedInstanceCount.toString();
+      _counter.classes.remove("spin-down");
+      
+      new Future.delayed(const Duration(milliseconds: 100), () {
+        _instancesTransitioning = false;
+        if(_displayedInstanceCount != _instanceCount) {
+          _displayedInstanceCount = _instanceCount;
+          _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
+          _counter.classes.add("spin-down");
+          _instancesTransitioning = true;
+        }
+      });
+    });
+    
     // Hook up the instances 
     InputElement instanceCount = query(_instanceCountId);
     _application.instanceCount = int.parse(instanceCount.value);
@@ -107,11 +122,21 @@ class ApplicationControls {
     _controlContainer.classes.add(_hideClassName);
   }
   
+  bool _instancesTransitioning = false;
   int _instanceCount = 0;
+  int _displayedInstanceCount = 0;
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
-    _instanceCount = value;
-    _counter.innerHtml = value.toString(); 
+    if(_instanceCount != value) {
+      _instanceCount = value;
+      
+      if(!_instancesTransitioning && _displayedInstanceCount != _instanceCount) {
+        _displayedInstanceCount = _instanceCount;
+        _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
+        _counter.classes.add("spin-down");
+        _instancesTransitioning = true;
+      }
+    }
   }
 
   //---------------------------------------------------------------------
