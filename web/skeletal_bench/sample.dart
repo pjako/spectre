@@ -44,7 +44,7 @@ part 'ui.dart';
 // Application
 //---------------------------------------------------------------------
 
-typedef AdjustInstances(int count);
+typedef AdjustInstances(int count, bool reset);
 
 class InstanceCountController {
   final Stopwatch autoAdjustWatch = new Stopwatch()..start();
@@ -53,13 +53,14 @@ class InstanceCountController {
   final List<int> instanceHistory = new List<int>(4);
   int cursor = 0;
   int lastMs = 0;
-  const int targetMicros = 17900;
+  const int targetMicrosMin = 17900;
+  const int targetMicrosMax = 19000;
   int instanceCount;
   double continuousInstanceCount;
   InstanceCountController(this.setInstances, this.instanceCount) {
     continuousInstanceCount = instanceCount.toDouble();
     for (int i = 0; i < history.length; i++) {
-      history[i] = targetMicros;
+      history[i] = targetMicrosMin;
       instanceHistory[i] = instanceCount;
     }
   }
@@ -67,15 +68,17 @@ class InstanceCountController {
   int get previousCursor => (cursor-1) % history.length;
   int get nextCursor => (cursor+1) % history.length;
 
-  void reset() {
+  void reset(int count) {
+    instanceCount = count;
+    continuousInstanceCount = count.toDouble();
     for (int i = 0; i < history.length; i++) {
-      history[i] = targetMicros;
+      history[i] = targetMicrosMin;
       instanceHistory[i] = instanceCount;
     }
     cursor = 0;
     lastMs = 0;
+    setInstances(instanceCount, true);
   }
-
 
   void recordSample() {
     int ms = autoAdjustWatch.elapsedMicroseconds;
@@ -88,9 +91,9 @@ class InstanceCountController {
     lastMs = ms;
     history[cursor] = delta;
     instanceHistory[cursor] = instanceCount;
-    if (delta < targetMicros) {
+    if (delta < targetMicrosMax) {
       continuousInstanceCount = continuousInstanceCount + 0.2 * (1.0);
-    } else {
+    } else if (delta > targetMicrosMin) {
       continuousInstanceCount = continuousInstanceCount + 0.2 * (-1.0);
     }
     if (continuousInstanceCount < 1.0) {
@@ -98,7 +101,7 @@ class InstanceCountController {
     }
     int nextInstanceCount = continuousInstanceCount.floor();
     instanceCount = nextInstanceCount;
-    setInstances(nextInstanceCount);
+    setInstances(nextInstanceCount, false);
     cursor = nextCursor;
   }
 
@@ -439,12 +442,13 @@ class Application {
 
         // This forces the instances list to initialize now that we have the mesh loaded.
         instanceCount = _instanceCount;
-        flickerLightsToRadius(_lightRadius);
+        _flickerLightsBackOn();
 
         // Start the loop and show the UI
         _gameLoop.start();
-        _applicationControls.show();
-        controller = new InstanceCountController((count) {
+        controller = new InstanceCountController((count, reset) {
+          if(reset)
+            flickerLights();
           instanceCount = count;
         }, instanceCount);
       });
@@ -481,8 +485,9 @@ class Application {
   //---------------------------------------------------------------------
   // Properties
   //---------------------------------------------------------------------
-
-  int _instanceCount = 0;
+  
+  int _targetInstanceCount = 15;
+  int _instanceCount = 15;
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
     _instanceCount = value;
@@ -509,10 +514,14 @@ class Application {
 
   List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
   bool autoAdjustInstanceCount = true;
-  bool _useSimdPosing = true;
+  bool _useSimdPosing = false;
   set useSimdPosing(bool r) {
     _useSimdPosing = r;
-    controller.reset();
+    if(useSimdPosing)
+      _targetInstanceCount = instanceCount * 3;
+    else
+      _targetInstanceCount = (instanceCount / 3).toInt();
+     flickerLights();
   }
   bool get useSimdPosing => _useSimdPosing;
 
@@ -528,21 +537,43 @@ class Application {
   double _lightIntensity = 1.0;
   double _targetLightIntensity = 1.0;
   bool _lightFlickering = true;
+  bool _lightOff = false;
   
   double get lightIntensity => _lightIntensity;
   set lightIntensity(double value) {
     _targetLightIntensity = value;
   }
   
-  void flickerLightsToRadius(double radius, [Duration duration = const Duration(milliseconds: 1400)]) {
+  void flickerLights() {
+    _lightOff = true;
+    _applicationControls.pauseCounterUpdates = true;
+    _targetLightIntensity = 0.0;
+  }
+  
+  void _flickerLightsBackOn() {
     _lightFlickering = true;
-    
-    new Future.delayed(duration, () {
-      _lightRadius = radius;
+    _lightOff = false;
+    new Future.delayed(const Duration(milliseconds: 700), () {
       _lightFlickering = false;
       _lightIntensity = -10.0;
       _targetLightIntensity = 1.0;
+      _applicationControls.pauseCounterUpdates = false;
     });
+  }
+  
+  int _time = 0;
+  Math.Random _lightRandom = new Math.Random();
+  void _updateLights(double dt) {
+    if (_lightFlickering) {
+      _time += (dt * 100.0).toInt();
+      _lightIntensity = _lightRandom.nextDouble() * 1.5 * ((_time % 120) / 120).roundToDouble();
+    } else {
+      _lightIntensity += (_targetLightIntensity - _lightIntensity) * (_lightOff ? 0.1 : 0.05);
+      if(_lightOff && _lightIntensity < 0.001) {
+        controller.reset(_targetInstanceCount);
+        _flickerLightsBackOn();
+      }
+    }
   }
 
   bool get useGpuSkinning => _useGpuSkinning;
@@ -572,9 +603,6 @@ class Application {
   //---------------------------------------------------------------------
   // Public methods
   //---------------------------------------------------------------------
-  
-  int _time = 0;
-  Math.Random _lightRandom = new Math.Random();
   
   /// Updates the application.
   ///
@@ -628,12 +656,7 @@ class Application {
     // Copy the View matrix from the camera into the Float32List.
     _camera.copyViewMatrixIntoArray(_modelViewMatrixArray);
     
-    if (_lightFlickering) {
-      _time += (dt * 100.0).toInt();
-      _lightIntensity = _lightRandom.nextDouble() * 1.5 * ((_time % 120) / 120).roundToDouble();
-    } else {
-      _lightIntensity += (_targetLightIntensity - _lightIntensity) * 0.05;
-    }
+    _updateLights(dt);
   }
 
   /// Renders the scene.
@@ -797,11 +820,7 @@ void onResize(GameLoopHtml gameLoop) {
 ///
 /// Used to show/hide the options UI.
 void onPointerLockChange(GameLoopHtml gameLoop) {
-  if (gameLoop.pointerLock.locked) {
-    _applicationControls.hide();
-  } else {
-    _applicationControls.show();
-  }
+
 }
 
 /// Entrypoint for the application.
