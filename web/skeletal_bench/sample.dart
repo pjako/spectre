@@ -496,7 +496,7 @@ class Application {
       _applicationControls.instanceCount = value;
 
     if(value < instances.length) {
-      instances = instances.sublist(0, value);
+      //instances = instances.sublist(0, value);
       return;
     }
 
@@ -616,8 +616,8 @@ class Application {
     updateSw.start();
 
     // Update the mesh
-    for(SkinnedMeshInstance instance in instances) {
-      instance.update(dt, useSimdPosing);
+    for(int i = 0; i < instanceCount; ++i) {
+      instances[i].update(dt, useSimdPosing);
     }
 
     updateSw.stop();
