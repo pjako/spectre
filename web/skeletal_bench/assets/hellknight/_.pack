@@ -20,6 +20,18 @@
     "type":"json",
     "importArguments":{}
   },
+  "chest": {
+    "loadArguments":{},
+    "url":"chest.anim",
+    "type":"json",
+    "importArguments":{}
+  },
+  "stand": {
+    "loadArguments":{},
+    "url":"stand.anim",
+    "type":"json",
+    "importArguments":{}
+  },
   "bodyDiffuse": {
     "loadArguments":{},
     "name":"bodyDiffuse",
