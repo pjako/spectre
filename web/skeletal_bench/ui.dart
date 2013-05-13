@@ -30,10 +30,6 @@ class ApplicationControls {
   static String _controlContainerId = '#ui_wrap';
   /// Identifier for the container holding the model selection.
   static String _modelSelectionId = '#model_selection';
-  /// Identifier for the show skeleton checkbox.
-  static String _instanceCountId = '#instance_count';
-  /// Identifier for the Auto instance count checkbox.
-  static String _instanceAutoId = '#instance_auto';
   /// Identifier for the SIMD Posing checkbox.
   static String _poseSimdId = '#pose_simd';
   /// Identifier for the counter.
@@ -73,27 +69,11 @@ class ApplicationControls {
       
       new Future.delayed(const Duration(milliseconds: 100), () {
         _instancesTransitioning = false;
-        if(_displayedInstanceCount != _instanceCount) {
-          _displayedInstanceCount = _instanceCount;
-          _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
-          _counter.classes.add("spin-down");
-          _instancesTransitioning = true;
-        }
+        _updateCounter();
       });
     });
     
     // Hook up the instances 
-    InputElement instanceCount = query(_instanceCountId);
-    _application.instanceCount = int.parse(instanceCount.value);
-    instanceCount.onChange.listen((_) {
-      _application.instanceCount = int.parse(instanceCount.value);
-    });
-
-    InputElement instanceAuto = query(_instanceAutoId);
-    instanceAuto.onChange.listen((_) {
-      _application.autoAdjustInstanceCount = instanceAuto.checked;
-    });
-
     InputElement poseSimd = query(_poseSimdId);
     poseSimd.onChange.listen((_) {
       _application.useSimdPosing = poseSimd.checked;
@@ -103,23 +83,14 @@ class ApplicationControls {
   //---------------------------------------------------------------------
   // Public methods
   //---------------------------------------------------------------------
-  /// Show the controls.
-  ///
-  /// Uses a CSS animation to display the application controls.
-  void show() {
-    // Initially display is set as none
-    _controlContainer.style.display = 'block';
 
-    _controlContainer.classes.remove(_hideClassName);
-    _controlContainer.classes.add(_showClassName);
-  }
-
-  /// Hide the controls.
-  ///
-  /// Uses a CSS animation to hide the application controls.
-  void hide() {
-    _controlContainer.classes.remove(_showClassName);
-    _controlContainer.classes.add(_hideClassName);
+  bool _pauseCounterUpdates = true;
+  bool get pauseCounterUpdates => _pauseCounterUpdates;
+  set pauseCounterUpdates(bool value) {
+    if(_pauseCounterUpdates != value) {
+      _pauseCounterUpdates = value;
+      _updateCounter();
+    }
   }
   
   bool _instancesTransitioning = false;
@@ -129,13 +100,7 @@ class ApplicationControls {
   set instanceCount(int value) {
     if(_instanceCount != value) {
       _instanceCount = value;
-      
-      if(!_instancesTransitioning && _displayedInstanceCount != _instanceCount) {
-        _displayedInstanceCount = _instanceCount;
-        _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
-        _counter.classes.add("spin-down");
-        _instancesTransitioning = true;
-      }
+      _updateCounter();
     }
   }
 
@@ -163,6 +128,15 @@ class ApplicationControls {
 
     // Change the model being displayed
     _application.meshIndex = index;
+  }
+  
+  void _updateCounter() {
+    if(!_pauseCounterUpdates && !_instancesTransitioning && _displayedInstanceCount != _instanceCount) {
+      _displayedInstanceCount = _instanceCount;
+      _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
+      _counter.classes.add("spin-down");
+      _instancesTransitioning = true;
+    }
   }
 
   //---------------------------------------------------------------------

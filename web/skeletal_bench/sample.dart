@@ -443,7 +443,6 @@ class Application {
 
         // Start the loop and show the UI
         _gameLoop.start();
-        _applicationControls.show();
         controller = new InstanceCountController((count) {
           instanceCount = count;
         }, instanceCount);
@@ -509,7 +508,7 @@ class Application {
 
   List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
   bool autoAdjustInstanceCount = true;
-  bool _useSimdPosing = true;
+  bool _useSimdPosing = false;
   set useSimdPosing(bool r) {
     _useSimdPosing = r;
     controller.reset();
@@ -536,12 +535,14 @@ class Application {
   
   void flickerLightsToRadius(double radius, [Duration duration = const Duration(milliseconds: 1400)]) {
     _lightFlickering = true;
+    _applicationControls.pauseCounterUpdates = true;
     
     new Future.delayed(duration, () {
       _lightRadius = radius;
       _lightFlickering = false;
       _lightIntensity = -10.0;
       _targetLightIntensity = 1.0;
+      _applicationControls.pauseCounterUpdates = false;
     });
   }
 
@@ -797,11 +798,7 @@ void onResize(GameLoopHtml gameLoop) {
 ///
 /// Used to show/hide the options UI.
 void onPointerLockChange(GameLoopHtml gameLoop) {
-  if (gameLoop.pointerLock.locked) {
-    _applicationControls.hide();
-  } else {
-    _applicationControls.show();
-  }
+
 }
 
 /// Entrypoint for the application.
