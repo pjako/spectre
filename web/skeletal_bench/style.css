@@ -3,7 +3,7 @@ html, body {
 }
 
 body {
-  background-color: #F8F8F8;
+  background-color: #000;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
   font-weight: normal;
@@ -18,7 +18,7 @@ body {
   position:absolute;
   left:-175px;
   top:0px;
-  z-index:1;
+  z-index:2;
   transition:left 0.333s;
 }
 
@@ -136,11 +136,55 @@ canvas {
   z-index:1;
 }
 
-#instanceCount {
+#counter_wrap {
   position: absolute;
-  color: #ff0000;
-  font-size: 28px;
-  left: 50%;
-  top: 40px;
   z-index: 1;
+  width: 100%;
+}
+
+#counter-frame {
+  text-align: center;
+  margin: 1em auto;
+  width: 75px;
+  height: 72px;
+  border-style: solid;
+  border-radius: 5px;
+  border-width: 2px;
+  border-color: #DDD;
+  background: #333;
+  color: white;
+  font-size: 2.5em; 
+  font-weight: bold;
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, 
+    from(#222),
+    color-stop(0.15, #333),
+    color-stop(0.5, #444),
+    color-stop(0.85, #333),
+    to(#222));
+  box-shadow: inset 0 0 10px #000;
+  overflow: hidden;
+}
+
+#counter:before {
+  padding: 0.8em 0 0.8em 0;
+  display: block;
+  content: attr(data-count-next);
+}
+
+#counter:after {
+  padding: 0.8em 0 0.8em 0;
+  top: -100%;
+  display: block;
+  content: attr(data-count);
+}
+
+#counter {
+  position: relative;
+  top: -100%;
+  -webkit-transition: top 0s;  
+}
+
+#counter.spin-down {
+   top: 0;
+   -webkit-transition: top 0.7s;
 }

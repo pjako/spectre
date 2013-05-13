@@ -36,6 +36,8 @@ class ApplicationControls {
   static String _instanceAutoId = '#instance_auto';
   /// Identifier for the SIMD Posing checkbox.
   static String _poseSimdId = '#pose_simd';
+  /// Identifier for the counter.
+  static String _counterId = '#counter';
   /// Classname for an option
   static String _optionClassName = 'option';
   /// Classname for when the UI should be hidden.
@@ -57,13 +59,30 @@ class ApplicationControls {
   DivElement _controlContainer;
   /// [DivElement] containing the model selection.
   DivElement _modelSelection;
+  DivElement _counter;
 
   /// Creates an instance of the [ApplicationControls] class.
   ApplicationControls() {
     _controlContainer = query(_controlContainerId);
     _modelSelection = query(_modelSelectionId);
-
-    // Hook up the instances
+    _counter = query(_counterId);
+    
+    _counter.onTransitionEnd.listen((_) {
+      _counter.attributes['data-count'] = _displayedInstanceCount.toString();
+      _counter.classes.remove("spin-down");
+      
+      new Future.delayed(const Duration(milliseconds: 100), () {
+        _instancesTransitioning = false;
+        if(_displayedInstanceCount != _instanceCount) {
+          _displayedInstanceCount = _instanceCount;
+          _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
+          _counter.classes.add("spin-down");
+          _instancesTransitioning = true;
+        }
+      });
+    });
+    
+    // Hook up the instances 
     InputElement instanceCount = query(_instanceCountId);
     _application.instanceCount = int.parse(instanceCount.value);
     instanceCount.onChange.listen((_) {
@@ -101,6 +120,23 @@ class ApplicationControls {
   void hide() {
     _controlContainer.classes.remove(_showClassName);
     _controlContainer.classes.add(_hideClassName);
+  }
+  
+  bool _instancesTransitioning = false;
+  int _instanceCount = 0;
+  int _displayedInstanceCount = 0;
+  int get instanceCount => _instanceCount;
+  set instanceCount(int value) {
+    if(_instanceCount != value) {
+      _instanceCount = value;
+      
+      if(!_instancesTransitioning && _displayedInstanceCount != _instanceCount) {
+        _displayedInstanceCount = _instanceCount;
+        _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
+        _counter.classes.add("spin-down");
+        _instancesTransitioning = true;
+      }
+    }
   }
 
   //---------------------------------------------------------------------

@@ -17,8 +17,6 @@ attribute vec3 vNormal;
 uniform mat4 uModelViewMatrix;
 /// The Model-View-Projection matrix.
 uniform mat4 uModelViewProjectionMatrix;
-/// The normal matrix
-uniform mat4 uNormalMatrix;
 uniform mat4 uModelMatrix;
 
 //---------------------------------------------------------------------
