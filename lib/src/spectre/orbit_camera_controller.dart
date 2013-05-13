@@ -29,7 +29,7 @@ class OrbitCameraController extends CameraController {
   num accumDZ = 0.0;
 
   num yaw = 0.0;
-  num pitch = 0.0;
+  num pitch = 50.5;
   num radius = 100.0;
 
   num minYaw = -Math.PI * 0.25;
@@ -45,9 +45,7 @@ class OrbitCameraController extends CameraController {
   vec2 _momentum = new vec2.zero();
   num _momentumTime = 0;
 
-  OrbitCameraController() {
-
-  }
+  OrbitCameraController();
 
   void updateCamera(num dt, Camera cam) {
     if(accumDX != 0 || accumDY != 0) {
@@ -79,7 +77,7 @@ class OrbitCameraController extends CameraController {
     }
     return v;
   }
-  
+
   void _ZoomView(num dt, num zoomDelta) {
     radius = _clamp(radius + zoomDelta, minRadius, maxRadius);
     // TODO: Exponential zoom?
