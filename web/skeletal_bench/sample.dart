@@ -553,6 +553,7 @@ class Application {
   void _flickerLightsBackOn() {
     _lightFlickering = true;
     _lightOff = false;
+    _lightTime = 0;
     new Future.delayed(const Duration(milliseconds: 700), () {
       _lightFlickering = false;
       _lightIntensity = -10.0;
@@ -560,13 +561,13 @@ class Application {
       _applicationControls.pauseCounterUpdates = false;
     });
   }
-
-  int _time = 0;
+  
+  int _lightTime = 0;
   Math.Random _lightRandom = new Math.Random();
   void _updateLights(double dt) {
     if (_lightFlickering) {
-      _time += (dt * 100.0).toInt();
-      _lightIntensity = _lightRandom.nextDouble() * 1.5 * ((_time % 120) / 120).roundToDouble();
+      _lightTime += (dt * 100.0).toInt();
+      _lightIntensity = _lightRandom.nextDouble() * 1.5 * ((_lightTime % 60) / 60).roundToDouble();
     } else {
       _lightIntensity += (_targetLightIntensity - _lightIntensity) * (_lightOff ? 0.1 : 0.05);
       if(_lightOff && _lightIntensity < 0.001) {
