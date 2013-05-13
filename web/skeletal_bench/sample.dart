@@ -196,7 +196,7 @@ class Application {
   mat4 _modelViewProjectionMatrix;
   /// [Float32List] storage for the Model-View matrix.
   Float32List _modelViewMatrixArray;
-  /// [Float32List] storage for the Model-View-Projection matrix.
+  /// [Float32List] stoarage for the Model-View-Projection matrix.
   Float32List _modelViewProjectionMatrixArray;
 
   //---------------------------------------------------------------------
@@ -332,7 +332,7 @@ class Application {
     _camera = new Camera();
     _camera.zFar = 2000.0;
     _camera.position = new vec3(150.0, 60.0, 0.0);
-    _camera.focusPosition = new vec3(0.0, 60.0, 0.0);
+    _camera.focusPosition = new vec3(0.0, 40.0, 0.0);
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
@@ -485,13 +485,13 @@ class Application {
   //---------------------------------------------------------------------
   // Properties
   //---------------------------------------------------------------------
-  
+
   int _targetInstanceCount = 15;
   int _instanceCount = 15;
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
     _instanceCount = value;
-    
+
     if(_applicationControls != null)
       _applicationControls.instanceCount = value;
 
@@ -527,29 +527,29 @@ class Application {
 
   bool useSimdSkinning = true;
   bool _useGpuSkinning = true;
-  
+
   double _lightRadius = 75.0;
   double get lightRadius => _lightRadius;
   set lightRadius(double value) {
     _lightRadius = value;
   }
-  
+
   double _lightIntensity = 1.0;
   double _targetLightIntensity = 1.0;
   bool _lightFlickering = true;
   bool _lightOff = false;
-  
+
   double get lightIntensity => _lightIntensity;
   set lightIntensity(double value) {
     _targetLightIntensity = value;
   }
-  
+
   void flickerLights() {
     _lightOff = true;
     _applicationControls.pauseCounterUpdates = true;
     _targetLightIntensity = 0.0;
   }
-  
+
   void _flickerLightsBackOn() {
     _lightFlickering = true;
     _lightOff = false;
@@ -560,7 +560,7 @@ class Application {
       _applicationControls.pauseCounterUpdates = false;
     });
   }
-  
+
   int _time = 0;
   Math.Random _lightRandom = new Math.Random();
   void _updateLights(double dt) {
@@ -603,7 +603,7 @@ class Application {
   //---------------------------------------------------------------------
   // Public methods
   //---------------------------------------------------------------------
-  
+
   /// Updates the application.
   ///
   /// Uses the current change in time, [dt].
@@ -655,7 +655,7 @@ class Application {
 
     // Copy the View matrix from the camera into the Float32List.
     _camera.copyViewMatrixIntoArray(_modelViewMatrixArray);
-    
+
     _updateLights(dt);
   }
 
@@ -692,7 +692,7 @@ class Application {
 
     _graphicsContext.setConstant('uLightRadius', biggestRadius);
     _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
-    
+
     _graphicsContext.setVertexBuffers(0, [_floor.vertexArray]);
     _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
     _graphicsContext.setInputLayout(_floorInputLayout);
