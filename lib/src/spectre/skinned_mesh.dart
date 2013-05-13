@@ -313,26 +313,20 @@ class SkinnedMeshInstance {
     _currentAnimation = mesh._currentAnimation;
   }
 
-  void update(double dt, bool useSimd) {
-    currentTime += dt * _currentAnimation.timeScale;
-
+  bool update(double dt, bool useSimd) {
     if(_currentAnimation == null)
-      return; // TODO: In this case the posedSkeleton should be set to all identity matricies
+      return false; // TODO: In this case the posedSkeleton should be set to all identity matricies
 
-    // Wrap.
-    if (_currentAnimation.runTime == 0.0) {
-      _currentTime = 0.0;
-    } else {
-      while (_currentTime >= _currentAnimation.runTime) {
-        _currentTime -= _currentAnimation.runTime;
-      }
-    }
+    double oldCurrentTime = currentTime;
+    currentTime += dt * _currentAnimation.timeScale;
 
     if(useSimd) {
       mesh.skeletonPoserSIMD.pose(mesh.skeleton, _currentAnimation, posedSkeleton, _currentTime);
     } else {
       mesh.skeletonPoser.pose(mesh.skeleton, _currentAnimation, posedSkeleton, _currentTime);
     }
+
+    return oldCurrentTime > currentTime;
   }
 
   void skin(bool useSimd) {
