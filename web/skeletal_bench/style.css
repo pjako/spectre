@@ -165,27 +165,26 @@ canvas {
   overflow: hidden;
 }
 
-#counter:before {
-  padding: 0.8em 0 0.8em 0;
+#counter:before, #counter:after {
+  padding: 1.5em 0 1.5em 0;
   display: block;
   content: attr(data-count-next);
 }
 
-#counter:after {
-  padding: 0.8em 0 0.8em 0;
-  top: -100%;
-  display: block;
-  content: attr(data-count);
-}
-
 #counter {
   position: relative;
-  top: -100%;
+  margin-top: -2.6em; /* This is terrible, and I apologize for it. */
+  top: 0;
   -webkit-transition: top 0s;  
 }
 
 #counter.spin-down {
-   top: 0;
+   top: 100%;
+   -webkit-transition: top 0.5s;
+}
+
+#counter.spin-up {
+   top: -100%;
    -webkit-transition: top 0.5s;
 }
 

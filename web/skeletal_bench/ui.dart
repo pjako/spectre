@@ -64,8 +64,9 @@ class ApplicationControls {
     _counter = query(_counterId);
     
     _counter.onTransitionEnd.listen((_) {
-      _counter.attributes['data-count'] = _displayedInstanceCount.toString();
+      _counter.innerHtml = _displayedInstanceCount.toString();
       _counter.classes.remove("spin-down");
+      _counter.classes.remove("spin-up");
       
       new Future.delayed(const Duration(milliseconds: 100), () {
         _instancesTransitioning = false;
@@ -132,9 +133,13 @@ class ApplicationControls {
   
   void _updateCounter() {
     if(!_pauseCounterUpdates && !_instancesTransitioning && _displayedInstanceCount != _instanceCount) {
+      _counter.attributes['data-count-next'] = _instanceCount.toString();
+      //_counter.innerHtml = _instanceCount.toString();
+      if(_displayedInstanceCount < _instanceCount)
+        _counter.classes.add("spin-down");
+      else
+        _counter.classes.add("spin-up");
       _displayedInstanceCount = _instanceCount;
-      _counter.attributes['data-count-next'] = "${_displayedInstanceCount}";
-      _counter.classes.add("spin-down");
       _instancesTransitioning = true;
     }
   }
