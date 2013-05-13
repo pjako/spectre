@@ -361,7 +361,7 @@ class Application {
       _simpleShaderProgram = assetPack['normalMapShader'];
       _skinnedShaderProgram = assetPack['normalMapSkinnedShader'];
 
-      _floorTextures = [assetPack['floorSpecular'], assetPack['floorDiffuse'], assetPack['floorNormal']];
+      _floorTextures = [assetPack['floorDiffuse']];
 
       // Apply the shader program and set the locations of the textures
       _graphicsContext.setShaderProgram(_simpleShaderProgram);
@@ -395,7 +395,7 @@ class Application {
         // compilation so just query the actual values.
         // TODO: This may not align properly for both shaders
         int diffuseIndex  = _simpleShaderProgram.samplers['uDiffuse'].textureUnit;
-        int specularIndex = _simpleShaderProgram.samplers['uSpecular'].textureUnit;
+        //int specularIndex = _simpleShaderProgram.samplers['uSpecular'].textureUnit;
 
         for (int i = 0; i < modelCount; ++i) {
           // Get the matching AssetPack
@@ -421,7 +421,7 @@ class Application {
             List<Texture2D> meshTextures = new List<Texture2D>(3);
 
             meshTextures[diffuseIndex]  = modelPack[meshConfig['diffuse']];
-            meshTextures[specularIndex] = modelPack[meshConfig['specular']];
+            //meshTextures[specularIndex] = modelPack[meshConfig['specular']];
 
             modelTextures.add(meshTextures);
           }

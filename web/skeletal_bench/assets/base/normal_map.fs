@@ -10,7 +10,6 @@ uniform sampler2D uDiffuse;
 uniform sampler2D uNormal;
 /// The specular sampler.
 uniform sampler2D uSpecular;
-uniform float lightRadius;
 
 /// Light Intensity
 uniform float uLightIntensity;
@@ -60,23 +59,13 @@ vec4 ads()
   float distAttn = 1.0 / (d * d);
   
   vec3 n = normalize(normal);
-  vec3 s = normalize(lightDirection);
-  vec3 v = normalize(-position);
-  vec3 r = reflect(-s, n);
-
   vec4 kd4 = texture2D(uDiffuse, texCoord);
   vec3 kd = kd4.rgb;
-  vec3 ks = texture2D(uSpecular, texCoord).rgb;
 	
   vec3 result = distAttn * lightColor * kd * max(dot(lightDirection, n), 0.0);
 
   // Fake a light bounce from the floor
   result += distAttn * bounceColor * kd * max(dot(floorDirection, n), 0.0);
-	
-  /*vec3 result = distAttn * lightIntensity *
-    (ka +
-     kd * max(dot(s, n), 0.0) +
-     ks * pow(max(dot(r, v), 0.0), shininess));*/
 
   return vec4(result * uLightIntensity, kd4.a);
 }
