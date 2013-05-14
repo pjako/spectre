@@ -39,6 +39,7 @@ import 'package:spectre/spectre_asset_pack.dart';
 //---------------------------------------------------------------------
 
 part 'ui.dart';
+part 'easing.dart';
 
 //---------------------------------------------------------------------
 // Application
@@ -92,9 +93,9 @@ class InstanceCountController {
     history[cursor] = delta;
     instanceHistory[cursor] = instanceCount;
     if (delta < targetMicrosMax) {
-      continuousInstanceCount = continuousInstanceCount + 0.2 * (1.0);
+      continuousInstanceCount = continuousInstanceCount + 0.5 * (1.0);
     } else if (delta > targetMicrosMin) {
-      continuousInstanceCount = continuousInstanceCount + 0.2 * (-1.0);
+      continuousInstanceCount = continuousInstanceCount + 0.5 * (-1.0);
     }
     if (continuousInstanceCount < 1.0) {
       continuousInstanceCount = 1.0;
@@ -109,21 +110,35 @@ class InstanceCountController {
 class SampleMeshInstance extends SkinnedMeshInstance {
   int id;
   double scale = 0.0;
+  
+  double startScale = 0.0;
   double targetScale = 1.0;
+  
+  double scaleDuration = 0.5;
+  double scaleTime = 0.0;
   
   SampleMeshInstance(SkinnedMesh mesh, this.id) : super(mesh);
   
+  bool _visibleFlagged = true;
   bool get visible => scale > 0.001;
   set visible(bool value) {
+    if(_visibleFlagged == value)
+      return;
+    
+    _visibleFlagged = value;
+    startScale = scale;
     targetScale = value ? 1.0 : 0.0;
+    scaleTime = 0.0;
   }
   
   bool update(double dt, bool useSimd) {
-    // TODO: A nice easing algorithim would help here.
-    // Maybe something with a little bounce in it?
-    scale += (targetScale - scale) * 0.05;
+    if(scaleTime < scaleDuration) {
+      scaleTime += dt;
+      EasingFunction f = _visibleFlagged ? Ease.OutElastic : Ease.InQuad;
+      scale = EaseTo(scaleTime, scaleDuration, startScale, targetScale, f);
+    }
     
-    if(targetScale != 0.0)
+    if(_visibleFlagged)
       return super.update(dt, useSimd);
 
     return false;
