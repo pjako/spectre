@@ -85,7 +85,7 @@ class ApplicationControls {
   // Public methods
   //---------------------------------------------------------------------
 
-  bool _pauseCounterUpdates = true;
+  bool _pauseCounterUpdates = false;
   bool get pauseCounterUpdates => _pauseCounterUpdates;
   set pauseCounterUpdates(bool value) {
     if(_pauseCounterUpdates != value) {

@@ -1,8 +1,8 @@
 {
-  "normalMapShader":{
+  "simpleShader":{
     "loadArguments":{},
-    "name":"normalMapShader",
-    "url":"normal_map.shader",
+    "name":"simpleShader",
+    "url":"simple.shader",
     "type":"shaderProgram",
     "importArguments":{}
   },
@@ -16,21 +16,21 @@
   "floorDiffuse": {
     "loadArguments":{},
     "name":"floorDiffuse",
-    "url":"wand_boden_5.jpg",
+    "url":"Floor.png",
     "type":"tex2d",
     "importArguments":{}
   },
-  "floorNormal": {
+  "ceilingDiffuse": {
     "loadArguments":{},
     "name":"floorNormal",
-    "url":"wand_boden_normal.jpg",
+    "url":"Ceiling.png",
     "type":"tex2d",
     "importArguments":{}
   },
-  "floorSpecular": {
+  "wallDiffuse": {
     "loadArguments":{},
     "name":"floorSpecular",
-    "url":"wand_boden_5_bump.jpg",
+    "url":"Back.png",
     "type":"tex2d",
     "importArguments":{}
   },
