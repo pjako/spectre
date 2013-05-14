@@ -104,8 +104,47 @@ class InstanceCountController {
     setInstances(nextInstanceCount, false);
     cursor = nextCursor;
   }
+}
 
+class SampleMeshInstance extends SkinnedMeshInstance {
+  int id;
+  double scale = 0.0;
+  double targetScale = 1.0;
+  
+  SampleMeshInstance(SkinnedMesh mesh, this.id) : super(mesh);
+  
+  bool get visible => scale > 0.001;
+  set visible(bool value) {
+    targetScale = value ? 1.0 : 0.0;
+  }
+  
+  bool update(double dt, bool useSimd) {
+    // TODO: A nice easing algorithim would help here.
+    // Maybe something with a little bounce in it?
+    scale += (targetScale - scale) * 0.05;
+    
+    if(targetScale != 0.0)
+      return super.update(dt, useSimd);
 
+    return false;
+  }
+  
+  const num TAU = Math.PI * 2;
+  final num PHI = (Math.sqrt(5) + 1) / 2;
+  const int SCALE_FACTOR = 25;
+  
+  void getMatrix(Float32List out) {
+    final num theta = id * TAU / PHI;
+    final num r = Math.sqrt(id) * SCALE_FACTOR;
+
+    out[0] = 0.5 * scale;
+    out[5] = 0.5 * scale;
+    out[10] = 0.5 * scale;
+
+    out[12] = r * Math.cos(theta);
+    out[14] = -r * Math.sin(theta);
+    out[13] = -10.0;
+  }
 }
 
 /// The sample application.
@@ -213,11 +252,14 @@ class Application {
   /// The [InputLayout] of the mesh.
   InputLayout _inputLayout;
   InputLayout _skinnedInputLayout;
-  InputLayout _floorInputLayout;
+  InputLayout _roomInputLayout;
   /// The [SkinnedMesh]es being used by the application.
   List<SkinnedMesh> _meshes;
-  SingleArrayMesh _floor;
-  List<Texture2D> _floorTextures;
+  SingleArrayMesh _room;
+  int _roomVertCount;
+  List<Texture2D> _roomFloorTextures;
+  List<Texture2D> _roomCeilingTextures;
+  List<Texture2D> _roomWallTextures;
   /// The [Texture]s to use on the meshes.
   ///
   /// Each mesh and their respective submeshes have [Texture]s to be set within the
@@ -314,7 +356,7 @@ class Application {
     //
     // The ShaderProgram being used takes three textures, so create a list
     // containing the same SamplerState at all three locations.
-    _samplerState = new SamplerState.linearWrap('SamplerState', _graphicsDevice);
+    _samplerState = new SamplerState.linearClamp('SamplerState', _graphicsDevice);
     _samplers = [_samplerState, _samplerState, _samplerState];
 
     // By default the rendering pipeline has the depth buffer enabled and
@@ -336,7 +378,7 @@ class Application {
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
-    _cameraController.radius = 250.0;
+    _cameraController.radius = 400.0;
     _cameraController.maxRadius = 1000.0;
 
     // Create the mat4 holding the Model-View-Projection matrix
@@ -358,10 +400,12 @@ class Application {
       // retains the state so there isn't a need to set them each time the
       // program is run. In fact its a drain on performance if the constants
       // are set to the same value each run
-      _simpleShaderProgram = assetPack['normalMapShader'];
+      _simpleShaderProgram = assetPack['simpleShader'];
       _skinnedShaderProgram = assetPack['normalMapSkinnedShader'];
 
-      _floorTextures = [assetPack['floorSpecular'], assetPack['floorDiffuse'], assetPack['floorNormal']];
+      _roomFloorTextures = [assetPack['floorDiffuse']];
+      _roomCeilingTextures = [assetPack['ceilingDiffuse']];
+      _roomWallTextures = [assetPack['wallDiffuse']];
 
       // Apply the shader program and set the locations of the textures
       _graphicsContext.setShaderProgram(_simpleShaderProgram);
@@ -395,7 +439,7 @@ class Application {
         // compilation so just query the actual values.
         // TODO: This may not align properly for both shaders
         int diffuseIndex  = _simpleShaderProgram.samplers['uDiffuse'].textureUnit;
-        int specularIndex = _simpleShaderProgram.samplers['uSpecular'].textureUnit;
+        //int specularIndex = _simpleShaderProgram.samplers['uSpecular'].textureUnit;
 
         for (int i = 0; i < modelCount; ++i) {
           // Get the matching AssetPack
@@ -421,7 +465,7 @@ class Application {
             List<Texture2D> meshTextures = new List<Texture2D>(3);
 
             meshTextures[diffuseIndex]  = modelPack[meshConfig['diffuse']];
-            meshTextures[specularIndex] = modelPack[meshConfig['specular']];
+            //meshTextures[specularIndex] = modelPack[meshConfig['specular']];
 
             modelTextures.add(meshTextures);
           }
@@ -438,27 +482,26 @@ class Application {
         _skinnedInputLayout.shaderProgram = _skinnedShaderProgram;
         _skinnedInputLayout.mesh = _meshes[0];
 
-        _createFloor();
+        _createRoom();
 
         // This forces the instances list to initialize now that we have the mesh loaded.
         instanceCount = _instanceCount;
-        _flickerLightsBackOn();
 
         // Start the loop and show the UI
         _gameLoop.start();
         controller = new InstanceCountController((count, reset) {
-          if(reset)
-            flickerLights();
           instanceCount = count;
         }, instanceCount);
       });
     });
   }
 
-  void _createFloor() {
-    double size = 1500.0;
-    double uvScale = 25.0;
+  void _createRoom() {
+    double size = 512.0;
+    double height = 400.0;
+    double uvScale = 1.0;
     Float32List verts = new Float32List.fromList([
+      // Floor                                            
       size, 0.0, size,    uvScale, uvScale,   0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
@@ -466,37 +509,91 @@ class Application {
       -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0,-size,   0.0, 0.0,           0.0, 1.0, 0.0,
-    ]);
-    _floor = new SingleArrayMesh('FloorMesh', _graphicsDevice);
-    _floor.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
+      
+      // Ceiling
+      size, height, size,    uvScale, uvScale,   0.0, 1.0, 0.0,
+      -size, height, size,   0.0, uvScale,       0.0, 1.0, 0.0,
+      size, height, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
+      
+      -size, height, size,   0.0, uvScale,       0.0, 1.0, 0.0,
+      -size, height,-size,   0.0, 0.0,           0.0, 1.0, 0.0,
+      size, height, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
+      
+      // Wall, Back                                            
+      -size, height, size,    uvScale, 0.0,   0.0, 1.0, 0.0,
+      -size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
+      -size, height, -size,    0.0, 0.0,      0.0, 1.0, 0.0,
+      
+      -size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
+      -size, 0.0,-size,   0.0, uvScale,           0.0, 1.0, 0.0,
+      -size, height, -size,    0.0, 0.0,      0.0, 1.0, 0.0,
+      
+      // Wall, Front                                            
+      size, height, size,    uvScale, 0.0,   0.0, 1.0, 0.0,
+      size, height, -size,   0.0, 0.0,       0.0, 1.0, 0.0,
+      size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
 
-    _floor.attributes['vPosition'] = new SpectreMeshAttribute('vPosition', 'float', 3,
+      size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
+      size, height, -size,  0.0, 0.0,      0.0, 1.0, 0.0,
+      size, 0.0,-size,   0.0, uvScale,           0.0, 1.0, 0.0,
+      
+      // Wall, Right                                            
+      size, height, -size,    uvScale, 0.0,   0.0, 1.0, 0.0,
+      -size, height, -size,   0.0, 0.0,       0.0, 1.0, 0.0,
+      size, 0.0, -size,   uvScale, uvScale,       0.0, 1.0, 0.0,
+      
+      -size, height, -size,   0.0, 0.0,       0.0, 1.0, 0.0,
+      -size, 0.0,-size,   0.0, uvScale,           0.0, 1.0, 0.0,
+      size, 0.0, -size,   uvScale, uvScale,       0.0, 1.0, 0.0,
+      
+      // Wall, Left                                            
+      size, height, size,    uvScale, 0.0,   0.0, 1.0, 0.0,
+      size, 0.0, size,   uvScale, uvScale,       0.0, 1.0, 0.0,
+      -size, height, size,   0.0, 0.0,       0.0, 1.0, 0.0,
+
+      -size, height, size,   0.0, 0.0,       0.0, 1.0, 0.0,
+      size, 0.0, size,   uvScale, uvScale,       0.0, 1.0, 0.0,
+      -size, 0.0,size,   0.0, uvScale,           0.0, 1.0, 0.0,
+    ]);
+    
+    _roomVertCount = (verts.length/8.0).toInt();
+    _room = new SingleArrayMesh('FloorMesh', _graphicsDevice);
+    _room.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
+
+    _room.attributes['vPosition'] = new SpectreMeshAttribute('vPosition', 'float', 3,
         0, 32, false);
-    _floor.attributes['vTexCoord0'] = new SpectreMeshAttribute('vTexCoord0', 'float', 2,
+    _room.attributes['vTexCoord0'] = new SpectreMeshAttribute('vTexCoord0', 'float', 2,
         12, 32, false);
-    _floor.attributes['vNormal'] = new SpectreMeshAttribute('vNormal', 'float', 3,
+    _room.attributes['vNormal'] = new SpectreMeshAttribute('vNormal', 'float', 3,
         20, 32, false);
 
-    _floorInputLayout = new InputLayout('FloorInputLayout', _graphicsDevice);
-    _floorInputLayout.shaderProgram = _simpleShaderProgram;
-    _floorInputLayout.mesh = _floor;
+    _roomInputLayout = new InputLayout('FloorInputLayout', _graphicsDevice);
+    _roomInputLayout.shaderProgram = _simpleShaderProgram;
+    _roomInputLayout.mesh = _room;
   }
 
   //---------------------------------------------------------------------
   // Properties
   //---------------------------------------------------------------------
 
-  int _targetInstanceCount = 15;
   int _instanceCount = 15;
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
+    if(value > _instanceCount) {
+      for(int i = _instanceCount; i < Math.min(instances.length, value); ++i) {
+        instances[i].visible = true;
+      }
+    }
+    
     _instanceCount = value;
 
     if(_applicationControls != null)
       _applicationControls.instanceCount = value;
 
     if(value < instances.length) {
-      //instances = instances.sublist(0, value);
+      for(int i = value; i < instances.length; ++i) {
+        instances[i].visible = false;
+      }
       return;
     }
 
@@ -506,76 +603,26 @@ class Application {
     SkinnedMesh mesh = _meshes[meshIndex];
 
     while(instances.length < value) {
-      SkinnedMeshInstance instance = new SkinnedMeshInstance(mesh);
+      SampleMeshInstance instance = new SampleMeshInstance(mesh, instances.length);
       instance.currentTime = instances.length * 1.8; // Force every mesh to animate at different offsets
       instances.add(instance);
     }
   }
-
-  List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
+  
+  List<SampleMeshInstance> instances = new List<SampleMeshInstance>();
   bool autoAdjustInstanceCount = true;
   bool _useSimdPosing = false;
   set useSimdPosing(bool r) {
     _useSimdPosing = r;
-    if(useSimdPosing)
-      _targetInstanceCount = instanceCount * 3;
+    /*if(useSimdPosing)
+      _instanceCount = instanceCount * 3;
     else
-      _targetInstanceCount = (instanceCount / 3).toInt();
-     flickerLights();
+      _instanceCount = (instanceCount / 3).toInt();*/
   }
   bool get useSimdPosing => _useSimdPosing;
 
   bool useSimdSkinning = true;
   bool _useGpuSkinning = true;
-
-  double _lightRadius = 75.0;
-  double get lightRadius => _lightRadius;
-  set lightRadius(double value) {
-    _lightRadius = value;
-  }
-
-  double _lightIntensity = 1.0;
-  double _targetLightIntensity = 1.0;
-  bool _lightFlickering = true;
-  bool _lightOff = false;
-
-  double get lightIntensity => _lightIntensity;
-  set lightIntensity(double value) {
-    _targetLightIntensity = value;
-  }
-
-  void flickerLights() {
-    _lightOff = true;
-    _applicationControls.pauseCounterUpdates = true;
-    _targetLightIntensity = 0.0;
-  }
-
-  void _flickerLightsBackOn() {
-    _lightFlickering = true;
-    _lightOff = false;
-    _lightTime = 0;
-    new Future.delayed(const Duration(milliseconds: 700), () {
-      _lightFlickering = false;
-      _lightIntensity = -10.0;
-      _targetLightIntensity = 1.0;
-      _applicationControls.pauseCounterUpdates = false;
-    });
-  }
-  
-  int _lightTime = 0;
-  Math.Random _lightRandom = new Math.Random();
-  void _updateLights(double dt) {
-    if (_lightFlickering) {
-      _lightTime += (dt * 100.0).toInt();
-      _lightIntensity = _lightRandom.nextDouble() * 1.5 * ((_lightTime % 60) / 60).roundToDouble();
-    } else {
-      _lightIntensity += (_targetLightIntensity - _lightIntensity) * (_lightOff ? 0.1 : 0.05);
-      if(_lightOff && _lightIntensity < 0.001) {
-        controller.reset(_targetInstanceCount);
-        _flickerLightsBackOn();
-      }
-    }
-  }
 
   bool get useGpuSkinning => _useGpuSkinning;
   set useGpuSkinning(bool value) {
@@ -616,8 +663,8 @@ class Application {
     updateSw.start();
 
     // Update the mesh
-    for(int i = 0; i < instanceCount; ++i) {
-      instances[i].update(dt, useSimdPosing);
+    for(int i = 0; i < instances.length; ++i) {
+      instances[i].update(dt, useSimdPosing); // Won't animate if the mesh has had visible set to false
     }
 
     updateSw.stop();
@@ -656,8 +703,6 @@ class Application {
 
     // Copy the View matrix from the camera into the Float32List.
     _camera.copyViewMatrixIntoArray(_modelViewMatrixArray);
-
-    _updateLights(dt);
   }
 
   /// Renders the scene.
@@ -672,10 +717,6 @@ class Application {
     );
     _graphicsContext.clearDepthBuffer(1.0);
 
-    const num TAU = Math.PI * 2;
-    final num PHI = (Math.sqrt(5) + 1) / 2;
-    const int SCALE_FACTOR = 25;
-    final biggestRadius = Math.sqrt(instanceCount) * SCALE_FACTOR;
     // Reset the graphics context
     _graphicsContext.reset();
 
@@ -691,12 +732,9 @@ class Application {
     _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
 
-    _graphicsContext.setConstant('uLightRadius', biggestRadius);
-    _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
-
-    _graphicsContext.setVertexBuffers(0, [_floor.vertexArray]);
+    _graphicsContext.setVertexBuffers(0, [_room.vertexArray]);
     _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
-    _graphicsContext.setInputLayout(_floorInputLayout);
+    _graphicsContext.setInputLayout(_roomInputLayout);
 
     modelMatrix[0] = 1.0;
     modelMatrix[5] = 1.0;
@@ -708,20 +746,25 @@ class Application {
 
     _graphicsContext.setConstant('uModelMatrix', modelMatrix);
 
-    _graphicsContext.setTextures(0, _floorTextures);
+    _graphicsContext.setTextures(0, _roomFloorTextures);
     _graphicsContext.draw(6, 0);
+    
+    _graphicsContext.setTextures(0, _roomCeilingTextures);
+    _graphicsContext.draw(6, 6);
+    
+    _graphicsContext.setTextures(0, _roomWallTextures);
+    _graphicsContext.draw(24, 12);
 
     // Set the shader program
     if(useGpuSkinning) {
       _graphicsContext.setShaderProgram(_skinnedShaderProgram);
-      _graphicsContext.setConstant('uLightRadius', biggestRadius);
       _graphicsContext.setConstant('uModelViewMatrix', _modelViewMatrixArray);
       _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
-      _graphicsContext.setConstant('uLightIntensity', _lightIntensity);
     }
 
-    for (int instance = 0; instance < instanceCount; instance++) {
-      SkinnedMeshInstance meshInstance = instances[instance];
+    for (int instance = 0; instance < instances.length; instance++) {
+      SampleMeshInstance meshInstance = instances[instance];
+      if(!meshInstance.visible) { break; }
       SkinnedMesh mesh = meshInstance.mesh;
       _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
       _graphicsContext.setIndexBuffer(mesh.indexArray);
@@ -734,18 +777,8 @@ class Application {
         meshInstance.skin(useSimdSkinning);
         _graphicsContext.setInputLayout(_inputLayout);
       }
-
-      final num theta = instance * TAU / PHI;
-      final num r = Math.sqrt(instance) * SCALE_FACTOR;
-
-      modelMatrix[0] = 0.5;
-      modelMatrix[5] = 0.5;
-      modelMatrix[10] = 0.5;
-
-      modelMatrix[12] = r * Math.cos(theta);
-      modelMatrix[14] = -r * Math.sin(theta);
-      modelMatrix[13] = -10.0;
-
+      
+      meshInstance.getMatrix(modelMatrix);
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
 
       // Draw each part of the mesh
