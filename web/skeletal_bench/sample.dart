@@ -104,8 +104,47 @@ class InstanceCountController {
     setInstances(nextInstanceCount, false);
     cursor = nextCursor;
   }
+}
 
+class SampleMeshInstance extends SkinnedMeshInstance {
+  int id;
+  double scale = 0.0;
+  double targetScale = 1.0;
+  
+  SampleMeshInstance(SkinnedMesh mesh, this.id) : super(mesh);
+  
+  bool get visible => scale > 0.001;
+  set visible(bool value) {
+    targetScale = value ? 1.0 : 0.0;
+  }
+  
+  bool update(double dt, bool useSimd) {
+    // TODO: A nice easing algorithim would help here.
+    // Maybe something with a little bounce in it?
+    scale += (targetScale - scale) * 0.05;
+    
+    if(targetScale != 0.0)
+      return super.update(dt, useSimd);
 
+    return false;
+  }
+  
+  const num TAU = Math.PI * 2;
+  final num PHI = (Math.sqrt(5) + 1) / 2;
+  const int SCALE_FACTOR = 25;
+  
+  void getMatrix(Float32List out) {
+    final num theta = id * TAU / PHI;
+    final num r = Math.sqrt(id) * SCALE_FACTOR;
+
+    out[0] = 0.5 * scale;
+    out[5] = 0.5 * scale;
+    out[10] = 0.5 * scale;
+
+    out[12] = r * Math.cos(theta);
+    out[14] = -r * Math.sin(theta);
+    out[13] = -10.0;
+  }
 }
 
 /// The sample application.
@@ -540,13 +579,21 @@ class Application {
   int _instanceCount = 15;
   int get instanceCount => _instanceCount;
   set instanceCount(int value) {
+    if(value > _instanceCount) {
+      for(int i = _instanceCount; i < Math.min(instances.length, value); ++i) {
+        instances[i].visible = true;
+      }
+    }
+    
     _instanceCount = value;
 
     if(_applicationControls != null)
       _applicationControls.instanceCount = value;
 
     if(value < instances.length) {
-      //instances = instances.sublist(0, value);
+      for(int i = value; i < instances.length; ++i) {
+        instances[i].visible = false;
+      }
       return;
     }
 
@@ -556,13 +603,13 @@ class Application {
     SkinnedMesh mesh = _meshes[meshIndex];
 
     while(instances.length < value) {
-      SkinnedMeshInstance instance = new SkinnedMeshInstance(mesh);
+      SampleMeshInstance instance = new SampleMeshInstance(mesh, instances.length);
       instance.currentTime = instances.length * 1.8; // Force every mesh to animate at different offsets
       instances.add(instance);
     }
   }
-
-  List<SkinnedMeshInstance> instances = new List<SkinnedMeshInstance>();
+  
+  List<SampleMeshInstance> instances = new List<SampleMeshInstance>();
   bool autoAdjustInstanceCount = true;
   bool _useSimdPosing = false;
   set useSimdPosing(bool r) {
@@ -616,8 +663,8 @@ class Application {
     updateSw.start();
 
     // Update the mesh
-    for(int i = 0; i < instanceCount; ++i) {
-      instances[i].update(dt, useSimdPosing);
+    for(int i = 0; i < instances.length; ++i) {
+      instances[i].update(dt, useSimdPosing); // Won't animate if the mesh has had visible set to false
     }
 
     updateSw.stop();
@@ -670,9 +717,6 @@ class Application {
     );
     _graphicsContext.clearDepthBuffer(1.0);
 
-    const num TAU = Math.PI * 2;
-    final num PHI = (Math.sqrt(5) + 1) / 2;
-    const int SCALE_FACTOR = 25;
     // Reset the graphics context
     _graphicsContext.reset();
 
@@ -718,8 +762,9 @@ class Application {
       _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
     }
 
-    for (int instance = 0; instance < instanceCount; instance++) {
-      SkinnedMeshInstance meshInstance = instances[instance];
+    for (int instance = 0; instance < instances.length; instance++) {
+      SampleMeshInstance meshInstance = instances[instance];
+      if(!meshInstance.visible) { break; }
       SkinnedMesh mesh = meshInstance.mesh;
       _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
       _graphicsContext.setIndexBuffer(mesh.indexArray);
@@ -732,18 +777,8 @@ class Application {
         meshInstance.skin(useSimdSkinning);
         _graphicsContext.setInputLayout(_inputLayout);
       }
-
-      final num theta = instance * TAU / PHI;
-      final num r = Math.sqrt(instance) * SCALE_FACTOR;
-
-      modelMatrix[0] = 0.5;
-      modelMatrix[5] = 0.5;
-      modelMatrix[10] = 0.5;
-
-      modelMatrix[12] = r * Math.cos(theta);
-      modelMatrix[14] = -r * Math.sin(theta);
-      modelMatrix[13] = -10.0;
-
+      
+      meshInstance.getMatrix(modelMatrix);
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
 
       // Draw each part of the mesh
