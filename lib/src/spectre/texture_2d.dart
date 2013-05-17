@@ -21,8 +21,7 @@
 part of spectre;
 
 /// Texture2D defines the storage for a 2D texture including Mipmaps
-/// Create using [Device.createTexture2D]
-/// Set using [immediateContext.setTextures]
+/// Set using [GraphicsContext.setTextures]
 /// NOTE: Unlike OpenGL, Spectre textures do not describe how they are sampled
 class Texture2D extends SpectreTexture {
   bool _loadError = false;

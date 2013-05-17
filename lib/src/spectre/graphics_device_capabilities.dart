@@ -80,7 +80,8 @@ class GraphicsDeviceCapabilities {
   bool _floatTextures;
   /// Whether half-floating point textures are available.
   bool _halfFloatTextures;
-  /// Whether standard derivatives (dFdx, dFdy, fwidth) are available in the fragment shader.
+  /// Whether standard derivatives (dFdx, dFdy, fwidth) are available in the
+  /// fragment shader.
   bool _standardDerivatives;
   /// Whether vertex array objects are available.
   bool _vertexArrayObjects;
@@ -111,7 +112,7 @@ class GraphicsDeviceCapabilities {
   // Construction
   //---------------------------------------------------------------------
 
-  /// Queries the device capabilities in the [WebGLRenderingContext].
+  /// Queries the device capabilities in the [WebGL.RenderingContext].
   GraphicsDeviceCapabilities._fromContext(WebGL.RenderingContext gl) {
     _queryDeviceContext(gl);
     _queryDeviceInfo(gl);
@@ -163,7 +164,8 @@ class GraphicsDeviceCapabilities {
   bool get hasFloatTextures => _floatTextures;
   /// Whether half-floating point textures are available.
   bool get hasHalfFloatTextures => _halfFloatTextures;
-  /// Whether standard derivatives (dFdx, dFdy, fwidth) are available in the fragment shader.
+  /// Whether standard derivatives (dFdx, dFdy, fwidth) are available in the
+  /// fragment shader.
   bool get hasStandardDerivatives => _standardDerivatives;
   /// Whether vertex array objects are available.
   bool get hasVertexArrayObjects => _vertexArrayObjects;
@@ -237,7 +239,7 @@ WEBGL_lose_context: $_loseContext
         ''';
   }
 
-  /// Queries context info using the [WebGLRenderingContext].
+  /// Queries context info using the [WebGL.RenderingContext].
   void _queryDeviceContext(WebGL.RenderingContext gl) {
     WebGL.ContextAttributes attributes = gl.getContextAttributes();
 
@@ -245,22 +247,25 @@ WEBGL_lose_context: $_loseContext
     _stencilBuffer = attributes.stencil;
   }
 
-  /// Queries device info using the [WebGLRenderingContext].
+  /// Queries device info using the [WebGL.RenderingContext].
   void _queryDeviceInfo(WebGL.RenderingContext gl) {
     _textureUnits = gl.getParameter(WebGL.MAX_TEXTURE_IMAGE_UNITS);
-    _vertexShaderTextureUnits = gl.getParameter(WebGL.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+    _vertexShaderTextureUnits =
+        gl.getParameter(WebGL.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
     _maxTextureSize = gl.getParameter(WebGL.MAX_TEXTURE_SIZE);
     _maxCubeMapTextureSize = gl.getParameter(WebGL.MAX_CUBE_MAP_TEXTURE_SIZE);
     _maxVertexAttribs = gl.getParameter(WebGL.MAX_VERTEX_ATTRIBS);
     _maxVaryingVectors = gl.getParameter(WebGL.MAX_VARYING_VECTORS);
-    _maxVertexShaderUniforms = gl.getParameter(WebGL.MAX_VERTEX_UNIFORM_VECTORS);
-    _maxFragmentShaderUniforms = gl.getParameter(WebGL.MAX_FRAGMENT_UNIFORM_VECTORS);
+    _maxVertexShaderUniforms =
+        gl.getParameter(WebGL.MAX_VERTEX_UNIFORM_VECTORS);
+    _maxFragmentShaderUniforms =
+        gl.getParameter(WebGL.MAX_FRAGMENT_UNIFORM_VECTORS);
 
     _depthBufferSize = gl.getParameter(WebGL.DEPTH_BITS);
     _stencilBufferSize = gl.getParameter(WebGL.STENCIL_BITS);
   }
 
-  /// Queries extensions using the [WebGLRenderingContext].
+  /// Queries extensions using the [WebGL.RenderingContext].
   void _queryExtensionInfo(WebGL.RenderingContext gl) {
     // Approved
     _floatTextures = _hasExtension(gl, 'OES_texture_float');
@@ -288,7 +293,8 @@ WEBGL_lose_context: $_loseContext
     // Draft
     _compressedTextureATC = _hasExtension(gl, 'WEBGL_compressed_texture_atc');
     _instancedArrays = _hasExtension(gl, 'ANGLE_instanced_arrays');
-    _compressedTexturePVRTC = _hasExtension(gl, 'WEBGL_compressed_texture_pvrtc');
+    _compressedTexturePVRTC =
+        _hasExtension(gl, 'WEBGL_compressed_texture_pvrtc');
     _multipleRenderTargets = _hasExtension(gl, 'EXT_draw_buffers');
   }
 
@@ -296,12 +302,13 @@ WEBGL_lose_context: $_loseContext
   // Class methods
   //---------------------------------------------------------------------
 
-  /// Queries the [WebGLRenderingContext] to see if the given extension is available.
+  /// Queries the [WebGL.RenderingContext] to see if the given extension is
+  /// available.
   static bool _hasExtension(WebGL.RenderingContext gl, String name) {
     return _getExtension(gl, name) != null;
   }
 
-  /// Queries the [WebGLRenderingContext] to retrieve the given extension.
+  /// Queries the [WebGL.RenderingContext] to retrieve the given extension.
   ///
   /// Returns [null] if the extension is not supported.
   static Object _getExtension(WebGL.RenderingContext gl, String name) {

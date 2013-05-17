@@ -105,9 +105,10 @@ class GraphicsDevice {
 
   /// Initializes an instance of the [GraphicsDevice] class.
   ///
-  /// A [WebGLRenderingContext] is created from the given [surface]. Additionally an
-  /// optional instance of [GraphicsDeviceConfig] can be passed in to control the creation
-  /// of the underlying frame buffer.
+  /// A [WebGL.RenderingContext] is created from the given [surface].
+  /// Additionally an
+  /// optional instance of [GraphicsDeviceConfig] can be passed in to control
+  /// the creation of the underlying frame buffer.
   GraphicsDevice(CanvasElement surface, [GraphicsDeviceConfig config = null]) {
     assert(surface != null);
     _surface = surface;

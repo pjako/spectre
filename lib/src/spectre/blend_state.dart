@@ -20,18 +20,15 @@
 
 part of spectre;
 
-/// BlendState controls how output from your fragment shader is blended onto the framebuffer
-/// Create using [Device.createBlendState]
-/// Set using [ImmediateContext.setBlendState]
+/// BlendState controls how output from your fragment shader is blended onto
+/// the framebuffer. Set using [GraphicsContext.setBlendState].
 class BlendState extends DeviceChild {
   //---------------------------------------------------------------------
   // Serialization names
   //---------------------------------------------------------------------
 
-  /// Serialization name for [blendEnabled].
+  /// Serialization name for [enabled].
   static const String _blendEnabledName = 'enabled';
-  /// Serialization name for [blendFactor].
-  static const String _blendFactorName = 'blendFactor';
   /// Serialization name for [blendFactorRed].
   static const String _blendFactorRedName = 'blendFactorRed';
   /// Serialization name for [blendFactorGreen].
@@ -52,8 +49,6 @@ class BlendState extends DeviceChild {
   static const String _colorDestinationBlendName = 'colorDestinationBlend';
   /// Serialization name for [colorSourceBlend].
   static const String _colorSourceBlendName = 'colorSourceBlend';
-  /// Serialization name for [colorWriteChannels].
-  static const String _colorWriteChannelsName = 'colorWriteChannels';
   /// Serialization name for [writeRenderTargetRed].
   static const String _writeRenderTargetRedName = 'writeRenderTargetRed';
   /// Serialization name for [writeRenderTargetGreen].
@@ -80,16 +75,17 @@ class BlendState extends DeviceChild {
   double _blendFactorAlpha = 1.0;
 
   /// The arithmetic operation when blending alpha values.
-  /// The default is [BlendFunction.Add].
+  /// The default is [BlendOperation.Add].
   int _alphaBlendOperation = BlendOperation.Add;
-  /// The blend factor for the destination alpha; the percentage of the destination alpha included in the result.
+  /// The blend factor for the destination alpha; the percentage of the
+  /// destination alpha included in the result.
   /// The default is [Blend.One].
   int _alphaDestinationBlend = Blend.One;
   /// The alpha blend factor.
   /// The default is [Blend.One].
   int _alphaSourceBlend = Blend.One;
   /// The arithmetic operation when blending color values.
-  /// The default is [BlendFunction.Add].
+  /// The default is [BlendOperation.Add].
   int _colorBlendOperation = BlendOperation.Add;
   /// The blend factor for the destination color.
   /// The default is [Blend.One].
@@ -115,8 +111,9 @@ class BlendState extends DeviceChild {
   BlendState(String name, GraphicsDevice device)
     : super._internal(name, device);
 
-  /// Initializes an instance of the BlendState class with settings for additive blend.
-  /// This adds the destination data to the source data without using alpha.
+  /// Initializes an instance of the BlendState class with settings for
+  /// additive blend. This adds the destination data to the source data without
+  /// using alpha.
   BlendState.additive(String name, GraphicsDevice device)
     : super._internal(name, device)
     , _alphaDestinationBlend = Blend.One
@@ -124,8 +121,8 @@ class BlendState extends DeviceChild {
     , _colorDestinationBlend = Blend.One
     , _colorSourceBlend = Blend.SourceAlpha;
 
-  /// Initializes an intance of the BlendState class with settings for alpha blend.
-  /// This blends the source and destination data using alpha.
+  /// Initializes an intance of the BlendState class with settings for alpha
+  /// blend. This blends the source and destination data using alpha.
   BlendState.alphaBlend(String name, GraphicsDevice device)
     : super._internal(name, device)
     , _alphaDestinationBlend = Blend.InverseSourceAlpha
@@ -133,9 +130,9 @@ class BlendState extends DeviceChild {
     , _colorDestinationBlend = Blend.InverseSourceAlpha
     , _colorSourceBlend = Blend.One;
 
-  /// Initializes an instance of the BlendState class with settings for blending with non-premultipled alpha.
-  /// This blends source and destination data by using alpha while assuming the
-  /// color data contains no alpha information.
+  /// Initializes an instance of the BlendState class with settings for blending
+  /// with non-premultipled alpha. This blends source and destination data by
+  /// using alpha while assuming the color data contains no alpha information.
   BlendState.nonPremultiplied(String name, GraphicsDevice device)
     : super._internal(name, device)
     , _alphaDestinationBlend = Blend.InverseSourceAlpha
@@ -143,8 +140,8 @@ class BlendState extends DeviceChild {
     , _colorDestinationBlend = Blend.InverseSourceAlpha
     , _colorSourceBlend = Blend.SourceAlpha;
 
-  /// Initializes an instance of the BlendState class with settings for opaque blend.
-  /// This overwrites the source with the destination data.
+  /// Initializes an instance of the BlendState class with settings for opaque
+  /// blend. This overwrites the source with the destination data.
   BlendState.opaque(String name, GraphicsDevice device)
     : super._internal(name, device)
     , _enabled = false
@@ -163,7 +160,6 @@ class BlendState extends DeviceChild {
 
   /// The red component of the blend factor for alpha blending.
   /// Throws [ArgumentError] if [value] is not in the range [0, 1].
-  double get blendFactorRed => _blendFactorRed;
   set blendFactorRed(double value) {
     if ((value >= 0.0) && (value <= 1.0)) {
       _blendFactorRed = value;
@@ -173,10 +169,10 @@ class BlendState extends DeviceChild {
 
     throw new ArgumentError('blendFactorRed must be in the range [0, 1]');
   }
+  double get blendFactorRed => _blendFactorRed;
 
   /// The green component of the blend factor for alpha blending.
   /// Throws [ArgumentError] if [value] is not in the range [0, 1].
-  double get blendFactorGreen => _blendFactorGreen;
   set blendFactorGreen(double value) {
     if ((value >= 0.0) && (value <= 1.0)) {
       _blendFactorGreen = value;
@@ -185,10 +181,11 @@ class BlendState extends DeviceChild {
 
     throw new ArgumentError('blendFactorGreen must be in the range [0, 1]');
   }
+  double get blendFactorGreen => _blendFactorGreen;
+
 
   /// The blue component of the blend factor for alpha blending.
   /// Throws [ArgumentError] if [value] is not in the range [0, 1].
-  double get blendFactorBlue => _blendFactorBlue;
   set blendFactorBlue(double value) {
     if ((value >= 0.0) && (value <= 1.0)) {
       _blendFactorBlue = value;
@@ -197,10 +194,11 @@ class BlendState extends DeviceChild {
 
     throw new ArgumentError('blendFactorGreen must be in the range [0, 1]');
   }
+  double get blendFactorBlue => _blendFactorBlue;
+
 
   /// The alpha component of the blend factor for alpha blending.
   /// Throws [ArgumentError] if [value] is not in the range [0, 1].
-  double get blendFactorAlpha => _blendFactorAlpha;
   set blendFactorAlpha(double value) {
     if ((value >= 0.0) && (value <= 1.0)) {
       _blendFactorAlpha = value;
@@ -209,11 +207,12 @@ class BlendState extends DeviceChild {
 
     throw new ArgumentError('blendFactorGreen must be in the range [0, 1]');
   }
+  double get blendFactorAlpha => _blendFactorAlpha;
+
 
   /// The arithmetic operation when blending alpha values.
-  /// The default is [BlendFunction.Add].
-  /// Throws [ArgumentError] if the [value] is not an enumeration within [BlendOperation].
-  int get alphaBlendOperation => _alphaBlendOperation;
+  /// The default is [BlendOperation.Add]. Throws [ArgumentError] if the
+  /// [value] is not an enumeration within [BlendOperation].
   set alphaBlendOperation(int value) {
     if (!BlendOperation.isValid(value)) {
       throw new ArgumentError('alphaBlendOperation must be an enumeration within BlendOperation.');
@@ -221,11 +220,13 @@ class BlendState extends DeviceChild {
 
     _alphaBlendOperation = value;
   }
+  int get alphaBlendOperation => _alphaBlendOperation;
 
-  /// The blend factor for the destination alpha; the percentage of the destination alpha included in the result.
-  /// The default is [Blend.One].
-  /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
-  int get alphaDestinationBlend => _alphaDestinationBlend;
+
+  /// The blend factor for the destination alpha; the percentage of the
+  /// destination alpha included in the result. The default is [Blend.One].
+  /// Throws [ArgumentError] if the [value] is not an enumeration within
+  /// [Blend].
   set alphaDestinationBlend(int value) {
     if (!Blend.isValid(value)) {
       throw new ArgumentError('alphaDestinationBlend must be an enumeration within Blend.');
@@ -233,11 +234,13 @@ class BlendState extends DeviceChild {
 
     _alphaDestinationBlend = value;
   }
+  int get alphaDestinationBlend => _alphaDestinationBlend;
+
 
   /// The alpha blend factor.
   /// The default is [Blend.One].
-  /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
-  int get alphaSourceBlend => _alphaSourceBlend;
+  /// Throws [ArgumentError] if the [value] is not an enumeration within
+  /// [Blend].
   set alphaSourceBlend(int value) {
     if (!Blend.isValid(value)) {
       throw new ArgumentError('alphaSourceBlend must be an enumeration within Blend.');
@@ -245,11 +248,13 @@ class BlendState extends DeviceChild {
 
     _alphaSourceBlend = value;
   }
+  int get alphaSourceBlend => _alphaSourceBlend;
+
 
   /// The arithmetic operation when blending color values.
-  /// The default is [BlendFunction.Add].
-  /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
-  int get colorBlendOperation => _colorBlendOperation;
+  /// The default is [BlendOperation.Add].
+  /// Throws [ArgumentError] if the [value] is not an enumeration within
+  /// [Blend].
   set colorBlendOperation(int value) {
     if (!BlendOperation.isValid(value)) {
       throw new ArgumentError('colorBlendOperation must be an enumeration within BlendOperation.');
@@ -257,11 +262,11 @@ class BlendState extends DeviceChild {
 
     _colorBlendOperation = value;
   }
+  int get colorBlendOperation => _colorBlendOperation;
 
   /// The blend factor for the destination color.
   /// The default is [Blend.One].
   /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
-  int get colorDestinationBlend => _colorDestinationBlend;
   set colorDestinationBlend(int value) {
     if (!Blend.isValid(value)) {
       throw new ArgumentError('colorDestinationBlend must be an enumeration within Blend.');
@@ -269,11 +274,12 @@ class BlendState extends DeviceChild {
 
     _colorDestinationBlend = value;
   }
+  int get colorDestinationBlend => _colorDestinationBlend;
+
 
   /// The blend factor for the source color.
   /// The default is Blend.One.
   /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
-  int get colorSourceBlend => _colorSourceBlend;
   set colorSourceBlend(int value) {
     if (!Blend.isValid(value)) {
       throw new ArgumentError('colorSourceBlend must be an enumeration within Blend.');
@@ -281,6 +287,8 @@ class BlendState extends DeviceChild {
 
     _colorSourceBlend = value;
   }
+  int get colorSourceBlend => _colorSourceBlend;
+
 
   /// Whether the red channel is enabled for writing during color blending.
   bool get writeRenderTargetRed => _writeRenderTargetRed;
@@ -313,13 +321,19 @@ class BlendState extends DeviceChild {
     json[_blendFactorBlueName]  = _blendFactorBlue;
     json[_blendFactorAlphaName] = _blendFactorAlpha;
 
-    json[_alphaBlendOperationName]   = BlendOperation.stringify(_alphaBlendOperation);
-    json[_alphaDestinationBlendName] = Blend.stringify(_alphaDestinationBlend);
-    json[_alphaSourceBlendName]      = Blend.stringify(_alphaSourceBlend);
+    json[_alphaBlendOperationName]   =
+        BlendOperation.stringify(_alphaBlendOperation);
+    json[_alphaDestinationBlendName] =
+        Blend.stringify(_alphaDestinationBlend);
+    json[_alphaSourceBlendName]      =
+        Blend.stringify(_alphaSourceBlend);
 
-    json[_colorBlendOperationName]   = BlendOperation.stringify(_colorBlendOperation);
-    json[_colorDestinationBlendName] = Blend.stringify(_colorDestinationBlend);
-    json[_colorSourceBlendName]      = Blend.stringify(_colorSourceBlend);
+    json[_colorBlendOperationName]   =
+        BlendOperation.stringify(_colorBlendOperation);
+    json[_colorDestinationBlendName] =
+        Blend.stringify(_colorDestinationBlend);
+    json[_colorSourceBlendName]      =
+        Blend.stringify(_colorSourceBlend);
 
     json[_writeRenderTargetRedName]   = _writeRenderTargetRed;
     json[_writeRenderTargetGreenName] = _writeRenderTargetGreen;
@@ -348,18 +362,24 @@ class BlendState extends DeviceChild {
     _blendFactorAlpha = (value != null) ? value : _blendFactorAlpha;
 
     value = values[_alphaBlendOperationName];
-    _alphaBlendOperation = (value != null) ? BlendOperation.parse(value) : _alphaBlendOperation;
+    _alphaBlendOperation = (value != null) ?
+        BlendOperation.parse(value) : _alphaBlendOperation;
     value = values[_alphaDestinationBlendName];
-    _alphaDestinationBlend = (value != null) ? Blend.parse(value) : _alphaDestinationBlend;
+    _alphaDestinationBlend = (value != null) ?
+        Blend.parse(value) : _alphaDestinationBlend;
     value = values[_alphaSourceBlendName];
-    _alphaSourceBlend = (value != null) ? Blend.parse(value) : _alphaSourceBlend;
+    _alphaSourceBlend = (value != null) ?
+        Blend.parse(value) : _alphaSourceBlend;
 
     value = values[_colorBlendOperationName];
-    _colorBlendOperation = (value != null) ? BlendOperation.parse(value) : _colorBlendOperation;
+    _colorBlendOperation = (value != null) ?
+        BlendOperation.parse(value) : _colorBlendOperation;
     value = values[_colorDestinationBlendName];
-    _colorDestinationBlend = (value != null) ? Blend.parse(value) : _colorDestinationBlend;
+    _colorDestinationBlend = (value != null) ?
+        Blend.parse(value) : _colorDestinationBlend;
     value = values[_colorSourceBlendName];
-    _colorSourceBlend = (value != null) ? Blend.parse(value) : _colorSourceBlend;
+    _colorSourceBlend = (value != null) ?
+        Blend.parse(value) : _colorSourceBlend;
 
     value = values[_writeRenderTargetRedName];
     _writeRenderTargetRed = (value != null) ? value : _writeRenderTargetRed;

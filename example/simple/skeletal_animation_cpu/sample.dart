@@ -66,7 +66,6 @@ class Application {
 
   /// The [GraphicsDevice] used by the application.
   ///
-  /// All [GraphicsResource]s are created through the [GraphicsDevice].
   GraphicsDevice _graphicsDevice;
   /// The [GraphicsContext] used by the application.
   ///
@@ -75,7 +74,7 @@ class Application {
   GraphicsContext _graphicsContext;
   /// The [AssetManager] used by the application.
   ///
-  /// The [AssetManager] is used to import [GraphicsResource]s into the
+  /// The [AssetManager] is used to import resources into the
   /// the application. Typically assets are imported by loading in a .pack
   /// file which contains references to the locations of the assets. Once
   /// loaded they can be used by the application.
@@ -143,9 +142,10 @@ class Application {
 
   /// The [ShaderProgram] to use to draw the mesh.
   ///
-  /// The models all contain a normal and specular map. The [ShaderProgram] uses the
-  /// normal map to add additional detail to the surface, and the specular map to
-  /// provide a variable shininess, which is used in Phong lighting, across the mesh.
+  /// The models all contain a normal and specular map. The [ShaderProgram]
+  /// uses the normal map to add additional detail to the surface, and the
+  /// specular map to provide a variable shininess, which is used in Phong
+  /// lighting, across the mesh.
   ShaderProgram _shaderProgram;
   /// The [InputLayout] of the mesh.
   InputLayout _inputLayout;
@@ -153,9 +153,10 @@ class Application {
   List<SkinnedMesh> _meshes;
   /// Posed meshes.
   List<SkinnedMeshInstance> _meshInstances;
-  /// The [Texture]s to use on the meshes.
+  /// The [SpectreTexture]s to use on the meshes.
   ///
-  /// Each mesh and their respective submeshes have [Texture]s to be set within the
+  /// Each mesh and their respective submeshes have [SpectreTexture]s to be set
+  /// within the
   /// pipeline. Each submesh has a diffuse map, a normal map, and a specular map.
   List<List<List<Texture2D>>> _textures;
   /// The index of the [SkinnedMesh] to draw.

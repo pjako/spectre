@@ -491,21 +491,21 @@ class DdsPixelFormat {
   static const int _hasCharacterCode = 0x4;
   /// Texture contains uncompressed RGB data.
   ///
-  /// The values in [bitCount] and the RGB masks [redBitMask], [greenBitMask], [blueBitMask] contain valid data.
+  /// The values in bitCount and the RGB masks [redBitMask], [greenBitMask], [blueBitMask] contain valid data.
   static const int _hasRgbValues = 0x40;
   /// Texture contains YUV compressed data.
   ///
-  /// The value in [bitCount] contains the YUV bit count. The Y mask is within [redBitMask]. The U mask is
+  /// The value in bitCount contains the YUV bit count. The Y mask is within [redBitMask]. The U mask is
   /// within [greenBitMask]. The V mask is within [blueBitMask].
   static const int _hasYuvValues = 0x200;
   /// Texture contains luminance data or some other single channel color.
   ///
-  /// The value in [bitCount] contains the luminance channel bit count. The channel mask is contained in
-  /// [redBitMask]. It can be combined with [_hasAlpha] for a two channel DDS file.
+  /// The value in bitCount contains the luminance channel bit count. The channel mask is contained in
+  /// [redBitMask]. It can be combined with _hasAlphaData for a two channel DDS file.
   static const int _hasLuminanceValues = 0x20000;
   /// Texture contains uncompressed RGBA data.
   ///
-  /// The values in [bitCount] and the RGB masks [redBitMask], [greenBitMask], [blueBitMask], and [alphaBitMask]
+  /// The values in bitCount and the RGB masks [redBitMask], [greenBitMask], [blueBitMask], and [alphaBitMask]
   /// contain valid data.
   static const int _hasRgbaValues = _hasAlphaData | _hasRgbValues;
   /// Texture contains two channels.

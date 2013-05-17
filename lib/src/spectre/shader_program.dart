@@ -64,9 +64,8 @@ typedef void SamplerCallback(ShaderProgramSampler sampler);
 typedef UniformSetFunction(device, location, argument);
 
 /** A shader program specifies the behaviour of the programmable GPU pipeline.
- * You can create an instance by calling [Graphicsdevice.createShaderProgram].
  * You can apply a shader program to the GPU pipeline with
- * [ImmediateContext.setShaderProgram].
+ * [GraphicsContext.setShaderProgram].
  *
  */
 class ShaderProgram extends DeviceChild {

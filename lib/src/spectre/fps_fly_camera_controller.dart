@@ -144,7 +144,7 @@ class FpsFlyCameraController extends CameraController {
   }
 
   void _RotateEyeAndLook(num delta_angle, Vector3 axis, Camera cam) {
-    quat q = new quat.axisAngle(axis, delta_angle);
+    Quaternion q = new Quaternion.axisAngle(axis, delta_angle);
     Vector3 frontDirection = cam.frontDirection;
     frontDirection.normalize();
     q.rotate(frontDirection);
