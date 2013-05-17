@@ -129,7 +129,7 @@ class Application {
   /// same way that a free-look FPS operates.
   OrbitCameraController _cameraController;
   /// The Model-View-Projection matrix.
-  mat4 _modelViewProjectionMatrix;
+  Matrix4 _modelViewProjectionMatrix;
   /// [Float32List] storage for the Model-View matrix.
   Float32List _modelViewMatrixArray;
   /// [Float32List] storage for the Model-View-Projection matrix.
@@ -257,15 +257,15 @@ class Application {
   void _createCamera() {
     // Create the Camera
     _camera = new Camera();
-    _camera.position = new vec3(150.0, 60.0, 0.0);
-    _camera.focusPosition = new vec3(0.0, 60.0, 0.0);
+    _camera.position = new Vector3(150.0, 60.0, 0.0);
+    _camera.focusPosition = new Vector3(0.0, 60.0, 0.0);
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
     _cameraController.radius = 150.0;
 
-    // Create the mat4 holding the Model-View-Projection matrix
-    _modelViewProjectionMatrix = new mat4.zero();
+    // Create the Matrix4 holding the Model-View-Projection matrix
+    _modelViewProjectionMatrix = new Matrix4.zero();
 
     // Create the Float32Lists that store the constant values for the matrices
     _modelViewMatrixArray = new Float32List(16);
@@ -437,10 +437,10 @@ class Application {
     // Copy the Normal matrix from the camera into the Float32List.
     _camera.copyNormalMatrixIntoArray(_normalMatrixArray);
 
-    _debugDrawManager.addCircle(new vec3(0.0, 4.0, 0.0),
-                                new vec3(0.0, 1.0, 0.0),
-                                8.0, new vec4(1.0, 0.0, 0.0, 1.0));
-    _debugDrawManager.addAxes(new mat4.identity(), 3.0);
+    _debugDrawManager.addCircle(new Vector3(0.0, 4.0, 0.0),
+                                new Vector3(0.0, 1.0, 0.0),
+                                8.0, new Vector4(1.0, 0.0, 0.0, 1.0));
+    _debugDrawManager.addAxes(new Matrix4.identity(), 3.0);
   }
 
   /// Renders the scene.

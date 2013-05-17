@@ -234,7 +234,7 @@ class ModelBaker {
 
   buildBoneNode(Map nodeDescription, ModelBone node) {
     copyMatrix(node.localTransform, nodeDescription['transformation']);
-    mat4 LT = new mat4.zero();
+    Matrix4 LT = new Matrix4.zero();
     LT.copyFromArray(node.localTransform);
     LT.transpose();
     LT.copyIntoArray(node.localTransform);
@@ -280,7 +280,7 @@ class ModelBaker {
         }
         bone.animationBone = true;
         copyMatrix(bone.offsetTransform, bones[b]['offsetmatrix']);
-        mat4 OT = new mat4.zero();
+        Matrix4 OT = new Matrix4.zero();
         OT.copyFromArray(bone.offsetTransform);
         OT.transpose();
         OT.copyIntoArray(bone.offsetTransform);

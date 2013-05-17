@@ -68,7 +68,7 @@ class InstanceCountController {
 
   int get previousCursor => (cursor-1) % history.length;
   int get nextCursor => (cursor+1) % history.length;
-  
+
   int get minDelta => history.reduce(Math.min);
   int get maxDelta => history.reduce(Math.max);
 
@@ -113,44 +113,44 @@ class InstanceCountController {
 class SampleMeshInstance extends SkinnedMeshInstance {
   int id;
   double scale = 0.0;
-  
+
   double startScale = 0.0;
   double targetScale = 1.0;
-  
+
   double scaleDuration = 0.5;
   double scaleTime = 0.0;
-  
+
   SampleMeshInstance(SkinnedMesh mesh, this.id) : super(mesh);
-  
+
   bool _visibleFlagged = true;
   bool get visible => scale > 0.001;
   set visible(bool value) {
     if(_visibleFlagged == value)
       return;
-    
+
     _visibleFlagged = value;
     startScale = scale;
     targetScale = value ? 1.0 : 0.0;
     scaleTime = 0.0;
   }
-  
+
   bool update(double dt, bool useSimd) {
     if(scaleTime < scaleDuration) {
       scaleTime += dt;
       EasingFunction f = _visibleFlagged ? Ease.OutElastic : Ease.InQuad;
       scale = EaseTo(scaleTime, scaleDuration, startScale, targetScale, f);
     }
-    
+
     if(_visibleFlagged)
       return super.update(dt, useSimd);
 
     return false;
   }
-  
+
   const num TAU = Math.PI * 2;
   final num PHI = (Math.sqrt(5) + 1) / 2;
   const int SCALE_FACTOR = 25;
-  
+
   void getMatrix(Float32List out) {
     final num theta = id * TAU / PHI;
     final num r = Math.sqrt(id) * SCALE_FACTOR;
@@ -250,7 +250,7 @@ class Application {
   /// same way that a free-look FPS operates.
   OrbitCameraController _cameraController;
   /// The Model-View-Projection matrix.
-  mat4 _modelViewProjectionMatrix;
+  Matrix4 _modelViewProjectionMatrix;
   /// [Float32List] storage for the Model-View matrix.
   Float32List _modelViewMatrixArray;
   /// [Float32List] stoarage for the Model-View-Projection matrix.
@@ -391,16 +391,16 @@ class Application {
     // Create the Camera
     _camera = new Camera();
     _camera.zFar = 2000.0;
-    _camera.position = new vec3(150.0, 60.0, 0.0);
-    _camera.focusPosition = new vec3(0.0, 40.0, 0.0);
+    _camera.position = new Vector3(150.0, 60.0, 0.0);
+    _camera.focusPosition = new Vector3(0.0, 40.0, 0.0);
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
     _cameraController.radius = 400.0;
     _cameraController.maxRadius = 1000.0;
 
-    // Create the mat4 holding the Model-View-Projection matrix
-    _modelViewProjectionMatrix = new mat4.zero();
+    // Create the Matrix4 holding the Model-View-Projection matrix
+    _modelViewProjectionMatrix = new Matrix4.zero();
 
     // Create the Float32Lists that store the constant values for the matrices
     _modelViewMatrixArray = new Float32List(16);
@@ -519,7 +519,7 @@ class Application {
     double height = 400.0;
     double uvScale = 1.0;
     Float32List verts = new Float32List.fromList([
-      // Floor                                            
+      // Floor
       size, 0.0, size,    uvScale, uvScale,   0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
@@ -527,26 +527,26 @@ class Application {
       -size, 0.0, size,   0.0, uvScale,       0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0,-size,   0.0, 0.0,           0.0, 1.0, 0.0,
-      
+
       // Ceiling
       size, height, size,    uvScale, uvScale,   0.0, 1.0, 0.0,
       -size, height, size,   0.0, uvScale,       0.0, 1.0, 0.0,
       size, height, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
-      
+
       -size, height, size,   0.0, uvScale,       0.0, 1.0, 0.0,
       -size, height,-size,   0.0, 0.0,           0.0, 1.0, 0.0,
       size, height, -size,   uvScale, 0.0,       0.0, 1.0, 0.0,
-      
-      // Wall, Back                                            
+
+      // Wall, Back
       -size, height, size,    uvScale, 0.0,   0.0, 1.0, 0.0,
       -size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
       -size, height, -size,    0.0, 0.0,      0.0, 1.0, 0.0,
-      
+
       -size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
       -size, 0.0,-size,   0.0, uvScale,           0.0, 1.0, 0.0,
       -size, height, -size,    0.0, 0.0,      0.0, 1.0, 0.0,
-      
-      // Wall, Front                                            
+
+      // Wall, Front
       size, height, size,    uvScale, 0.0,   0.0, 1.0, 0.0,
       size, height, -size,   0.0, 0.0,       0.0, 1.0, 0.0,
       size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
@@ -554,17 +554,17 @@ class Application {
       size, 0.0, size,   uvScale, uvScale,        0.0, 1.0, 0.0,
       size, height, -size,  0.0, 0.0,      0.0, 1.0, 0.0,
       size, 0.0,-size,   0.0, uvScale,           0.0, 1.0, 0.0,
-      
-      // Wall, Right                                            
+
+      // Wall, Right
       size, height, -size,    uvScale, 0.0,   0.0, 1.0, 0.0,
       -size, height, -size,   0.0, 0.0,       0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, uvScale,       0.0, 1.0, 0.0,
-      
+
       -size, height, -size,   0.0, 0.0,       0.0, 1.0, 0.0,
       -size, 0.0,-size,   0.0, uvScale,           0.0, 1.0, 0.0,
       size, 0.0, -size,   uvScale, uvScale,       0.0, 1.0, 0.0,
-      
-      // Wall, Left                                            
+
+      // Wall, Left
       size, height, size,    uvScale, 0.0,   0.0, 1.0, 0.0,
       size, 0.0, size,   uvScale, uvScale,       0.0, 1.0, 0.0,
       -size, height, size,   0.0, 0.0,       0.0, 1.0, 0.0,
@@ -573,7 +573,7 @@ class Application {
       size, 0.0, size,   uvScale, uvScale,       0.0, 1.0, 0.0,
       -size, 0.0,size,   0.0, uvScale,           0.0, 1.0, 0.0,
     ]);
-    
+
     _roomVertCount = (verts.length/8.0).toInt();
     _room = new SingleArrayMesh('FloorMesh', _graphicsDevice);
     _room.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
@@ -602,7 +602,7 @@ class Application {
         instances[i].visible = true;
       }
     }
-    
+
     _instanceCount = value;
 
     if(_applicationControls != null)
@@ -626,7 +626,7 @@ class Application {
       instances.add(instance);
     }
   }
-  
+
   List<SampleMeshInstance> instances = new List<SampleMeshInstance>();
   bool autoAdjustInstanceCount = true;
   bool _useSimdPosing = false;
@@ -766,10 +766,10 @@ class Application {
 
     _graphicsContext.setTextures(0, _roomFloorTextures);
     _graphicsContext.draw(6, 0);
-    
+
     _graphicsContext.setTextures(0, _roomCeilingTextures);
     _graphicsContext.draw(6, 6);
-    
+
     _graphicsContext.setTextures(0, _roomWallTextures);
     _graphicsContext.draw(24, 12);
 
@@ -795,7 +795,7 @@ class Application {
         meshInstance.skin(useSimdSkinning);
         _graphicsContext.setInputLayout(_inputLayout);
       }
-      
+
       meshInstance.getMatrix(modelMatrix);
       _graphicsContext.setConstant('uModelMatrix', modelMatrix);
 

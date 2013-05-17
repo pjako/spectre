@@ -132,7 +132,7 @@ class Renderer {
     _frontBufferViewport.height = frontBuffer.height;
     renderTargets['frontBuffer'] = RenderTarget.systemRenderTarget;
     if (_rendererPack['frontBuffer'] == null) {
-      var asset = _rendererPack.registerAsset('frontBuffer', 'RenderTarget', 
+      var asset = _rendererPack.registerAsset('frontBuffer', 'RenderTarget',
                                               '', {}, {});
       asset.imported =  RenderTarget.systemRenderTarget;
     }
@@ -301,16 +301,16 @@ class Renderer {
     _blitMaterialShader = new MaterialShader('blit', this);
     _blitMaterialShader.vertexShader = '''
 precision highp float;
-attribute vec2 vPosition;
-attribute vec2 vTexCoord;
-varying vec2 samplePoint;
+attribute Vector2 vPosition;
+attribute Vector2 vTexCoord;
+varying Vector2 samplePoint;
 
 uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
+uniform Vector2 cursor;
+uniform Vector2 renderTargetResolution;
 
 void main() {
-  vec4 vPosition4 = vec4(vPosition.x, vPosition.y, 1.0, 1.0);
+  Vector4 vPosition4 = Vector4(vPosition.x, vPosition.y, 1.0, 1.0);
   gl_Position = vPosition4;
   samplePoint = vTexCoord;
 }
@@ -319,10 +319,10 @@ void main() {
 precision mediump float;
 
 uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
+uniform Vector2 cursor;
+uniform Vector2 renderTargetResolution;
 
-varying vec2 samplePoint;
+varying Vector2 samplePoint;
 uniform sampler2D source;
 
 void main() {

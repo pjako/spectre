@@ -90,24 +90,24 @@ void renderFrame(GameLoop gameLoop) {
   renderer.render(layers, renderables, camera);
 
   // Add three lines, one for each axis.
-  debugDrawManager.addLine(new vec3(0.0, 0.0, 0.0),
-                           new vec3(10.0, 0.0, 0.0),
-                           new vec4(1.0, 0.0, 0.0, 1.0));
-  debugDrawManager.addLine(new vec3(0.0, 0.0, 0.0),
-                           new vec3(0.0, 10.0, 0.0),
-                           new vec4(0.0, 1.0, 0.0, 1.0));
-  debugDrawManager.addLine(new vec3(0.0, 0.0, 0.0),
-                           new vec3(0.0, 0.0, 10.0),
-                           new vec4(0.0, 0.0, 1.0, 1.0));
-  debugDrawManager.addSphere(new vec3(20.0, 20.0, 20.0), 20.0,
-                             new vec4(0.0, 1.0, 0.0, 1.0));
+  debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                           new Vector3(10.0, 0.0, 0.0),
+                           new Vector4(1.0, 0.0, 0.0, 1.0));
+  debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                           new Vector3(0.0, 10.0, 0.0),
+                           new Vector4(0.0, 1.0, 0.0, 1.0));
+  debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                           new Vector3(0.0, 0.0, 10.0),
+                           new Vector4(0.0, 0.0, 1.0, 1.0));
+  debugDrawManager.addSphere(new Vector3(20.0, 20.0, 20.0), 20.0,
+                             new Vector4(0.0, 1.0, 0.0, 1.0));
   if (_circleDrawn == false) {
     _circleDrawn = true;
     // Draw a circle that lasts for 5 seconds.
-    debugDrawManager.addCircle(new vec3(0.0, 0.0, 0.0),
-                               new vec3(0.0, 1.0, 0.0),
+    debugDrawManager.addCircle(new Vector3(0.0, 0.0, 0.0),
+                               new Vector3(0.0, 1.0, 0.0),
                                2.0,
-                               new vec4(1.0, 1.0, 1.0, 1.0),
+                               new Vector4(1.0, 1.0, 1.0, 1.0),
                                duration:5.0);
   }
   // Prepare the debug draw manager for rendering
@@ -165,55 +165,55 @@ void _makeMaterial() {
   materialShader.vertexShader = '''
 precision highp float;
 
-attribute vec3 POSITION;
-attribute vec3 NORMAL;
-attribute vec2 TEXCOORD0;
+attribute Vector3 POSITION;
+attribute Vector3 NORMAL;
+attribute Vector2 TEXCOORD0;
 
-uniform mat4 cameraProjectionView;
-uniform mat4 normalTransform;
-uniform mat4 objectTransform;
+uniform Matrix4 cameraProjectionView;
+uniform Matrix4 normalTransform;
+uniform Matrix4 objectTransform;
 
-uniform vec3 lightDirection;
+uniform Vector3 lightDirection;
 
-varying vec3 surfaceNormal;
-varying vec2 samplePoint;
-varying vec3 lightDir;
+varying Vector3 surfaceNormal;
+varying Vector2 samplePoint;
+varying Vector3 lightDir;
 
 void main() {
     // TexCoord
     samplePoint = TEXCOORD0;
     // Normal
-    //mat4 LM = normalTransform*objectTransform;
-    vec3 N = (objectTransform*vec4(NORMAL, 0.0)).xyz;
+    //Matrix4 LM = normalTransform*objectTransform;
+    Vector3 N = (objectTransform*Vector4(NORMAL, 0.0)).xyz;
     N = normalize(N);
-    N = (normalTransform*vec4(N, 0.0)).xyz;
+    N = (normalTransform*Vector4(N, 0.0)).xyz;
     surfaceNormal = normalize(N);
-    lightDir = (normalTransform*vec4(lightDirection, 0.0)).xyz;
-    mat4 M = cameraProjectionView*objectTransform;
-    vec4 vPosition4 = vec4(POSITION.x, POSITION.y, POSITION.z, 1.0);
+    lightDir = (normalTransform*Vector4(lightDirection, 0.0)).xyz;
+    Matrix4 M = cameraProjectionView*objectTransform;
+    Vector4 vPosition4 = Vector4(POSITION.x, POSITION.y, POSITION.z, 1.0);
     gl_Position = M*vPosition4;
 }
 ''';
   materialShader.fragmentShader = '''
 precision mediump float;
 
-varying vec3 surfaceNormal;
-varying vec2 samplePoint;
+varying Vector3 surfaceNormal;
+varying Vector2 samplePoint;
 
-varying vec3 lightDir;
+varying Vector3 lightDir;
 
 uniform sampler2D diffuse;
 
 void main() {
-  vec3 normal = normalize(surfaceNormal);
-  vec3 light = normalize(lightDir);
+  Vector3 normal = normalize(surfaceNormal);
+  Vector3 light = normalize(lightDir);
   float NdotL = max(dot(normal, -light), 0.3);
-  vec3 ambientColor = vec3(0.1, 0.1, 0.1);
-  //vec3 diffuseColor = vec3(1.0, 0.0, 0.0) * NdotL;
-  vec3 diffuseColor = vec3(texture2D(diffuse, samplePoint)) * NdotL;
-  vec3 finalColor = diffuseColor + ambientColor;
-    //gl_FragColor = vec4(NdotL, NdotL, 1.0, 1.0);
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  Vector3 ambientColor = Vector3(0.1, 0.1, 0.1);
+  //Vector3 diffuseColor = Vector3(1.0, 0.0, 0.0) * NdotL;
+  Vector3 diffuseColor = Vector3(texture2D(diffuse, samplePoint)) * NdotL;
+  Vector3 finalColor = diffuseColor + ambientColor;
+    //gl_FragColor = Vector4(NdotL, NdotL, 1.0, 1.0);
+    gl_FragColor = Vector4(1.0, 0.0, 0.0, 1.0);
 }
 ''';
   Material material = new Material('simpleTexture', materialShader, renderer);
@@ -235,10 +235,10 @@ void _drawSkybox() {
   context.setTextures(0, [assetManager['demoAssets.space']]);
   context.setSamplers(0, [_skyboxSampler]);
   {
-    mat4 P = camera.projectionMatrix;
-    mat4 LA = makeViewMatrix(new vec3.zero(),
+    Matrix4 P = camera.projectionMatrix;
+    Matrix4 LA = makeViewMatrix(new Vector3.zero(),
         camera.frontDirection,
-        new vec3(0.0, 1.0, 0.0));
+        new Vector3(0.0, 1.0, 0.0));
     P.multiply(LA);
     P.copyIntoArray(_cameraTransform, 0);
   }
@@ -279,8 +279,8 @@ main() {
     _setupSkybox();
     // Setup camera.
     camera.aspectRatio = canvas.width.toDouble()/canvas.height.toDouble();
-    camera.position = new vec3(2.0, 2.0, 2.0);
-    camera.focusPosition = new vec3(1.0, 1.0, 1.0);
+    camera.position = new Vector3(2.0, 2.0, 2.0);
+    camera.focusPosition = new Vector3(1.0, 1.0, 1.0);
     _makeMaterial();
     _buildCubes();
     // Setup layers.

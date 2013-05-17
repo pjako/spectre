@@ -53,24 +53,24 @@ void renderFrame(GameLoop gameLoop) {
   // Set the viewport
   _graphicsContext.setViewport(_viewport);
   // Add three lines, one for each axis.
-  _debugDrawManager.addLine(new vec3(0.0, 0.0, 0.0),
-                            new vec3(10.0, 0.0, 0.0),
-                            new vec4(1.0, 0.0, 0.0, 1.0));
-  _debugDrawManager.addLine(new vec3(0.0, 0.0, 0.0),
-                            new vec3(0.0, 10.0, 0.0),
-                            new vec4(0.0, 1.0, 0.0, 1.0));
-  _debugDrawManager.addLine(new vec3(0.0, 0.0, 0.0),
-                            new vec3(0.0, 0.0, 10.0),
-                            new vec4(0.0, 0.0, 1.0, 1.0));
-  _debugDrawManager.addSphere(new vec3(20.0, 20.0, 20.0), 20.0,
-                              new vec4(0.0, 1.0, 0.0, 1.0));
+  _debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                            new Vector3(10.0, 0.0, 0.0),
+                            new Vector4(1.0, 0.0, 0.0, 1.0));
+  _debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                            new Vector3(0.0, 10.0, 0.0),
+                            new Vector4(0.0, 1.0, 0.0, 1.0));
+  _debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                            new Vector3(0.0, 0.0, 10.0),
+                            new Vector4(0.0, 0.0, 1.0, 1.0));
+  _debugDrawManager.addSphere(new Vector3(20.0, 20.0, 20.0), 20.0,
+                              new Vector4(0.0, 1.0, 0.0, 1.0));
   if (_circleDrawn == false) {
     _circleDrawn = true;
     // Draw a circle that lasts for 5 seconds.
-    _debugDrawManager.addCircle(new vec3(0.0, 0.0, 0.0),
-                                new vec3(0.0, 1.0, 0.0),
+    _debugDrawManager.addCircle(new Vector3(0.0, 0.0, 0.0),
+                                new Vector3(0.0, 1.0, 0.0),
                                 2.0,
-                                new vec4(1.0, 1.0, 1.0, 1.0),
+                                new Vector4(1.0, 1.0, 1.0, 1.0),
                                 duration:5.0);
   }
 
@@ -130,10 +130,10 @@ void _drawSkybox() {
   context.setTextures(0, [_assetManager['demoAssets.space']]);
   context.setSamplers(0, [_skyboxSampler]);
   {
-    mat4 P = camera.projectionMatrix;
-    mat4 LA = makeViewMatrix(new vec3.zero(),
+    Matrix4 P = camera.projectionMatrix;
+    Matrix4 LA = makeViewMatrix(new Vector3.zero(),
         camera.frontDirection,
-        new vec3(0.0, 1.0, 0.0));
+        new Vector3(0.0, 1.0, 0.0));
     P.multiply(LA);
     P.copyIntoArray(_cameraTransform, 0);
   }
@@ -162,11 +162,11 @@ void _drawSkinnedBones(Bone bone, PosedSkeleton posedSkeleton) {
   origin[1] = matrix[13] * _skeletonScale;
   origin[2] = matrix[14] * _skeletonScale;
   if (boneIndex == 0) {
-    _debugDrawManager.addCross(new vec3(origin[0], origin[1], origin[2]),
-        new vec4(1.0, 0.0, 1.0, 1.0));
+    _debugDrawManager.addCross(new Vector3(origin[0], origin[1], origin[2]),
+        new Vector4(1.0, 0.0, 1.0, 1.0));
   } else {
-  _debugDrawManager.addCross(new vec3(origin[0], origin[1], origin[2]),
-                             new vec4(0.0, 1.0, 1.0, 1.0));
+  _debugDrawManager.addCross(new Vector3(origin[0], origin[1], origin[2]),
+                             new Vector4(0.0, 1.0, 1.0, 1.0));
   }
   bone.children.forEach((childBone) {
     List<double> end = [0.0, 0.0, 0.0];
@@ -174,11 +174,11 @@ void _drawSkinnedBones(Bone bone, PosedSkeleton posedSkeleton) {
     end[0] = posedSkeleton.globalTransforms[childId][12] * _skeletonScale;
     end[1] = posedSkeleton.globalTransforms[childId][13] * _skeletonScale;
     end[2] = posedSkeleton.globalTransforms[childId][14] * _skeletonScale;
-    _debugDrawManager.addLine(new vec3(origin[0],
+    _debugDrawManager.addLine(new Vector3(origin[0],
                                            origin[1],
                                            origin[2]),
-                              new vec3(end[0], end[1], end[2]),
-                              new vec4(1.0, 1.0, 1.0, 1.0));
+                              new Vector3(end[0], end[1], end[2]),
+                              new Vector4(1.0, 1.0, 1.0, 1.0));
     _drawSkinnedBones(childBone, posedSkeleton);
   });
 }
@@ -210,8 +210,8 @@ void _drawSkinnedCharacter() {
   context.setShaderProgram(_skinnedShaderProgram);
   context.setSamplers(0, [_skyboxSampler]);
   {
-    mat4 P = camera.projectionMatrix;
-    mat4 LA = camera.viewMatrix;
+    Matrix4 P = camera.projectionMatrix;
+    Matrix4 LA = camera.viewMatrix;
     P.multiply(LA);
     P.copyIntoArray(_cameraTransform, 0);
   }
@@ -280,8 +280,8 @@ main() {
 
   // Create the camera
   camera.aspectRatio = canvas.width.toDouble()/canvas.height.toDouble();
-  camera.position = new vec3(2.0, 2.0, 2.0);
-  camera.focusPosition = new vec3(1.0, 1.0, 1.0);
+  camera.position = new Vector3(2.0, 2.0, 2.0);
+  camera.focusPosition = new Vector3(1.0, 1.0, 1.0);
 
   _assetManager = new AssetManager();
   registerSpectreWithAssetManager(_graphicsDevice, _assetManager);

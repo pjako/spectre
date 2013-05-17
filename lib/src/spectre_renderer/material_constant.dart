@@ -33,19 +33,19 @@ class MaterialConstant {
     switch (type) {
       case 'float':
         return new Float32List(1);
-      case 'vec2':
+      case 'Vector2':
         return new Float32List(2);
-      case 'vec3':
+      case 'Vector3':
         return new Float32List(3);
-      case 'vec4':
+      case 'Vector4':
         return new Float32List(4);
-      case 'mat3':
+      case 'Matrix3':
         var v = new Float32List(9);
         v[0] = 1.0;
         v[4] = 1.0;
         v[8] = 1.0;
         return v;
-      case 'mat4':
+      case 'Matrix4':
         var v = new Float32List(16);
         v[0] = 1.0;
         v[5] = 1.0;

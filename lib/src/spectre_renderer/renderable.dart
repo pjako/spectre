@@ -30,7 +30,7 @@ class Renderable {
   final String name;
   Map<String, String> _materialPaths;
   Map<String, Material> materials;
-  mat4 T = new mat4.identity();
+  Matrix4 T = new Matrix4.identity();
 
   /// Path to mesh asset.
   String get meshPath => _meshPath;

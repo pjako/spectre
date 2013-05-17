@@ -127,14 +127,14 @@ class Material {
     if (camera == null) {
       // TODO(johnmccutchan): Do we have a default camera setup?
     }
-    mat4 projectionMatrix = camera.projectionMatrix;
-    mat4 viewMatrix = camera.viewMatrix;
-    mat4 projectionViewMatrix = camera.projectionMatrix;
+    Matrix4 projectionMatrix = camera.projectionMatrix;
+    Matrix4 viewMatrix = camera.viewMatrix;
+    Matrix4 projectionViewMatrix = camera.projectionMatrix;
     projectionViewMatrix.multiply(viewMatrix);
-    mat4 viewRotationMatrix = makeViewMatrix(new vec3.zero(),
+    Matrix4 viewRotationMatrix = makeViewMatrix(new Vector3.zero(),
                                              camera.frontDirection,
-                                             new vec3(0.0, 1.0, 0.0));
-    mat4 projectionViewRotationMatrix = camera.projectionMatrix;
+                                             new Vector3(0.0, 1.0, 0.0));
+    Matrix4 projectionViewRotationMatrix = camera.projectionMatrix;
     projectionViewRotationMatrix.multiply(viewRotationMatrix);
     MaterialConstant constant;
     constant = constants['cameraView'];
@@ -159,7 +159,7 @@ class Material {
     }
   }
 
-  void updateObjectTransformConstant(mat4 T) {
+  void updateObjectTransformConstant(Matrix4 T) {
     MaterialConstant constant;
     constant = constants['objectTransform'];
     if (constant != null) {

@@ -115,23 +115,23 @@ void testMaterialConstruct() {
 precision highp float;
 
 // Input attributes
-attribute vec3 vPosition;
-attribute vec4 vColor;
+attribute Vector3 vPosition;
+attribute Vector4 vColor;
 // Input uniforms
-uniform mat4 cameraTransform;
+uniform Matrix4 cameraTransform;
 // Varying outputs
-varying vec4 fColor;
+varying Vector4 fColor;
 
 void main() {
     fColor = vColor;
-    vec4 vPosition4 = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
+    Vector4 vPosition4 = Vector4(vPosition.x, vPosition.y, vPosition.z, 1.0);
     gl_Position = cameraTransform*vPosition4;
 }
 ''';
   sp.fragmentShader.source = '''
 precision mediump float;
 uniform sampler2D texture;
-varying vec4 fColor;
+varying Vector4 fColor;
 
 void main() {
     gl_FragColor = fColor + texture2D(texture, fColor.xy);

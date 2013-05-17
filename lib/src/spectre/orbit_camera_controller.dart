@@ -42,7 +42,7 @@ class OrbitCameraController extends CameraController {
   bool hasMomentum = true;
   bool hasFriction = true;
 
-  vec2 _momentum = new vec2.zero();
+  Vector2 _momentum = new Vector2.zero();
   num _momentumTime = 0;
 
   OrbitCameraController();
@@ -87,7 +87,7 @@ class OrbitCameraController extends CameraController {
   void _RotateView(num dt, Camera cam, num yawDelta, num pitchDelta) {
     yaw += yawDelta;
     pitch = _clamp(pitch + pitchDelta, minYaw, maxYaw);
-    vec3 offset = new vec3(
+    Vector3 offset = new Vector3(
       radius * Math.cos(yaw) * Math.cos(pitch),
       radius * Math.sin(pitch),
       radius * Math.sin(yaw) * Math.cos(pitch)
