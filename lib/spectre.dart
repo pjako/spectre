@@ -30,6 +30,7 @@ import 'dart:async';
 import 'dart:math' as Math;
 import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_operations.dart';
 import 'package:spectre/disposable.dart';
 
 part 'src/spectre/device_child.dart';

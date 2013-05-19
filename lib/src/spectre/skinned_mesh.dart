@@ -21,80 +21,6 @@
 part of spectre;
 
 class Float32ListHelpers {
-  static void transpose44(Float32List out) {
-    Float32List a = out;
-    var a01 = a[1], a02 = a[2], a03 = a[3],
-        a12 = a[6], a13 = a[7],
-        a23 = a[11];
-
-    out[1] = a[4];
-    out[2] = a[8];
-    out[3] = a[12];
-    out[4] = a01;
-    out[6] = a[9];
-    out[7] = a[13];
-    out[8] = a02;
-    out[9] = a12;
-    out[11] = a[14];
-    out[12] = a03;
-    out[13] = a13;
-    out[14] = a23;
-  }
-
-  static void zeroSIMD(Float32x4List out) {
-    var z = new Float32x4.zero();
-    out[0] = z;
-    out[1] = z;
-    out[2] = z;
-    out[3] = z;
-  }
-
-  static void zero(Float32List out) {
-    out[0] = 0.0;
-    out[1] = 0.0;
-    out[2] = 0.0;
-    out[3] = 0.0;
-
-    out[4] = 0.0;
-    out[5] = 0.0;
-    out[6] = 0.0;
-    out[7] = 0.0;
-
-    out[8] = 0.0;
-    out[9] = 0.0;
-    out[10] = 0.0;
-    out[11] = 0.0;
-
-    out[12] = 0.0;
-    out[13] = 0.0;
-    out[14] = 0.0;
-    out[15] = 0.0;
-  }
-
-  static void transform(out,
-                        a, int ii,
-                        m) {
-    var x = a[ii+0], y = a[ii+1], z = a[ii+2], w = a[ii+3];
-    out[0] += (m[0] * x + m[4] * y + m[8] * z + m[12] * w);
-    out[1] += (m[1] * x + m[5] * y + m[9] * z + m[13] * w);
-    out[2] += (m[2] * x + m[6] * y + m[10] * z + m[14] * w);
-    out[3] += (m[3] * x + m[7] * y + m[11] * z + m[15] * w);
-  }
-
-  static void transformSIMD(Float32x4List out, Float32x4List a, int ii,
-                            Float32x4List m4) {
-    Float32x4 v = a[ii];
-    Float32x4 xxxx = v.xxxx;
-    Float32x4 z = new Float32x4.zero();
-    z += xxxx * m4[0];
-    Float32x4 yyyy = v.yyyy;
-    z += yyyy * m4[1];
-    Float32x4 zzzz = v.zzzz;
-    z += zzzz * m4[2];
-    z += m4[3];
-    out[0] = z;
-  }
-
   static void addScale44(out, input, scale) {
     out[0] += input[0] * scale;
     out[1] += input[1] * scale;
@@ -219,7 +145,7 @@ class SkinnedMesh extends SpectreMesh {
         vertexData[i] = baseVertexData[vertexBase+i];
       }
       int skinningDataOffset = v*4;
-      Float32ListHelpers.zero(m);
+      Matrix44Operations.zero(m, 0);
       for (int i = 0; i < 4; ++i) {
         final int boneId = boneData[skinningDataOffset];
         final double weight = weightData[skinningDataOffset];
@@ -227,8 +153,8 @@ class SkinnedMesh extends SpectreMesh {
                                       weight);
         skinningDataOffset++;
       }
-      Float32ListHelpers.transform(vertex,
-          baseVertexData, vertexBase, m);
+      Matrix44Operations.transform4(vertex, 0, m, 0, baseVertexData,
+                                    vertexBase);
       for (int i = 0; i < 4; i++) {
         vertexData[vertexBase+i] = vertex[i];
       }
@@ -250,7 +176,7 @@ class SkinnedMesh extends SpectreMesh {
       vertexData4[1] = baseVertexData4[vertexBase+1];
       vertexData4[2] = baseVertexData4[vertexBase+2];
       int skinningDataOffset = v*4;
-      Float32ListHelpers.zeroSIMD(m4);
+      Matrix44SIMDOperations.zero(m4, 0);
       for (int i = 0; i < 4; ++i) {
         final int boneId = boneData[skinningDataOffset];
         final double weight = weightData[skinningDataOffset];
@@ -262,7 +188,8 @@ class SkinnedMesh extends SpectreMesh {
         m4[3] += boneMatrix[3] * weight4;
         skinningDataOffset++;
       }
-      Float32ListHelpers.transformSIMD(vertex4, baseVertexData4, vertexBase, m4);
+      Matrix44SIMDOperations.transform4(vertex4, 0, m4, 0, baseVertexData4,
+                                        vertexBase);
       vertexData4[vertexBase] = vertex4[0];
       vertexBase += _floatsPerVertex ~/ 4;
     }

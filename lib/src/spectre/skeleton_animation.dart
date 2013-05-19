@@ -209,47 +209,6 @@ class BoneAnimation {
     return _findTime(_rotationTimes, t) << 2;
   }
   
-  void mul44(Float32List out, Float32List a, Float32List b) {
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
-        a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
-        a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
-        a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-
-    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
-    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
-    out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-
-    b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
-    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
-  }
-  
-  void mul44SIMD(Float32x4List out, Float32x4List a, Float32x4List b) {
-    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
-        b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-
-    out[0] = b0.xxxx*a0 + b0.yyyy*a1 + b0.zzzz*a2 + b0.wwww*a3;
-    out[1] = b1.xxxx*a0 + b1.yyyy*a1 + b1.zzzz*a2 + b1.wwww*a3;
-    out[2] = b2.xxxx*a0 + b2.yyyy*a1 + b2.zzzz*a2 + b2.wwww*a3;
-    out[3] = b3.xxxx*a0 + b3.yyyy*a1 + b3.zzzz*a2 + b3.wwww*a3;
-  }
-  
   void buildTransformMatricesAtTime(double t) {
     int positionIndex = _findPositionIndex(t);
     int rotationIndex = _findRotationIndex(t);
@@ -309,9 +268,10 @@ class BoneAnimation {
   /// Does not interpolate between key frames.
   void setBoneMatrixAtTime(double t, Float32List boneMatrix) {
     buildTransformMatricesAtTime(t);
-
-    mul44(boneMatrix, _scaleMatrix, _rotationMatrix);
-    mul44(boneMatrix, _positionMatrix, boneMatrix);
+    Matrix44Operations.multiply(boneMatrix, 0, _scaleMatrix, 0,
+                                _rotationMatrix, 0);
+    Matrix44Operations.multiply(boneMatrix, 0, _positionMatrix, 0,
+                                boneMatrix, 0);
   }
   
   /// Set [boneMatrix] to correspond to bone animation at time [t].
@@ -319,8 +279,10 @@ class BoneAnimation {
   void setBoneMatrixAtTimeSIMD(double t, Float32x4List boneMatrix) {
     buildTransformMatricesAtTime(t);
     
-    mul44SIMD(boneMatrix, _scaleMatrix4, _rotationMatrix4);
-    mul44SIMD(boneMatrix, _positionMatrix4, boneMatrix);
+    Matrix44SIMDOperations.multiply(boneMatrix, 0, _scaleMatrix4, 0,
+                                    _rotationMatrix4, 0);
+    Matrix44SIMDOperations.multiply(boneMatrix, 0, _positionMatrix4, 0,
+                                    boneMatrix, 0);
   }
 
   /// Set bone matrix [transform] to correspond to bone animation at time [t].
