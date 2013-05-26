@@ -20,80 +20,36 @@
 
 part of spectre;
 
-/// Defines modes for addressing texels using texture coordinates outside of the typical range of 0.0 to 1.0.
-class TextureAddressMode {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [Clamp].
-  static const String _clampName = 'TextureAddressMode.Clamp';
-  /// String representation of [Mirror].
-  static const String _mirrorName = 'TextureAddressMode.Mirror';
-  /// String representation of [Wrap].
-  static const String _wrapName = 'TextureAddressMode.Wrap';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
-  /// Texture coordinates outside the range [0.0, 1.0] are set to the texture color at 0.0 or 1.0, respectively.
+/// Defines modes for addressing texels using texture coordinates outside of
+/// the typical range of 0.0 to 1.0.
+class TextureAddressMode extends Enum {
+  /// Texture coordinates outside the range [0.0, 1.0] are set to the texture
+  /// color at 0.0 or 1.0, respectively.
   static const int Clamp = WebGL.CLAMP_TO_EDGE;
-  /// Similar to Wrap, except that the texture is flipped at every integer junction.
+  /// Similar to Wrap, except that the texture is flipped at every integer
+  /// junction.
   ///
-  /// For values between 0 and 1, for example, the texture is addressed normally; between 1 and 2, the texture is
-  /// flipped (mirrored); between 2 and 3, the texture is normal again, and so on.
+  /// For values between 0 and 1, for example, the texture is addressed
+  /// normally; between 1 and 2, the texture is
+  /// flipped (mirrored); between 2 and 3, the texture is normal again, and so
+  /// on.
   static const int Mirror = WebGL.MIRRORED_REPEAT;
   /// Tile the texture at every integer junction.
   ///
-  /// For example, for u values between 0 and 3, the texture is repeated three times;
+  /// For example, for u values between 0 and 3, the texture is repeated three
+  /// times;
   /// no mirroring is performed.
   static const int Wrap = WebGL.REPEAT;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
-
-  /// Convert from a [String] name to the corresponding [TextureAddressMode] enumeration.
-  static int parse(String name) {
-    if (name == _clampName) {
-      return Clamp;
-    } else if (name == _mirrorName) {
-      return Mirror;
-    } else if (name == _wrapName) {
-      return Wrap;
-    }
-
-    assert(false);
-    return Clamp;
-  }
-
-  /// Converts the [TextureAddressMode] enumeration to a [String].
-  static String stringify(int value) {
-    if (value == Clamp) {
-      return _clampName;
-    } else if (value == Mirror) {
-      return _mirrorName;
-    } else if (value == Wrap) {
-      return _wrapName;
-    }
-
-    assert(false);
-    return _wrapName;
-  }
-
+  static Map<String, int> _values = {
+    'TextureAddressMode.Clamp' : Clamp,
+    'TextureAddressMode.Mirror' : Mirror,
+    'TextureAddressMode.Wrap' : Wrap
+  };
+  /// Convert a [String] to a [TextureAddressMode].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [TextureAddressMode] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    if (value == Clamp) {
-      return true;
-    } else if (value == Mirror) {
-      return true;
-    } else if (value == Wrap) {
-      return true;
-    }
-
-    return false;
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }
