@@ -21,57 +21,21 @@
 part of spectre;
 
 /// Defines filtering types for minification during texture sampling.
-class TextureMinFilter {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [Linear].
-  static const String _linearName = 'TextureMinFilter.Linear';
-  /// String representation of [Point].
-  static const String _pointName = 'TextureMinFilter.Point';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
+class TextureMinFilter extends Enum {
   /// Use linear filtering for minification.
   static const int Linear = WebGL.LINEAR;
   /// Use point filtering for minification.
   static const int Point = WebGL.NEAREST;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'TextureMinFilter.Linear' : Linear,
+    'TextureMinFilter.Point' : Point
+  };
 
-  /// Convert from a [String] name to the corresponding [TextureMinFilter] enumeration.
-  static int parse(String name) {
-    if (name == _linearName) {
-      return Linear;
-    } else if (name == _pointName) {
-      return Point;
-    }
-
-    assert(false);
-    return Linear;
-  }
-
-  /// Converts the [TextureMinFilter] enumeration to a [String].
-  static String stringify(int value) {
-    if (value == Linear) {
-      return _linearName;
-    } else if (value == Point) {
-      return _pointName;
-    }
-
-    assert(false);
-    return _linearName;
-  }
-
+  /// Convert a [String] to a [TextureMinFilter].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [TextureMinFilter] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    return ((value == Linear) || (value == Point));
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }
