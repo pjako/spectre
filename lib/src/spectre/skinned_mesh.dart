@@ -337,10 +337,10 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
     mesh.baseVertexData[i] = json['vertices'][i].toDouble();
   }
   mesh.vertexArray.uploadData(mesh.vertexData4,
-                              SpectreBuffer.UsageDynamic);
+                              UsagePattern.DynamicDraw);
   List indices = json['indices'];
   mesh.indexArray.uploadData(new Uint16List.fromList(json['indices']),
-                             SpectreBuffer.UsageStatic);
+                             UsagePattern.StaticDraw);
   List meshes = json['meshes'];
   meshes.forEach((m) {
     importMesh(mesh, m);
@@ -417,7 +417,7 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
                                                                16,
                                                                false,
                                                                1);
-    mesh.skinningArray.uploadData(mesh.skinningData, SpectreBuffer.UsageStatic);
+    mesh.skinningArray.uploadData(mesh.skinningData, UsagePattern.StaticDraw);
   }
   return mesh;
 }

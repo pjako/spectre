@@ -25,16 +25,10 @@ part of spectre;
  * or a [VertexBuffer].
  */
 class SpectreBuffer extends DeviceChild {
-  /** Hint that buffer data is used once and then discarded. */
-  static const UsageStream = WebGL.STREAM_DRAW;
-  /** Hint that buffer data is used few times and then discarded. */
-  static const UsageDynamic = WebGL.DYNAMIC_DRAW;
-  /** Hint that buffer data is used many times and never discarded. */
-  static const UsageStatic = WebGL.STATIC_DRAW;
   WebGL.Buffer _deviceBuffer;
   final int _bindTarget;
   final int _bindingParam;
-  int _usage = UsageDynamic;
+  int _usage = UsagePattern.DynamicDraw;
   int _size = 0;
 
   SpectreBuffer(String name, GraphicsDevice device,

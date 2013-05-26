@@ -71,6 +71,7 @@ part 'src/spectre/texture_cube.dart';
 part 'src/spectre/texture_mag_filter.dart';
 part 'src/spectre/texture_min_filter.dart';
 part 'src/spectre/texture_2d.dart';
+part 'src/spectre/usage_pattern.dart';
 part 'src/spectre/vertex_buffer.dart';
 part 'src/spectre/vertex_shader.dart';
 part 'src/spectre/viewport.dart';

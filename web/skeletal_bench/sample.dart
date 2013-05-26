@@ -575,7 +575,7 @@ class Application {
 
     _roomVertCount = (verts.length/8.0).toInt();
     _room = new SingleArrayMesh('FloorMesh', _graphicsDevice);
-    _room.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
+    _room.vertexArray.uploadData(verts, UsagePattern.StaticDraw);
 
     _room.attributes['vPosition'] = new SpectreMeshAttribute('vPosition', 'float', 3,
         0, 32, false);

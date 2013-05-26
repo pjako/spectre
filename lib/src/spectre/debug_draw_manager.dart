@@ -144,7 +144,7 @@ class _DebugDrawLineManager {
     _lineMesh = new SingleArrayMesh('_DebugDrawLineManager', device);
     _lineMesh.primitiveTopology = PrimitiveTopology.Lines;
     _lineMesh.vertexArray.allocate(_vboStorage.length*4,
-                                   SpectreBuffer.UsageDynamic);
+                                   UsagePattern.DynamicDraw);
     _lineMesh.attributes['vPosition'] = new SpectreMeshAttribute('vPosition',
                                                                  'float', 3,
                                                                  0, 28, false);
