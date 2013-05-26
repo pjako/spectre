@@ -20,103 +20,47 @@
 
 part of spectre;
 
-/// Defines comparison functions that can be chosen for stencil, or depth-buffer tests.
-class CompareFunction {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// Serialization name for [Always].
-  static const String _alwaysName = 'CompareFunction.Always';
-  /// Serialization name for [Equal].
-  static const String _equalName = 'CompareFunction.Equal';
-  /// Serialization name for [Greater].
-  static const String _greaterName = 'CompareFunction.Greater';
-  /// Serialization name for [GreaterEqual].
-  static const String _greaterEqualName = 'CompareFunction.GreaterEqual';
-  /// Serialization name for [Less].
-  static const String _lessName = 'CompareFunction.Less';
-  /// Serialization name for [LessEqual].
-  static const String _lessEqualName = 'CompareFunction.LessEqual';
-  /// Serialization name for [Fail].
-  static const String _failName = 'CompareFunction.Fail';
-  /// Serialization name for [NotEqual].
-  static const String _notEqualName = 'CompareFunction.NotEqual';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
+/// Defines comparison functions that can be chosen for stencil,
+/// or depth-buffer tests.
+class CompareFunction extends Enum {
   /// Always pass the test.
   static const int Always = WebGL.ALWAYS;
-  /// Accept the new pixel if its value is equal to the value of the current pixel.
+  /// Accept the new pixel if its value is equal to the value of the current
+  /// pixel.
   static const int Equal = WebGL.EQUAL;
-  /// Accept the new pixel if its value is greater than the value of the current pixel.
+  /// Accept the new pixel if its value is greater than the value of the
+  /// current pixel.
   static const int Greater = WebGL.GREATER;
-  /// Accept the new pixel if its value is greater than or equal to the value of the current pixel.
+  /// Accept the new pixel if its value is greater than or equal to the value
+  /// of the current pixel.
   static const int GreaterEqual = WebGL.GEQUAL;
-  /// Accept the new pixel if its value is less than the value of the current pixel.
+  /// Accept the new pixel if its value is less than the value of the current
+  /// pixel.
   static const int Less = WebGL.LESS;
-  /// Accept the new pixel if its value is less than or equal to the value of the current pixel.
+  /// Accept the new pixel if its value is less than or equal to the value of
+  /// the current pixel.
   static const int LessEqual = WebGL.LEQUAL;
   /// Always fail the test.
   static const int Fail = WebGL.NEVER;
-  ///  Accept the new pixel if its value does not equal the value of the current pixel.
+  ///  Accept the new pixel if its value does not equal the value of the
+  /// current pixel.
   static const int NotEqual = WebGL.NOTEQUAL;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'CompareFunction.Always' : Always,
+    'CompareFunction.Equal' : Equal,
+    'CompareFunction.Greater' : Greater,
+    'CompareFunction.GreaterEqual' : GreaterEqual,
+    'CompareFunction.Less' : Less,
+    'CompareFunction.LessEqual' : LessEqual,
+    'CompareFunction.Fail' : Fail,
+    'CompareFunction.NotEqual' : NotEqual
+  };
 
-  /// Convert from a [String] name to the corresponding [CompareFunction] enumeration.
-  static int parse(String name) {
-    switch (name) {
-      case _alwaysName      : return Always;
-      case _equalName       : return Equal;
-      case _greaterName     : return Greater;
-      case _greaterEqualName: return GreaterEqual;
-      case _lessName        : return Less;
-      case _lessEqualName   : return LessEqual;
-      case _failName        : return Fail;
-      case _notEqualName    : return NotEqual;
-    }
-
-    assert(false);
-    return Always;
-  }
-
-  /// Converts the [CompareFunction] enumeration to a [String].
-  static String stringify(int value) {
-    switch (value) {
-      case Always      : return _alwaysName;
-      case Equal       : return _equalName;
-      case Greater     : return _greaterName;
-      case GreaterEqual: return _greaterEqualName;
-      case Less        : return _lessName;
-      case LessEqual   : return _lessEqualName;
-      case Fail        : return _failName;
-      case NotEqual    : return _notEqualName;
-    }
-
-    assert(false);
-    return _alwaysName;
-  }
-
+  /// Convert a [String] to a [CompareFunction].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [CompareFunction] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    switch (value) {
-      case Always      :
-      case Equal       :
-      case Greater     :
-      case GreaterEqual:
-      case Less        :
-      case LessEqual   :
-      case Fail        :
-      case NotEqual    : return true;
-    }
-
-    return false;
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }
