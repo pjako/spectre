@@ -20,79 +20,33 @@
 
 part of spectre;
 
-class BlendOperation {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [Add].
-  static const String _addName = 'BlendOperation.Add';
-  /// String representation of [Subtract].
-  static const String _reverseSubtractName = 'BlendOperation.ReverseSubtract';
-  /// String representation of [Subtract].
-  static const String _subtractName = 'BlendOperation.Subtract';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
+class BlendOperation extends Enum {
   /// The result is the destination added to the source.
   ///
-  ///     Result = (Source Color * Source Blend) + (Destination Color * Destination Blend)
+  ///     Result = (Source Color * Source Blend) +
+  ///              (Destination Color * Destination Blend)
   static const int Add = WebGL.FUNC_ADD;
   /// The result is the source subtracted from the destination.
   ///
-  ///     Result = (Destination Color * Destination Blend) - (Source Color * Source Blend)
+  ///     Result = (Destination Color * Destination Blend) -
+  ///              (Source Color * Source Blend)
   static const int ReverseSubtract = WebGL.FUNC_REVERSE_SUBTRACT;
   /// The result is the destination subtracted from the source.
   ///
-  ///     Result = (Source Color * Source Blend) - (Destination Color * Destination Blend)
+  ///     Result = (Source Color * Source Blend) -
+  ///              (Destination Color * Destination Blend)
   static const int Subtract = WebGL.FUNC_SUBTRACT;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'BlendOperation.Add' : Add,
+    'BlendOperation.ReverseSubtract' : ReverseSubtract,
+    'BlendOperation.Subtract' : Subtract
+  };
 
-  /// Convert from a [String] name to the corresponding [BlendOperation] enumeration.
-  static int parse(String name) {
-    if (name == _addName) {
-      return Add;
-    } else if (name == _reverseSubtractName) {
-      return ReverseSubtract;
-    } else if (name == _subtractName) {
-      return Subtract;
-    }
-
-    assert(false);
-    return Add;
-  }
-
-  /// Converts the [BlendOperation] enumeration to a [String].
-  static String stringify(int value) {
-    if (value == Add) {
-      return _addName;
-    } else if (value == ReverseSubtract) {
-      return _reverseSubtractName;
-    } else if (value == Subtract) {
-      return _subtractName;
-    }
-
-    assert(false);
-    return _addName;
-  }
-
+  /// Convert a [String] to a [BlendOperation].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [BlendOperation] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    if (value == Add) {
-      return true;
-    } else if (value == ReverseSubtract) {
-      return true;
-    } else if (value == Subtract) {
-      return true;
-    }
-
-    return false;
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }
