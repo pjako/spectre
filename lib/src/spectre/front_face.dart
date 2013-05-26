@@ -29,7 +29,7 @@ class FrontFace extends Enum {
   static const int CounterClockwise = WebGL.CCW;
 
   static Map<String, int> _values = {
-    'FrontFace.ClockWise' : Clockwise,
+    'FrontFace.Clockwise' : Clockwise,
     'FrontFace.CounterClockwise' : CounterClockwise
   };
 

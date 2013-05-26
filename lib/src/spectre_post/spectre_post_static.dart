@@ -96,7 +96,7 @@ class SpectrePost {
         verts[index++] = 1.0;
       }
       assert(index == numFloats);
-      _arrayMesh.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
+      _arrayMesh.vertexArray.uploadData(verts, UsagePattern.StaticDraw);
       _arrayMesh.attributes['vPosition'] = new SpectreMeshAttribute('vPosition',
                                                                     'float',
                                                                     3, 0, 20,

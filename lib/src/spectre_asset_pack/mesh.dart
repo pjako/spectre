@@ -70,8 +70,8 @@ class MeshImporter extends AssetImporter {
     SingleArrayIndexedMesh mesh = new SingleArrayIndexedMesh(name, device);
     var vertexArray = new Float32List.fromList(meshes[0]['vertices']);
     var indexArray = new Uint16List.fromList(meshes[0]['indices']);
-    mesh.vertexArray.uploadData(vertexArray, SpectreBuffer.UsageStatic);
-    mesh.indexArray.uploadData(indexArray, SpectreBuffer.UsageStatic);
+    mesh.vertexArray.uploadData(vertexArray, UsagePattern.StaticDraw);
+    mesh.indexArray.uploadData(indexArray, UsagePattern.StaticDraw);
     mesh.count = indexArray.length;
     meshes[0]['attributes'].forEach((k, v) {
       var attribute = new SpectreMeshAttribute(v['name'],

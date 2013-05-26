@@ -277,7 +277,7 @@ class Renderer {
     fullscreenVertexArray[10] = 0.0;
     fullscreenVertexArray[11] = 2.0;
     _fullscreenMesh.vertexArray.uploadData(fullscreenVertexArray,
-                                           SpectreBuffer.UsageStatic);
+                                           UsagePattern.StaticDraw);
     _fullscreenMesh.attributes['vPosition'] = new SpectreMeshAttribute(
         'vPosition',
         'float',
