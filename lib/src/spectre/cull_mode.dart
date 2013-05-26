@@ -21,71 +21,24 @@
 part of spectre;
 
 /// Indicates whether triangles facing a particular direction are drawn.
-class CullMode {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [None].
-  static const String _noneName = 'CullMode.None';
-  /// String representation of [Front].
-  static const String _frontName = 'CullMode.Front';
-  /// String representation of [Back].
-  static const String _backName = 'CullMode.Back';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
-  /// Always draw all triangles.
+class CullMode extends Enum {
+  /// Always draw.
   static const int None = 0;
-  /// Do not draw triangles that are front-facing.
+  /// Do not draw if triangle is front-facing.
   static const int Front = WebGL.FRONT;
-  /// Do not draw triangles that are back-facing.
+  /// Do not draw if triangle is back-facing.
   static const int Back = WebGL.BACK;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'CullMode.None' : None,
+    'CullMode.Front' : Front,
+    'CullMode.Back' : Back
+  };
 
-  /// Convert from a [String] name to the corresponding [CullMode] enumeration.
-  static int parse(String name) {
-    if (name == _noneName) {
-      return None;
-    } else if (name == _frontName) {
-      return Front;
-    } else if (name == _backName) {
-      return Back;
-    }
-
-    assert(false);
-    return None;
-  }
-
-  /// Converts the [CullMode] enumeration to a [String].
-  static String stringify(int value) {
-    if (value == None) {
-      return _noneName;
-    } else if (value == Front) {
-      return _frontName;
-    } else if (value == Back) {
-      return _backName;
-    }
-
-    assert(false);
-    return _noneName;
-  }
-
+  /// Convert a [String] to a [CullMode].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [CullMode] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  static bool isValid(int value) {
-    if (value == None) {
-      return true;
-    } else if (value == Front) {
-      return true;
-    } else if (value == Back) {
-      return true;
-    }
-
-    return false;
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }

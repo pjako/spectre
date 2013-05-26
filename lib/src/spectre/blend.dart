@@ -102,9 +102,9 @@ class Blend extends Enum {
   };
 
   /// Convert a [String] to a [Blend].
-  static int parse(String name) => Enum._parse(Blend._values, name);
+  static int parse(String name) => Enum._parse(_values, name);
   /// Convert a [Blend] to a [String].
-  static String stringify(int value) => Enum._stringify(Blend._values, value);
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  static bool isValid(int value) => Enum._isValid(Blend._values, value);
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }
