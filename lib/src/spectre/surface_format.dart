@@ -21,26 +21,7 @@
 part of spectre;
 
 /// Defines various types of surface formats.
-class SurfaceFormat {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [Rgba].
-  static const String _rgbaName = 'SurfaceFormat.Rgba';
-  /// String representation of [Rgb].
-  static const String _rgbName = 'SurfaceFormat.Rgb';
-  /// String representation of [Dxt1].
-  static const String _dxt1Name = 'SurfaceFormat.Dxt1';
-  /// String representation of [Dxt3].
-  static const String _dxt3Name = 'SurfaceFormat.Dxt3';
-  /// String representation of [Dxt5].
-  static const String _dxt5Name = 'SurfaceFormat.Dxt5';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
+class SurfaceFormat extends Enum {
   /// 32-bit RGBA pixel format with alpha, using 8 bits per channel.
   ///
   /// Underlying format is an unsigned byte.
@@ -51,64 +32,36 @@ class SurfaceFormat {
   static const int Rgb = WebGL.RGB;
   /// DXT1 compression format.
   ///
-  /// Only available if the compressed texture s3tc extension is supported. Assumes
-  /// the texture has no alpha component. DXT1 can support alpha but only 1-bit.
-  static const int Dxt1 = 0x83F0; // Value is not in WebGLRenderingContext. Using value from spec.
+  /// Only available if the compressed texture s3tc extension is supported.
+  /// Assumes the texture has no alpha component. DXT1 can support
+  /// alpha but only 1-bit.
+  // Value is not in WebGLRenderingContext. Using value from spec.
+  static const int Dxt1 = 0x83F0;
   /// DXT3 compression format.
   ///
   /// Only available if the compressed texture s3tc extension is supported.
-  static const int Dxt3 = 0x83F2; // Value is not in WebGLRenderingContext. Using value from spec.
+// Value is not in WebGLRenderingContext. Using value from spec.
+  static const int Dxt3 = 0x83F2;
   /// DXT5 compression format.
   ///
   /// Only available if the compressed texture s3tc extension is supported.
-  static const int Dxt5 = 0x83F3; // Value is not in WebGLRenderingContext. Using value from spec.
+  // Value is not in WebGLRenderingContext. Using value from spec.
+  static const int Dxt5 = 0x83F3;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'SurfaceFormat.Rgba' : Rgba,
+    'SurfaceFormat.Rgb' : Rgb,
+    'SurfaceFormat.Dxt1' : Dxt1,
+    'SurfaceFormat.Dxt3' : Dxt3,
+    'SurfaceFormat.Dxt5' : Dxt5
+  };
 
-  /// Convert from a [String] name to the corresponding [SurfaceFormat] enumeration.
-  static int parse(String name) {
-    switch (name) {
-      case _rgbaName : return Rgba;
-      case _rgbName  : return Rgb;
-      case _dxt1Name : return Dxt1;
-      case _dxt3Name : return Dxt3;
-      case _dxt5Name : return Dxt5;
-    }
-
-    assert(false);
-    return Rgba;
-  }
-
-  /// Converts the [SurfaceFormat] enumeration to a [String].
-  static String stringify(int value) {
-    switch (value) {
-      case Rgba : return _rgbaName;
-      case Rgb  : return _rgbName;
-      case Dxt1 : return _dxt1Name;
-      case Dxt3 : return _dxt3Name;
-      case Dxt5 : return _dxt5Name;
-    }
-
-    assert(false);
-    return _rgbaName;
-  }
-
+  /// Convert a [String] to a [SurfaceFormat].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [SurfaceFormat] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    switch (value) {
-      case Rgba :
-      case Rgb  :
-      case Dxt1 :
-      case Dxt3 :
-      case Dxt5 : return true;
-    }
-
-    return false;
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 
   /// Checks whether the value is a compressed format.
   static bool _isCompressedFormat(int value) {
@@ -120,8 +73,9 @@ class SurfaceFormat {
   /// WebGL does not determine the internal format based on the surface type
   /// so this must be queried directly.
   static int _getInternalFormat(int value) {
-    // This method will not be called for compressed textures as there's no internal format parameter
-    // within compressedTexImage) so just return unsigned byte as the other formats are all unsigned byte
+    // This method will not be called for compressed textures as there's
+    // no internal format parameter within compressedTexImage) so just return
+    // unsigned byte as the other formats are all unsigned byte
     return WebGL.UNSIGNED_BYTE;
   }
 }
