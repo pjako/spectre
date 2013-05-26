@@ -215,7 +215,8 @@ class BlendState extends DeviceChild {
   /// [value] is not an enumeration within [BlendOperation].
   set alphaBlendOperation(int value) {
     if (!BlendOperation.isValid(value)) {
-      throw new ArgumentError('alphaBlendOperation must be an enumeration within BlendOperation.');
+      throw new ArgumentError('alphaBlendOperation must be an enumeration '
+                              'within BlendOperation.');
     }
 
     _alphaBlendOperation = value;
@@ -229,7 +230,8 @@ class BlendState extends DeviceChild {
   /// [Blend].
   set alphaDestinationBlend(int value) {
     if (!Blend.isValid(value)) {
-      throw new ArgumentError('alphaDestinationBlend must be an enumeration within Blend.');
+      throw new ArgumentError('alphaDestinationBlend must be an enumeration '
+                              'within Blend.');
     }
 
     _alphaDestinationBlend = value;
@@ -243,7 +245,8 @@ class BlendState extends DeviceChild {
   /// [Blend].
   set alphaSourceBlend(int value) {
     if (!Blend.isValid(value)) {
-      throw new ArgumentError('alphaSourceBlend must be an enumeration within Blend.');
+      throw new ArgumentError('alphaSourceBlend must be an enumeration within '
+                              'Blend.');
     }
 
     _alphaSourceBlend = value;
@@ -257,7 +260,8 @@ class BlendState extends DeviceChild {
   /// [Blend].
   set colorBlendOperation(int value) {
     if (!BlendOperation.isValid(value)) {
-      throw new ArgumentError('colorBlendOperation must be an enumeration within BlendOperation.');
+      throw new ArgumentError('colorBlendOperation must be an enumeration '
+                              'within BlendOperation.');
     }
 
     _colorBlendOperation = value;
@@ -266,10 +270,12 @@ class BlendState extends DeviceChild {
 
   /// The blend factor for the destination color.
   /// The default is [Blend.One].
-  /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
+  /// Throws [ArgumentError] if the [value] is not an enumeration within
+  /// [Blend].
   set colorDestinationBlend(int value) {
     if (!Blend.isValid(value)) {
-      throw new ArgumentError('colorDestinationBlend must be an enumeration within Blend.');
+      throw new ArgumentError('colorDestinationBlend must be an enumeration '
+                              'within Blend.');
     }
 
     _colorDestinationBlend = value;
@@ -279,10 +285,12 @@ class BlendState extends DeviceChild {
 
   /// The blend factor for the source color.
   /// The default is Blend.One.
-  /// Throws [ArgumentError] if the [value] is not an enumeration within [Blend].
+  /// Throws [ArgumentError] if the [value] is not an enumeration within
+  /// [Blend].
   set colorSourceBlend(int value) {
     if (!Blend.isValid(value)) {
-      throw new ArgumentError('colorSourceBlend must be an enumeration within Blend.');
+      throw new ArgumentError('colorSourceBlend must be an enumeration within '
+                              'Blend.');
     }
 
     _colorSourceBlend = value;

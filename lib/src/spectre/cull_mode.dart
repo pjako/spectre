@@ -77,8 +77,6 @@ class CullMode {
   }
 
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
   static bool isValid(int value) {
     if (value == None) {
       return true;
