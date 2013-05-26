@@ -55,7 +55,7 @@ abstract class SpectreMesh extends DeviceChild {
   final Map<String, SpectreMeshAttribute> attributes =
       new Map<String, SpectreMeshAttribute>();
   int count = 0;
-  int primitiveTopology = GraphicsContext.PrimitiveTopologyTriangles;
+  int primitiveTopology = PrimitiveTopology.Triangles;
   SpectreMesh(String name, GraphicsDevice device)
       : super._internal(name, device);
   void finalize() {

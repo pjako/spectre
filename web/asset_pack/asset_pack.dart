@@ -125,7 +125,7 @@ Float32List _cameraTransform = new Float32List(16);
 void _drawSkybox() {
   var context = _graphicsDevice.context;
   context.setInputLayout(_skyboxInputLayout);
-  context.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+  context.setPrimitiveTopology(PrimitiveTopology.Triangles);
   context.setShaderProgram(_skyboxShaderProgram);
   context.setTextures(0, [_assetManager['demoAssets.space']]);
   context.setSamplers(0, [_skyboxSampler]);
@@ -206,7 +206,7 @@ void _drawSkinnedCharacter() {
   _drawSkinnedBones(_skinnedMesh.skeleton.boneList[0],
                     _skinnedMeshInstance.posedSkeleton);
   var context = _graphicsDevice.context;
-  context.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+  context.setPrimitiveTopology(PrimitiveTopology.Triangles);
   context.setShaderProgram(_skinnedShaderProgram);
   context.setSamplers(0, [_skyboxSampler]);
   {

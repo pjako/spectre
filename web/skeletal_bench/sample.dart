@@ -750,7 +750,7 @@ class Application {
     _graphicsContext.setConstant('uModelViewProjectionMatrix', _modelViewProjectionMatrixArray);
 
     _graphicsContext.setVertexBuffers(0, [_room.vertexArray]);
-    _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+    _graphicsContext.setPrimitiveTopology(PrimitiveTopology.Triangles);
     _graphicsContext.setInputLayout(_roomInputLayout);
 
     modelMatrix[0] = 1.0;
@@ -785,7 +785,7 @@ class Application {
       SkinnedMesh mesh = meshInstance.mesh;
       _graphicsContext.setVertexBuffers(0, [mesh.vertexArray, mesh.skinningArray]);
       _graphicsContext.setIndexBuffer(mesh.indexArray);
-      _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+      _graphicsContext.setPrimitiveTopology(PrimitiveTopology.Triangles);
 
       if(useGpuSkinning) {
         _graphicsContext.setInputLayout(_skinnedInputLayout);

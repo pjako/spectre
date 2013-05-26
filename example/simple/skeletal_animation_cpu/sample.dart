@@ -480,7 +480,7 @@ class Application {
     _graphicsContext.setVertexBuffers(0, [mesh.vertexArray]);
     _graphicsContext.setIndexBuffer(mesh.indexArray);
     _graphicsContext.setInputLayout(_inputLayout);
-    _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+    _graphicsContext.setPrimitiveTopology(PrimitiveTopology.Triangles);
 
     // Draw each part of the mesh
     int meshCount = mesh.meshes.length;

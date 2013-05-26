@@ -22,9 +22,6 @@ part of spectre;
 
 /// The [GraphicsContext] configures the GPU pipeline and executes draw commands.
 class GraphicsContext {
-  static final int PrimitiveTopologyTriangles = WebGL.TRIANGLES;
-  static final int PrimitiveTopologyLines = WebGL.LINES;
-  static final int PrimitiveTopologyPoints = WebGL.POINTS;
   static final int numVertexBuffers = 2;
   static final int numTextures = 3;
   final GraphicsDevice device;
