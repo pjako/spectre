@@ -269,8 +269,9 @@ void importAttribute(SkinnedMesh mesh, Map json) {
   String name = json['name'];
   int offset = json['offset'];
   int stride = json['stride'];
-  mesh.attributes[name] = new SpectreMeshAttribute(name, 'float', 4,
-      offset, stride, false);
+  mesh.attributes[name] = new SpectreMeshAttribute(
+      name,
+      new VertexAttribute(0, 0, offset, stride, DataType.Float32, 4, false));
 }
 
 void importAnimationFrames(SkeletonAnimation animation, int boneId, Map ba) {
@@ -404,19 +405,10 @@ SkinnedMesh importSkinnedMesh2(String name, GraphicsDevice device, Map json) {
 
     // GPU-skinning specific attributes
     mesh.attributes['vBoneIndices'] = new SpectreMeshAttribute('vBoneIndices',
-                                                               'float',
-                                                               4,
-                                                               0,
-                                                               16,
-                                                               false,
-                                                               1);
+        new VertexAttribute(1, 0, 0, 16, DataType.Float32, 4, false));
     mesh.attributes['vBoneWeights'] = new SpectreMeshAttribute('vBoneWeights',
-                                                               'float',
-                                                               4,
-                                                               boneId.length*4,
-                                                               16,
-                                                               false,
-                                                               1);
+        new VertexAttribute(1, 0, boneId.length*4, 16, DataType.Float32, 4,
+                            false));
     mesh.skinningArray.uploadData(mesh.skinningData, UsagePattern.StaticDraw);
   }
   return mesh;

@@ -173,9 +173,9 @@ class GraphicsContext {
       device.gl.enableVertexAttribArray(element.attributeIndex);
       vb._bind();
       device.gl.vertexAttribPointer(element.attributeIndex,
-        element.attributeFormat.count,
-        element.attributeFormat.type,
-        element.attributeFormat.normalized,
+        element.dataCount,
+        element.dataType,
+        element.normalizeData,
         element.attributeStride,
         element.attributeOffset);
       // Remember that this was enabled.

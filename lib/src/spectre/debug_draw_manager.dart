@@ -145,12 +145,12 @@ class _DebugDrawLineManager {
     _lineMesh.primitiveTopology = PrimitiveTopology.Lines;
     _lineMesh.vertexArray.allocate(_vboStorage.length*4,
                                    UsagePattern.DynamicDraw);
-    _lineMesh.attributes['vPosition'] = new SpectreMeshAttribute('vPosition',
-                                                                 'float', 3,
-                                                                 0, 28, false);
-    _lineMesh.attributes['vColor'] = new SpectreMeshAttribute('vColor',
-                                                              'float', 4,
-                                                              12, 28, false);
+    _lineMesh.attributes['vPosition'] = new SpectreMeshAttribute(
+        'vPosition',
+        new VertexAttribute(0, 0, 0, 28, DataType.Float32, 3, false));
+    _lineMesh.attributes['vColor'] = new SpectreMeshAttribute(
+        'vColor',
+        new VertexAttribute(0, 0, 12, 28, DataType.Float32, 4, false));
     _lineMeshInputLayout = new InputLayout('_DebugDrawLineManager', device);
     _lineMeshInputLayout.shaderProgram = shaderProgram;
     _lineMeshInputLayout.mesh = _lineMesh;

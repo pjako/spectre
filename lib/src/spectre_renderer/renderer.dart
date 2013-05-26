@@ -278,20 +278,17 @@ class Renderer {
     fullscreenVertexArray[11] = 2.0;
     _fullscreenMesh.vertexArray.uploadData(fullscreenVertexArray,
                                            UsagePattern.StaticDraw);
+
+    VertexAttribute(this.vboSlot, this.attributeIndex, this.attributeOffset,
+        this.attributeStride, this.dataType, this.dataCount,
+        this.normalizeData);
+
     _fullscreenMesh.attributes['vPosition'] = new SpectreMeshAttribute(
         'vPosition',
-        'float',
-        2,
-        0,
-        16,
-        false);
+        new VertexAttribute(0, 0, 0, 16, DataType.Float32, 2, false));
     _fullscreenMesh.attributes['vTexCoord'] = new SpectreMeshAttribute(
         'vTexCoord',
-        'float',
-        2,
-        8,
-        16,
-        false);
+        new VertexAttribute(0, 0, 8, 16, DataType.Float32, 2, false));
     _fullscreenMesh.count = 3;
     _fullscreenMeshInputLayout = new InputLayout('fullscreen', device);
     _fullscreenMeshInputLayout.mesh = _fullscreenMesh;

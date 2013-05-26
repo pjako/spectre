@@ -72,12 +72,9 @@ class InputLayout extends DeviceChild {
       if (meshAttribute == null) {
         missingAttributes.add(shaderProgramAttribute);
       } else {
-        VertexAttribute element = new VertexAttribute(
-            meshAttribute.vboSlot,
-            shaderProgramAttribute.location,
-            meshAttribute.offset,
-            meshAttribute.stride,
-            meshAttribute.deviceFormat, false);
+        VertexAttribute element = new VertexAttribute.atAttributeIndex(
+            meshAttribute.attribute,
+            shaderProgramAttribute.location);
         attributes.add(element);
       }
     });

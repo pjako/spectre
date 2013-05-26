@@ -577,12 +577,12 @@ class Application {
     _room = new SingleArrayMesh('FloorMesh', _graphicsDevice);
     _room.vertexArray.uploadData(verts, UsagePattern.StaticDraw);
 
-    _room.attributes['vPosition'] = new SpectreMeshAttribute('vPosition', 'float', 3,
-        0, 32, false);
-    _room.attributes['vTexCoord0'] = new SpectreMeshAttribute('vTexCoord0', 'float', 2,
-        12, 32, false);
-    _room.attributes['vNormal'] = new SpectreMeshAttribute('vNormal', 'float', 3,
-        20, 32, false);
+    _room.attributes['vPosition'] = new SpectreMeshAttribute('vPosition',
+        new VertexAttribute(0, 0, 0, 32, DataType.Float32, 3, false));
+    _room.attributes['vTexCoord0'] = new SpectreMeshAttribute('vTexCoord0',
+        new VertexAttribute(0, 0, 12, 32, DataType.Float32, 2, false));
+    _room.attributes['vNormal'] = new SpectreMeshAttribute('vNormal',
+        new VertexAttribute(0, 0, 20, 32, DataType.Float32, 3, false));
 
     _roomInputLayout = new InputLayout('FloorInputLayout', _graphicsDevice);
     _roomInputLayout.shaderProgram = _simpleShaderProgram;

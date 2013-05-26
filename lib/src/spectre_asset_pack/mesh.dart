@@ -54,12 +54,8 @@ class MeshImporter extends AssetImporter {
 
       SpectreMeshAttribute attribute = new SpectreMeshAttribute(
           name,
-          'float',
-          count,
-          offset,
-          stride,
-          false);
-
+          new VertexAttribute(0, 0, offset, stride, DataType.Float32, count,
+                              false));
       mesh.attributes[name] = attribute;
     });
     return mesh;

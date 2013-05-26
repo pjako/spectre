@@ -21,12 +21,30 @@
 part of spectre;
 
 class VertexAttribute {
+  /// Vertex buffer slot to fetch from.
   final int vboSlot;
+  /// Shader attribute index.
   final int attributeIndex;
+  /// Offset into buffer to fetch at.
   final int attributeOffset;
+  /// Stride between vertices.
   final int attributeStride;
-  final DeviceFormat attributeFormat;
-  final bool normalized;
+  /// Type of data.
+  final int dataType;
+  /// Number of dataType to be fetched for this attribute.
+  final int dataCount;
+  /// Data is converted into a normalized floating point value.
+  /// 0.0 ... 1.0 for unsigned, -1.0 ... 1.0 for signed data.
+  final bool normalizeData;
   VertexAttribute(this.vboSlot, this.attributeIndex, this.attributeOffset,
-                  this.attributeStride, this.attributeFormat, this.normalized);
+                  this.attributeStride, this.dataType, this.dataCount,
+                  this.normalizeData);
+  VertexAttribute.atAttributeIndex(VertexAttribute attribute,
+                                   this.attributeIndex) :
+      vboSlot = attribute.vboSlot,
+      attributeOffset = attribute.attributeOffset,
+      attributeStride = attribute.attributeStride,
+      dataType = attribute.dataType,
+      dataCount = attribute.dataCount,
+      normalizeData = attribute.normalizeData;
 }

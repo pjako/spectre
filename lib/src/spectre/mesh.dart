@@ -22,33 +22,10 @@ part of spectre;
 
 class SpectreMeshAttribute {
   final String name;
-  final String componentType;
-  final int componentCount;
-  final int offset;
-  final int stride;
-  final bool normalized;
-  final int vboSlot;
+  final VertexAttribute attribute;
+  SpectreMeshAttribute(this.name, this.attribute);
 
-  SpectreMeshAttribute(this.name, this.componentType, this.componentCount,
-                       this.offset, this.stride, this.normalized, [this.vboSlot = 0]);
-
-  DeviceFormat get deviceFormat {
-    assert(componentType == 'float');
-    switch (componentCount) {
-      case 1:
-        return GraphicsDevice.DeviceFormatFloat1;
-      case 2:
-        return GraphicsDevice.DeviceFormatFloat2;
-      case 3:
-        return GraphicsDevice.DeviceFormatFloat3;
-      case 4:
-        return GraphicsDevice.DeviceFormatFloat4;
-      default:
-        throw new FallThroughError();
-    }
-  }
-
-  String toString() => '$name $componentType$componentCount $offset $stride $vboSlot';
+  String toString() => '$name $attribute';
 }
 
 abstract class SpectreMesh extends DeviceChild {
