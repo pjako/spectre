@@ -36,7 +36,9 @@ class Enum {
         r = k;
       }
     });
-    assert(r != null);
+    if (r == null) {
+      throw new AssertionError();
+    }
     return r;
   }
 
