@@ -27,6 +27,7 @@ part of spectre_renderer;
  */
 class Renderer {
   final GraphicsDevice device;
+  final DebugDrawManager debugDrawManager;
   final CanvasElement frontBuffer;
   final AssetManager assetManager;
   AssetPack _rendererPack;
@@ -36,6 +37,8 @@ class Renderer {
       new Map<String, RenderBuffer>();
   final Map<String, RenderTarget> renderTargets =
       new Map<String, RenderTarget>();
+  final Map<String, MaterialShader> materialShaders =
+      new Map<String, MaterialShader>();
 
   Viewport _frontBufferViewport;
   Viewport get frontBufferViewport => _frontBufferViewport;
@@ -136,6 +139,33 @@ class Renderer {
                                               '', {}, {});
       asset.imported =  RenderTarget.systemRenderTarget;
     }
+  }
+
+  Layer layerFactory(Map layerDescription) {
+    String type = layerDescription['type'];
+    if (type == null) {
+      throw new FormatException('Layer has no type.');
+    }
+    String name = layerDescription['name'];
+    if (name == null) {
+      throw new FormatException('Layer has no name.');
+    }
+    Layer layer;
+    switch (type) {
+      case 'Fullscreen':
+        layer = new FullscreenLayer(name);
+      break;
+      case 'DebugDraw':
+        layer = new DebugDrawLayer(name, debugDrawManager);
+      break;
+      case 'Scene':
+        layer = new SceneLayer(name);
+      break;
+      default:
+        throw new UnimplementedError('Unknown layer type: $type');
+    }
+    layer.fromJson(layerDescription, this);
+    return layer;
   }
 
   /// Clear render targets.
@@ -302,11 +332,11 @@ void main() {
   gl_FragColor = texture2D(source, samplePoint);
 }
 ''';
-    Material blitMaterial = new Material('blit fullscreen', _blitMaterialShader,
-                                         this);
-    var asset = _fullscreenEffectsPack.registerAsset('blit', 'material', '',
-                                                     {}, {});
-    asset.imported = blitMaterial;
+
+    var asset = _fullscreenEffectsPack.registerAsset('blit', 'materialShader',
+                                                     '', {}, {});
+    asset.imported = _blitMaterialShader;
+    materialShaders['blit'] = _blitMaterialShader;
   }
 
   void _buildFullscreenPassData() {
@@ -315,7 +345,8 @@ void main() {
     _buildFullscreenBlitMaterial();
   }
 
-  Renderer(this.frontBuffer, this.device, this.assetManager) {
+  Renderer(this.frontBuffer, this.device, this.debugDrawManager,
+           this.assetManager) {
     _clearDepthState = new DepthState('clear depth state', device);
     _clearDepthState.depthBufferWriteEnabled = true;
     _clearBlendState = new BlendState('clear blend state', device);

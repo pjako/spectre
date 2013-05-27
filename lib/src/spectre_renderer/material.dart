@@ -53,6 +53,10 @@ class Material {
     textures[name] = texture;
   }
 
+  Material.json(Map map, this.renderer) {
+    fromJson(map);
+  }
+
   Material(this.name, this.shader, this.renderer) {
     if (this.name == null) {
       throw new ArgumentError('name cannot be null.');
@@ -89,6 +93,7 @@ class Material {
   dynamic toJson() {
     Map json = new Map();
     json['name'] = name;
+    json['shaderName'] = shader.name;
     json['constants'] = {};
     constants.forEach((k, v) {
       json['constants'][k] = v.toJson();
@@ -101,13 +106,18 @@ class Material {
   }
 
   void fromJson(dynamic json) {
+    shader = renderer.materialShaders[json['shaderName']];
     constants.clear();
-    constants.forEach((k, v) {
-      v.fromJson(json['constants'][k]);
-    });
+    if (json['constats'] != null) {
+      json['constants'].forEach((k, v) {
+        constants[k] = new MaterialConstant.json(v);
+      });
+    }
     textures.clear();
-    textures.forEach((k, v) {
-      v.fromJson(json['textures'][k]);
-    });
+    if (json['textures'] != null) {
+      json['textures'].forEach((k, v) {
+        textures[k] = new MaterialTexture.json(renderer, v);
+      });
+    }
   }
 }

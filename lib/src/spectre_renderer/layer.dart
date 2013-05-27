@@ -49,7 +49,7 @@ abstract class Layer {
   }
 
   /// Name of layer.
-  final String name;
+  String name;
   String get type;
 
   /// Material.
@@ -86,9 +86,13 @@ abstract class Layer {
 
   void render(Renderer renderer, List<Renderable> renderables, Camera camera);
 
-  void fromJson(Map json) {
-    renderTarget = json['rendertarget'];
+  void fromJson(Map json, Renderer renderer) {
+    name = json['name'];
+    renderTarget = json['renderTarget'];
     clearColorTarget = json['clearColorTarget'];
+    if (json['material'] != null) {
+      material = new Material.json(json['material'], renderer);
+    }
     clearColorR = json['clearColorR'];
     clearColorG = json['clearColorG'];
     clearColorB = json['clearColorB'];
@@ -102,6 +106,7 @@ abstract class Layer {
     json['name'] = name;
     json['type'] = type;
     json['renderTarget'] = renderTarget;
+    json['material'] = material;
     json['clearColorTarget'] = clearColorTarget;
     json['clearColorR'] = clearColorR;
     json['clearColorG'] = clearColorG;

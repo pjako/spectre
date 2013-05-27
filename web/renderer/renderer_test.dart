@@ -13,7 +13,7 @@ final String _canvasId = '#frontBuffer';
 
 // TODO:
 // Flesh out import / export.
-// Write good useful shader.
+
 // Implement DynamicMeshRenderable, sub classes:
 //   Implement FullscreenRenderable
 //   Implement CubeRenderable
@@ -21,7 +21,9 @@ final String _canvasId = '#frontBuffer';
 //   Implement CapsuleRenderable
 //   Implement ConvexHullRenderable
 //   Implement CubeRenderable
+
 // ^^ Above mesh properties (cube extents, etc) are mutable- regenerate mesh.
+
 // Only update material camera transform, time uniforms once.
 
 GraphicsDevice graphicsDevice;
@@ -66,6 +68,8 @@ Map renderer_config = {
  }
  ]
 };
+
+List<Map> layer_config = Json.parse('[{"clearColorB":0.0,"clearColorTarget":true,"clearDepthValue":1.0,"name":"clear","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":true,"type":"Fullscreen","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"color","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Scene","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"debug","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"DebugDraw","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"blit","clearColorG":0.0,"renderTarget":"frontBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Fullscreen","material":{"constants":{},"name":"blit","shaderName":"blit","textures":{"source":{"texturePath":"renderer.colorBuffer","name":"source","sampler":{"addressU":"TextureAddressMode.Clamp","magFilter":"TextureMagFilter.Linear","addressV":"TextureAddressMode.Clamp","maxAnisotropy":1.0,"minFilter":"TextureMinFilter.Linear"}}}}}]');
 
 void gameFrame(GameLoopHtml gameLoop) {
   double dt = gameLoop.dt;
@@ -259,7 +263,8 @@ main() {
 
   assetManager = new AssetManager();
   registerSpectreWithAssetManager(graphicsDevice, assetManager);
-  renderer = new Renderer(canvas, graphicsDevice, assetManager);
+  renderer = new Renderer(canvas, graphicsDevice, debugDrawManager,
+                          assetManager);
   renderer.fromJson(renderer_config);
   gameLoop = new GameLoopHtml(canvas);
   gameLoop.onUpdate = gameFrame;
@@ -273,27 +278,37 @@ main() {
     _makeMaterial();
     _buildCubes();
     _setupSkybox();
-    // Setup layers.
-    var clearBackBuffer = new FullscreenLayer('clear');
-    clearBackBuffer.clearColorTarget = true;
-    clearBackBuffer.clearDepthTarget = true;
-    clearBackBuffer.renderTarget = 'backBuffer';
-    layers.add(clearBackBuffer);
-    var colorBackBuffer = new SceneLayer('color');
-    colorBackBuffer.renderTarget = 'backBuffer';
-    layers.add(colorBackBuffer);
-    var debugLayer = new DebugDrawLayer('debug', debugDrawManager);
-    debugLayer.renderTarget = 'backBuffer';
-    layers.add(debugLayer);
-    var blitBackBuffer = new FullscreenLayer('blit');
-    blitBackBuffer.renderTarget = 'frontBuffer';
-    blitBackBuffer.material = assetManager['fullscreenEffects.blit'];
-    blitBackBuffer.material.addTexture('source');
-    blitBackBuffer.material.textures['source'].texturePath =
-        'renderer.colorBuffer';
-    blitBackBuffer.material.textures['source'].sampler = renderer.NPOTSampler;
-    layers.add(blitBackBuffer);
-    print(Json.stringify(layers));
+    if (true) {
+      for (int i = 0; i < layer_config.length; i++) {
+        Layer layer = renderer.layerFactory(layer_config[i]);
+        layers.add(layer);
+      }
+    } else {
+      // Setup layers.
+      var clearBackBuffer = new FullscreenLayer('clear');
+      clearBackBuffer.clearColorTarget = true;
+      clearBackBuffer.clearDepthTarget = true;
+      clearBackBuffer.renderTarget = 'backBuffer';
+      layers.add(clearBackBuffer);
+      var colorBackBuffer = new SceneLayer('color');
+      colorBackBuffer.renderTarget = 'backBuffer';
+      layers.add(colorBackBuffer);
+      var debugLayer = new DebugDrawLayer('debug', debugDrawManager);
+      debugLayer.renderTarget = 'backBuffer';
+      layers.add(debugLayer);
+      var blitBackBuffer = new FullscreenLayer('blit');
+      blitBackBuffer.renderTarget = 'frontBuffer';
+      blitBackBuffer.material = new Material(
+          'blit',
+          assetManager['fullscreenEffects.blit'],
+          renderer);
+      blitBackBuffer.material.addTexture('source');
+      blitBackBuffer.material.textures['source'].texturePath =
+          'renderer.colorBuffer';
+      blitBackBuffer.material.textures['source'].sampler = renderer.NPOTSampler;
+      layers.add(blitBackBuffer);
+      print(Json.stringify(layers));
+    }
     gameLoop.start();
   });
 }
