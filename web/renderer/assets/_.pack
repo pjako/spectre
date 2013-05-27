@@ -21,17 +21,6 @@
 
     }
   },
-  "skyBoxShader":{
-    "loadArguments":{
-
-    },
-    "name":"skyBoxShader",
-    "url":"shader/skyBoxShader.shader",
-    "type":"shaderProgram",
-    "importArguments":{
-
-    }
-  },
   "guard1_face":{
     "loadArguments":{
 
@@ -71,7 +60,7 @@
     },
     "name":"skyBoxVertexShader",
     "url":"shader/skyBoxVertexShader.glsl",
-    "type":"vertexShader",
+    "type":"text",
     "importArguments":{
 
     }
@@ -93,7 +82,7 @@
     },
     "name":"skyBoxFragmentShader",
     "url":"shader/skyBoxFragmentShader.glsl",
-    "type":"fragmentShader",
+    "type":"text",
     "importArguments":{
 
     }

@@ -11,13 +11,15 @@ import 'package:spectre/spectre_renderer.dart';
 final String _canvasId = '#frontBuffer';
 
 // TODO:
-// Material constants are decoupled from shader constants.
-// Material is a property sheet.
-// Shader looks up current value in material.
-// Look up material settings first in renderable then layer.
-// A shader has a default material property sheet.
-// Add Material->apply(). Possible for a material to override it.
 // Fix renderable interface.
+//   Implement FullscreenRenderable
+// Fix material texture handling
+// Material is just set of constants and textures
+// Shader consumes it:
+//     Shader material
+//     Layer material
+//     Renderable material
+// Add Material->apply(). Possible for a material to override it.
 // Add layer list importer and material importer.
 // Only update material camera transform, time uniforms once.
 
@@ -133,29 +135,34 @@ BlendState _skyboxBlendState;
 RasterizerState _skyboxRasterizerState;
 
 void _setupSkybox() {
-  _skyboxShaderProgram = assetManager['demoAssets.skyBoxShader'];
-  assert(_skyboxShaderProgram.linked == true);
-  _skyboxMesh = assetManager['demoAssets.skyBox'];
-  _skyboxInputLayout = new InputLayout('Skybox', graphicsDevice);
-  _skyboxInputLayout.mesh = _skyboxMesh;
-  _skyboxInputLayout.shaderProgram = _skyboxShaderProgram;
-  assert(_skyboxInputLayout.ready == true);
-  _skyboxSampler = new SamplerState('Skybox', graphicsDevice);
-  _skyboxDepthState = new DepthState('Skybox', graphicsDevice);
-  _skyboxBlendState = new BlendState('Skybox', graphicsDevice);
-  _skyboxBlendState.enabled = false;
-  _skyboxRasterizerState = new RasterizerState('skybox.rs', graphicsDevice);
-  _skyboxRasterizerState.cullMode = CullMode.None;
+  MaterialShader materialShader = new MaterialShader('skyBox', renderer);
+  materialShader.vertexShader = assetManager['demoAssets.skyBoxVertexShader'];
+  materialShader.fragmentShader =
+      assetManager['demoAssets.skyBoxFragmentShader'];
+  materialShader.rasterizerState.cullMode = CullMode.None;
+  materialShader.blendState.enabled = false;
+  var asset = assetManager['demoAssets'].registerAsset('skyBoxShader',
+                                                       'MaterialShader', '', {},
+                                                       {});
+  asset.imported = materialShader;
+  Renderable renderable = new Renderable('Skybox', renderer,
+                                         'demoAssets.skyBox');
+  renderable.T.setIdentity();
+  renderable.material = new Material('Skybox', materialShader, renderer);
+  renderable.material.textures['skyMap'].texturePath = 'demoAssets.space';
+  renderable.material.addConstant('cameraTransform', 'mat4');
+  renderables.add(renderable);
 }
 
 void _buildCubes() {
   renderables.length = 100;
   for (int i = 0; i < 100; i++) {
     Renderable renderable = new Renderable('box $i', renderer,
-                                           'demoAssets.unitCube', {});
+                                           'demoAssets.unitCube');
     renderable.T.setIdentity();
     renderable.T.translate(i.toDouble() * 2.0, 0.0, 0.0);
-    renderable.materialPath = 'demoAssets.simpleTexture';
+    MaterialShader shader = assetManager['demoAssets.simpleTextureShader'];
+    renderable.material = new Material('Cube $i', shader, renderer);
     renderables[i] = renderable;
   }
 }
@@ -165,91 +172,63 @@ void _makeMaterial() {
   materialShader.vertexShader = '''
 precision highp float;
 
-attribute Vector3 POSITION;
-attribute Vector3 NORMAL;
-attribute Vector2 TEXCOORD0;
+attribute vec3 POSITION;
+attribute vec3 NORMAL;
+attribute vec2 TEXCOORD0;
 
-uniform Matrix4 cameraProjectionView;
-uniform Matrix4 normalTransform;
-uniform Matrix4 objectTransform;
+uniform mat4 cameraProjectionView;
+uniform mat4 normalTransform;
+uniform mat4 objectTransform;
 
-uniform Vector3 lightDirection;
+uniform vec3 lightDirection;
 
-varying Vector3 surfaceNormal;
-varying Vector2 samplePoint;
-varying Vector3 lightDir;
+varying vec3 surfaceNormal;
+varying vec2 samplePoint;
+varying vec3 lightDir;
 
 void main() {
     // TexCoord
     samplePoint = TEXCOORD0;
     // Normal
-    //Matrix4 LM = normalTransform*objectTransform;
-    Vector3 N = (objectTransform*Vector4(NORMAL, 0.0)).xyz;
+    //mat4 LM = normalTransform*objectTransform;
+    vec3 N = (objectTransform*vec4(NORMAL, 0.0)).xyz;
     N = normalize(N);
-    N = (normalTransform*Vector4(N, 0.0)).xyz;
+    N = (normalTransform*vec4(N, 0.0)).xyz;
     surfaceNormal = normalize(N);
-    lightDir = (normalTransform*Vector4(lightDirection, 0.0)).xyz;
-    Matrix4 M = cameraProjectionView*objectTransform;
-    Vector4 vPosition4 = Vector4(POSITION.x, POSITION.y, POSITION.z, 1.0);
+    lightDir = (normalTransform*vec4(lightDirection, 0.0)).xyz;
+    mat4 M = cameraProjectionView*objectTransform;
+    vec4 vPosition4 = vec4(POSITION.x, POSITION.y, POSITION.z, 1.0);
     gl_Position = M*vPosition4;
 }
 ''';
   materialShader.fragmentShader = '''
 precision mediump float;
 
-varying Vector3 surfaceNormal;
-varying Vector2 samplePoint;
+varying vec3 surfaceNormal;
+varying vec2 samplePoint;
 
-varying Vector3 lightDir;
+varying vec3 lightDir;
 
 uniform sampler2D diffuse;
 
 void main() {
-  Vector3 normal = normalize(surfaceNormal);
-  Vector3 light = normalize(lightDir);
+  vec3 normal = normalize(surfaceNormal);
+  vec3 light = normalize(lightDir);
   float NdotL = max(dot(normal, -light), 0.3);
-  Vector3 ambientColor = Vector3(0.1, 0.1, 0.1);
-  //Vector3 diffuseColor = Vector3(1.0, 0.0, 0.0) * NdotL;
-  Vector3 diffuseColor = Vector3(texture2D(diffuse, samplePoint)) * NdotL;
-  Vector3 finalColor = diffuseColor + ambientColor;
-    //gl_FragColor = Vector4(NdotL, NdotL, 1.0, 1.0);
-    gl_FragColor = Vector4(1.0, 0.0, 0.0, 1.0);
+  vec3 ambientColor = vec3(0.1, 0.1, 0.1);
+  //Vector3 diffuseColor = vec3(1.0, 0.0, 0.0) * NdotL;
+  vec3 diffuseColor = vec3(texture2D(diffuse, samplePoint)) * NdotL;
+  vec3 finalColor = diffuseColor + ambientColor;
+    //gl_FragColor = vec4(NdotL, NdotL, 1.0, 1.0);
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 ''';
-  Material material = new Material('simpleTexture', materialShader, renderer);
-  material.depthState.depthBufferWriteEnabled = true;
-
-  var asset = assetManager['demoAssets'].registerAsset('simpleTexture',
-                                                       'shader', '', {},
+  materialShader.depthState.depthBufferWriteEnabled = true;
+  var asset = assetManager['demoAssets'].registerAsset('simpleTextureShader',
+                                                       'MaterialShader', '', {},
                                                        {});
-  asset.imported = material;
+  asset.imported = materialShader;
 }
-
-Float32List _cameraTransform = new Float32List(16);
-
-void _drawSkybox() {
-  var context = graphicsDevice.context;
-  context.setInputLayout(_skyboxInputLayout);
-  context.setPrimitiveTopology(PrimitiveTopology.Triangles);
-  context.setShaderProgram(_skyboxShaderProgram);
-  context.setTextures(0, [assetManager['demoAssets.space']]);
-  context.setSamplers(0, [_skyboxSampler]);
-  {
-    Matrix4 P = camera.projectionMatrix;
-    Matrix4 LA = makeViewMatrix(new Vector3.zero(),
-        camera.frontDirection,
-        new Vector3(0.0, 1.0, 0.0));
-    P.multiply(LA);
-    P.copyIntoArray(_cameraTransform, 0);
-  }
-  context.setConstant('cameraTransform', _cameraTransform);
-  context.setBlendState(_skyboxBlendState);
-  context.setRasterizerState(_skyboxRasterizerState);
-  context.setDepthState(_skyboxDepthState);
-  context.setIndexedMesh(_skyboxMesh);
-  context.drawIndexedMesh(_skyboxMesh);
-}
-
 
 main() {
   CanvasElement canvas = query(_canvasId);
@@ -275,14 +254,13 @@ main() {
   gameLoop.onRender = renderFrame;
   gameLoop.onResize = resizeFrame;
   assetManager.loadPack('demoAssets', 'assets/_.pack').then((assetPack) {
-    // All assets are loaded.
-    _setupSkybox();
     // Setup camera.
     camera.aspectRatio = canvas.width.toDouble()/canvas.height.toDouble();
     camera.position = new Vector3(2.0, 2.0, 2.0);
     camera.focusPosition = new Vector3(1.0, 1.0, 1.0);
     _makeMaterial();
     _buildCubes();
+    _setupSkybox();
     // Setup layers.
     var clearBackBuffer = new FullscreenLayer('clear');
     clearBackBuffer.clearColorTarget = true;

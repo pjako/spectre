@@ -279,10 +279,6 @@ class Renderer {
     _fullscreenMesh.vertexArray.uploadData(fullscreenVertexArray,
                                            UsagePattern.StaticDraw);
 
-    VertexAttribute(this.vboSlot, this.attributeIndex, this.attributeOffset,
-        this.attributeStride, this.dataType, this.dataCount,
-        this.normalizeData);
-
     _fullscreenMesh.attributes['vPosition'] = new SpectreMeshAttribute(
         'vPosition',
         new VertexAttribute(0, 0, 0, 16, DataType.Float32, 2, false));
@@ -298,16 +294,16 @@ class Renderer {
     _blitMaterialShader = new MaterialShader('blit', this);
     _blitMaterialShader.vertexShader = '''
 precision highp float;
-attribute Vector2 vPosition;
-attribute Vector2 vTexCoord;
-varying Vector2 samplePoint;
+attribute vec2 vPosition;
+attribute vec2 vTexCoord;
+varying vec2 samplePoint;
 
 uniform float time;
-uniform Vector2 cursor;
-uniform Vector2 renderTargetResolution;
+uniform vec2 cursor;
+uniform vec2 renderTargetResolution;
 
 void main() {
-  Vector4 vPosition4 = Vector4(vPosition.x, vPosition.y, 1.0, 1.0);
+  vec4 vPosition4 = vec4(vPosition.x, vPosition.y, 1.0, 1.0);
   gl_Position = vPosition4;
   samplePoint = vTexCoord;
 }
@@ -316,10 +312,10 @@ void main() {
 precision mediump float;
 
 uniform float time;
-uniform Vector2 cursor;
-uniform Vector2 renderTargetResolution;
+uniform vec2 cursor;
+uniform vec2 renderTargetResolution;
 
-varying Vector2 samplePoint;
+varying vec2 samplePoint;
 uniform sampler2D source;
 
 void main() {

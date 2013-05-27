@@ -23,7 +23,8 @@ part of spectre_renderer;
 class MaterialTexture {
   final Renderer renderer;
   final String name;
-  final int textureUnit;
+  int _textureUnit;
+  int get textureUnit => _textureUnit;
   String _texturePath;
 
   /** The asset path used when linking the texture */
@@ -39,7 +40,7 @@ class MaterialTexture {
 
   /** Construct a new texture */
   MaterialTexture(this.renderer, this.name, this._texturePath,
-                  this.textureUnit) {
+                  this._textureUnit) {
     sampler = new SamplerState(name, renderer.device);
     link();
   }

@@ -33,19 +33,19 @@ class MaterialConstant {
     switch (type) {
       case 'float':
         return new Float32List(1);
-      case 'Vector2':
+      case 'vec2':
         return new Float32List(2);
-      case 'Vector3':
+      case 'vec3':
         return new Float32List(3);
-      case 'Vector4':
+      case 'vec4':
         return new Float32List(4);
-      case 'Matrix3':
+      case 'mat3':
         var v = new Float32List(9);
         v[0] = 1.0;
         v[4] = 1.0;
         v[8] = 1.0;
         return v;
-      case 'Matrix4':
+      case 'mat4':
         var v = new Float32List(16);
         v[0] = 1.0;
         v[5] = 1.0;
@@ -60,6 +60,13 @@ class MaterialConstant {
     assert(destination.value.length == source.value.length);
     for (int i = 0; i < source.value.length; i++) {
       destination.value[i] = source.value[i];
+    }
+  }
+
+  /// Update the constant value with [arg].
+  void update(dynamic arg) {
+    for (int i = 0; i < _value.length; i++) {
+      _value[i] = arg[i];
     }
   }
 

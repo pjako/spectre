@@ -31,15 +31,25 @@ class Material {
   /// Key shader sampler variable.
   final Map<String, MaterialTexture> textures =
       new Map<String, MaterialTexture>();
-  final List<SpectreTexture> _textures = new List<SpectreTexture>();
-  final List<SamplerState> _samplers = new List<SamplerState>();
 
-  DepthState _depthState;
-  DepthState get depthState => _depthState;
-  RasterizerState _rasterizerState;
-  RasterizerState get rasterizerState => _rasterizerState;
-  BlendState _blendState;
-  BlendState get blendState => _blendState;
+  /// Add a new constant with [name] of [type].
+  void addConstant(String name, String type) {
+    MaterialConstant constant = constants[name];
+    if (constant != null) {
+      return;
+    }
+    constant = new MaterialConstant(name, type);
+    constants[name] = constant;
+  }
+
+  // Set constant [name].
+  void setConstant(String name, dynamic value) {
+    MaterialConstant constant = constants[name];
+    if (constant == null) {
+      return;
+    }
+    constant.update(value);
+  }
 
   Material(this.name, this.shader, this.renderer) {
     if (this.name == null) {
@@ -51,52 +61,20 @@ class Material {
     if (this.renderer == null) {
       throw new ArgumentError('renderer cannot be null.');
     }
-    _depthState = new DepthState(name, renderer.device);
-    _blendState = new BlendState(name, renderer.device);
-    _rasterizerState = new RasterizerState(name, renderer.device);
     _link();
   }
 
   Material.clone(Material other)
     : renderer = other.renderer, name = other.name, shader = other.shader {
-    _depthState = new DepthState(name, renderer.device);
-    _blendState = new BlendState(name, renderer.device);
-    _rasterizerState = new RasterizerState(name, renderer.device);
-    _depthState.fromJson(other._depthState.toJson());
-    _blendState.fromJson(other._blendState.toJson());
-    _rasterizerState.fromJson(other._rasterizerState.toJson());
     _cloneLink(other);
   }
 
   /** Apply this material to be used for rendering */
   void apply(GraphicsDevice device) {
-    device.context.setBlendState(_blendState);
-    device.context.setRasterizerState(_rasterizerState);
-    device.context.setDepthState(_depthState);
-    device.context.setShaderProgram(shader.shader);
-    constants.forEach((k, v) {
-      device.context.setConstant(k, v.value);
-    });
-    textures.forEach((k, v) {
-      int textureUnit = v.textureUnit;
-      _textures[textureUnit] = v.texture;
-      _samplers[textureUnit] = v.sampler;
-    });
-    device.context.setSamplers(0, _samplers);
-    device.context.setTextures(0, _textures);
-  }
-
-  void _setupTextureSamplerTable() {
-    _textures.length = shader.shader.samplers.length;
-    _samplers.length = shader.shader.samplers.length;
-    for (int i = 0; i < shader.samplers.length; i++) {
-      _textures[i] = null;
-      _samplers[i] = null;
-    }
+    shader.apply(device, this);
   }
 
   void _cloneLink(Material other) {
-    _setupTextureSamplerTable();
     constants.clear();
     other.constants.forEach((k, v) {
       constants[k] = new MaterialConstant.clone(v);
@@ -108,11 +86,6 @@ class Material {
   }
 
   void _link() {
-    _setupTextureSamplerTable();
-    constants.clear();
-    shader.shader.uniforms.forEach((k, v) {
-      constants[k] = new MaterialConstant(k, v.type);
-    });
     textures.clear();
     shader.shader.samplers.forEach((k, v) {
       textures[k] = new MaterialTexture(renderer, k, '', v.textureUnit);
@@ -121,61 +94,6 @@ class Material {
 
   void link() {
     _link();
-  }
-
-  void updateCameraConstants(Camera camera) {
-    if (camera == null) {
-      // TODO(johnmccutchan): Do we have a default camera setup?
-    }
-    Matrix4 projectionMatrix = camera.projectionMatrix;
-    Matrix4 viewMatrix = camera.viewMatrix;
-    Matrix4 projectionViewMatrix = camera.projectionMatrix;
-    projectionViewMatrix.multiply(viewMatrix);
-    Matrix4 viewRotationMatrix = makeViewMatrix(new Vector3.zero(),
-                                             camera.frontDirection,
-                                             new Vector3(0.0, 1.0, 0.0));
-    Matrix4 projectionViewRotationMatrix = camera.projectionMatrix;
-    projectionViewRotationMatrix.multiply(viewRotationMatrix);
-    MaterialConstant constant;
-    constant = constants['cameraView'];
-    if (constant != null) {
-      viewMatrix.copyIntoArray(constant.value);
-    }
-    constant = constants['cameraProjection'];
-    if (constant != null) {
-      projectionMatrix.copyIntoArray(constant.value);
-    }
-    constant = constants['cameraProjectionView'];
-    if (constant != null) {
-      projectionViewMatrix.copyIntoArray(constant.value);
-    }
-    constant = constants['cameraViewRotation'];
-    if (constant != null) {
-      viewRotationMatrix.copyIntoArray(constant.value);
-    }
-    constant = constants['cameraProjectionViewRotation'];
-    if (constant != null) {
-      projectionViewRotationMatrix.copyIntoArray(constant.value);
-    }
-  }
-
-  void updateObjectTransformConstant(Matrix4 T) {
-    MaterialConstant constant;
-    constant = constants['objectTransform'];
-    if (constant != null) {
-      T.copyIntoArray(constant.value);
-    }
-  }
-
-  void updateViewportConstants(Viewport vp) {
-    MaterialConstant constant;
-    constant = constants['viewport'];
-    if (constant != null) {
-      constant.value[0] = vp.x.toDouble();
-      constant.value[1] = vp.y.toDouble();
-      constant.value[2] = vp.width.toDouble();
-      constant.value[3] = vp.height.toDouble();
-    }
   }
 
   dynamic toJson() {

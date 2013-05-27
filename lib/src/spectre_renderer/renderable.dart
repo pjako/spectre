@@ -28,8 +28,6 @@ part of spectre_renderer;
 class Renderable {
   final Renderer renderer;
   final String name;
-  Map<String, String> _materialPaths;
-  Map<String, Material> materials;
   Matrix4 T = new Matrix4.identity();
 
   /// Path to mesh asset.
@@ -52,7 +50,7 @@ class Renderable {
   InputLayout _inputLayout;
   // Bounding Box.
 
-  Renderable(this.name, this.renderer, this._meshPath, this._materialPaths) {
+  Renderable(this.name, this.renderer, this._meshPath) {
     _inputLayout = new InputLayout(name, renderer.device);
     mesh = renderer.assetManager[_meshPath];
     _link();
@@ -102,9 +100,9 @@ class Renderable {
       spectreLog.Error('Cannot render $name inputs are invalid.');
       return;
     }
-    _material.updateCameraConstants(camera);
-    _material.updateObjectTransformConstant(T);
     renderer._applyMaterial(_material);
+    _material.shader.updateCameraConstants(camera);
+    _material.shader.updateObjectTransformConstant(T);
     renderer.device.context.setInputLayout(_inputLayout);
     renderer.device.context.setIndexedMesh(_mesh);
     renderer.device.context.drawIndexedMesh(_mesh);

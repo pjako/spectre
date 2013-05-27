@@ -508,6 +508,10 @@ $_linkLog''');
     throw new FallThroughError();
   }
 
+  /// Update the stored value for [uniform] with [argument].
+  void updateUniform(ShaderProgramUniform uniform, var argument) {
+    uniform._apply(device, uniform.location, argument);
+  }
   /// Set Uniform variable [name] in this [ShaderProgram].
   void setConstant(String name, var argument) {
     var uniform = uniforms[name];
@@ -516,7 +520,7 @@ $_linkLog''');
     }
     var oldBind = device.gl.getParameter(WebGL.CURRENT_PROGRAM);
     device.gl.useProgram(_program);
-    uniform._apply(device, uniform.location, argument);
+    updateUniform(uniform, argument);
     device.gl.useProgram(oldBind);
   }
 
@@ -525,6 +529,6 @@ $_linkLog''');
     if (sampler == null) {
       return;
     }
-    // Set
+    throw new FallThroughError();
   }
 }
