@@ -23,8 +23,6 @@ part of spectre_renderer;
 class MaterialTexture {
   final Renderer renderer;
   final String name;
-  int _textureUnit;
-  int get textureUnit => _textureUnit;
   String _texturePath;
 
   /** The asset path used when linking the texture */
@@ -39,8 +37,7 @@ class MaterialTexture {
   SamplerState sampler;
 
   /** Construct a new texture */
-  MaterialTexture(this.renderer, this.name, this._texturePath,
-                  this._textureUnit) {
+  MaterialTexture(this.renderer, this.name, this._texturePath) {
     sampler = new SamplerState(name, renderer.device);
     link();
   }
@@ -48,8 +45,7 @@ class MaterialTexture {
   /** Construct a clone of [other] */
   MaterialTexture.clone(MaterialTexture other)
       : renderer = other.renderer,
-        name = other.name,
-        textureUnit = other.textureUnit {
+        name = other.name {
     sampler = new SamplerState(name, renderer.device);
     sampler.fromJson(sampler.toJson());
     link();

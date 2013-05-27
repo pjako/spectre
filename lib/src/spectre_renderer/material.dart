@@ -22,15 +22,16 @@ part of spectre_renderer;
 
 /** A material describes how a mesh is rendered. */
 class Material {
-  final String name;
   final Renderer renderer;
-  final MaterialShader shader;
   /// Key shader constant variable.
   final Map<String, MaterialConstant> constants =
       new Map<String, MaterialConstant>();
   /// Key shader sampler variable.
   final Map<String, MaterialTexture> textures =
       new Map<String, MaterialTexture>();
+
+  String name;
+  MaterialShader shader;
 
   /// Add a new constant with [name] of [type].
   void addConstant(String name, String type) {
@@ -42,13 +43,14 @@ class Material {
     constants[name] = constant;
   }
 
-  // Set constant [name].
-  void setConstant(String name, dynamic value) {
-    MaterialConstant constant = constants[name];
-    if (constant == null) {
+  /// Add a new texture with [name].
+  void addTexture(String name) {
+    MaterialTexture texture = textures[name];
+    if (texture != null) {
       return;
     }
-    constant.update(value);
+    texture = new MaterialTexture(renderer, name, '');
+    textures[name] = texture;
   }
 
   Material(this.name, this.shader, this.renderer) {
@@ -61,7 +63,6 @@ class Material {
     if (this.renderer == null) {
       throw new ArgumentError('renderer cannot be null.');
     }
-    _link();
   }
 
   Material.clone(Material other)
@@ -85,23 +86,9 @@ class Material {
     });
   }
 
-  void _link() {
-    textures.clear();
-    shader.shader.samplers.forEach((k, v) {
-      textures[k] = new MaterialTexture(renderer, k, '', v.textureUnit);
-    });
-  }
-
-  void link() {
-    _link();
-  }
-
   dynamic toJson() {
     Map json = new Map();
     json['name'] = name;
-    json['depthState'] = depthState.toJson();
-    json['rasterizerState'] = rasterizerState.toJson();
-    json['blendState'] = blendState.toJson();
     json['constants'] = {};
     constants.forEach((k, v) {
       json['constants'][k] = v.toJson();
@@ -114,12 +101,11 @@ class Material {
   }
 
   void fromJson(dynamic json) {
-    depthState.fromJson(json['depthState']);
-    rasterizerState.fromJson(json['rasterizerState']);
-    blendState.fromJson(json['blendState']);
+    constants.clear();
     constants.forEach((k, v) {
       v.fromJson(json['constants'][k]);
     });
+    textures.clear();
     textures.forEach((k, v) {
       v.fromJson(json['textures'][k]);
     });

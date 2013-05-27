@@ -23,6 +23,8 @@ part of spectre_renderer;
 class MaterialShader extends Disposable {
   String name;
   final Renderer renderer;
+  Material _material;
+  Material get material => _material;
   ShaderProgram _shader;
   ShaderProgram get shader => _shader;
 
@@ -76,6 +78,7 @@ class MaterialShader extends Disposable {
     _shader = new ShaderProgram(name, renderer.device);
     _shader.vertexShader = new VertexShader(name, renderer.device);
     _shader.fragmentShader = new FragmentShader(name, renderer.device);
+    _material = new Material(name, this, renderer);
     _depthState = new DepthState(name, renderer.device);
     _blendState = new BlendState(name, renderer.device);
     _rasterizerState = new RasterizerState(name, renderer.device);
@@ -153,19 +156,76 @@ class MaterialShader extends Disposable {
     }
   }
 
-  void apply(GraphicsDevice device, Material material) {
+  MaterialConstant _findConstant(String k, Material one, Material two,
+                                 Material three) {
+    MaterialConstant constant;
+    if (one != null) {
+      constant = one.constants[k];
+      if (constant != null) {
+        return constant;
+      }
+    }
+    if (two != null) {
+      constant = two.constants[k];
+      if (constant != null) {
+        return constant;
+      }
+    }
+    if (three != null) {
+      constant = three.constants[k];
+      if (constant != null) {
+        return constant;
+      }
+    }
+    return constant;
+  }
+
+  MaterialTexture _findTexture(String k, Material one, Material two,
+                               Material three) {
+    MaterialTexture texture;
+    if (one != null) {
+      texture = one.textures[k];
+      if (texture != null) {
+        return texture;
+      }
+    }
+    if (two != null) {
+      texture = two.textures[k];
+      if (texture != null) {
+        return texture;
+      }
+    }
+    if (three != null) {
+      texture = three.textures[k];
+      if (texture != null) {
+        return texture;
+      }
+    }
+    return texture;
+  }
+
+  void apply(GraphicsDevice device, Material renderableMaterial) {
     device.context.setBlendState(_blendState);
     device.context.setRasterizerState(_rasterizerState);
     device.context.setDepthState(_depthState);
     device.context.setShaderProgram(shader);
 
-    material.constants.forEach((k, v) {
-      device.context.setConstant(k, v.value);
+    shader.uniforms.forEach((String k, ShaderProgramUniform v) {
+      MaterialConstant constant = _findConstant(k, renderableMaterial, material,
+                                                null);
+      if (constant != null) {
+        shader.updateUniform(v, constant.value);
+      }
     });
-    material.textures.forEach((k, v) {
+
+    shader.samplers.forEach((String k, ShaderProgramSampler v) {
       int textureUnit = v.textureUnit;
-      _textures[textureUnit] = v.texture;
-      _samplers[textureUnit] = v.sampler;
+      MaterialTexture texture = _findTexture(k, renderableMaterial, material,
+                                             null);
+      if (texture != null) {
+        _textures[textureUnit] = texture.texture;
+        _samplers[textureUnit] = texture.sampler;
+      }
     });
     device.context.setSamplers(0, _samplers);
     device.context.setTextures(0, _textures);
@@ -183,6 +243,7 @@ class MaterialShader extends Disposable {
     json['depthState'] = depthState.toJson();
     json['rasterizerState'] = rasterizerState.toJson();
     json['blendState'] = blendState.toJson();
+    json['material'] = _material.toJson();
     json['fragmentShader'] = _shader.fragmentShader.source;
     json['vertexShader'] = _shader.vertexShader.source;
     return json;
@@ -193,6 +254,7 @@ class MaterialShader extends Disposable {
     depthState.fromJson(json['depthState']);
     rasterizerState.fromJson(json['rasterizerState']);
     blendState.fromJson(json['blendState']);
+    _material.fromJson(json['material']);
     _shader.fragmentShader.source = json['fragmentShader'];
     _shader.vertexShader.source = json['vertexShader'];
   }

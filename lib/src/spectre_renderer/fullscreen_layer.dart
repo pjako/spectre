@@ -25,7 +25,8 @@ class FullscreenLayer extends Layer {
     if (material == null) {
       return;
     }
-    renderer.applyMaterial(material, null);
+    material.apply(renderer.device);
+    material.shader.updateCameraConstants(camera);
     renderer.renderFullscreenMesh(material);
   }
   String get type => 'Fullscreen';

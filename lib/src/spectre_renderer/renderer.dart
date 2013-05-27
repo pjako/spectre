@@ -191,26 +191,6 @@ class Renderer {
   void _sortDrawables(List<Renderable> visibleSet, int sortMode) {
   }
 
-  void _applyMaterial(Material material) {
-    var constant = material.constants['time'];
-    if (constant != null) {
-      constant.value[0] = time / 1000.0;
-    }
-    material.apply(device);
-  }
-
-  /// Takes two materials [primary] and [fallback] and configures the GPU
-  /// to draw using the material. Any material properties not defined in
-  /// [primary] will be looked in [fallback] before falling back to the
-  /// defaults specified by the shader.
-  /// NOTE: [primary] and [fallback] must have the same shader.
-  void applyMaterial(Material primary, Material fallback) {
-    if (fallback != null) {
-      assert(primary.shader == fallback.shader);
-    }
-    _applyMaterial(primary);
-  }
-
   /// Draws a single triangle covering the entire viewport. Useful for
   /// doing full screen passes.
   void renderFullscreenMesh(Material material) {

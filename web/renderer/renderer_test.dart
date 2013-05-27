@@ -1,5 +1,6 @@
 import 'dart:html';
 import 'dart:math';
+import 'dart:json' as Json;
 import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart';
 import 'package:game_loop/game_loop_html.dart';
@@ -11,16 +12,16 @@ import 'package:spectre/spectre_renderer.dart';
 final String _canvasId = '#frontBuffer';
 
 // TODO:
-// Fix renderable interface.
+// Flesh out import / export.
+// Write good useful shader.
+// Implement DynamicMeshRenderable, sub classes:
 //   Implement FullscreenRenderable
-// Fix material texture handling
-// Material is just set of constants and textures
-// Shader consumes it:
-//     Shader material
-//     Layer material
-//     Renderable material
-// Add Material->apply(). Possible for a material to override it.
-// Add layer list importer and material importer.
+//   Implement CubeRenderable
+//   Implement SphereRenderable
+//   Implement CapsuleRenderable
+//   Implement ConvexHullRenderable
+//   Implement CubeRenderable
+// ^^ Above mesh properties (cube extents, etc) are mutable- regenerate mesh.
 // Only update material camera transform, time uniforms once.
 
 GraphicsDevice graphicsDevice;
@@ -145,24 +146,30 @@ void _setupSkybox() {
                                                        'MaterialShader', '', {},
                                                        {});
   asset.imported = materialShader;
-  Renderable renderable = new Renderable('Skybox', renderer,
+  MeshRenderable renderable = new MeshRenderable('Skybox', renderer,
                                          'demoAssets.skyBox');
-  renderable.T.setIdentity();
+  renderable.transform.setIdentity();
   renderable.material = new Material('Skybox', materialShader, renderer);
+  renderable.material.addTexture('skyMap');
   renderable.material.textures['skyMap'].texturePath = 'demoAssets.space';
-  renderable.material.addConstant('cameraTransform', 'mat4');
   renderables.add(renderable);
 }
 
 void _buildCubes() {
   renderables.length = 100;
   for (int i = 0; i < 100; i++) {
-    Renderable renderable = new Renderable('box $i', renderer,
+    MeshRenderable renderable = new MeshRenderable('box $i', renderer,
                                            'demoAssets.unitCube');
-    renderable.T.setIdentity();
-    renderable.T.translate(i.toDouble() * 2.0, 0.0, 0.0);
+    renderable.transform.setIdentity();
+    renderable.transform.translate(i.toDouble() * 2.0, 0.0, 0.0);
     MaterialShader shader = assetManager['demoAssets.simpleTextureShader'];
     renderable.material = new Material('Cube $i', shader, renderer);
+    if (i > 50) {
+      renderable.material.addConstant('color', 'vec3');
+      renderable.material.constants['color'].value[0] = i / 100;
+      renderable.material.constants['color'].value[1] = 0.5;
+      renderable.material.constants['color'].value[2] = 0.5;
+    }
     renderables[i] = renderable;
   }
 }
@@ -208,7 +215,7 @@ varying vec3 surfaceNormal;
 varying vec2 samplePoint;
 
 varying vec3 lightDir;
-
+uniform vec3 color;
 uniform sampler2D diffuse;
 
 void main() {
@@ -220,13 +227,18 @@ void main() {
   vec3 diffuseColor = vec3(texture2D(diffuse, samplePoint)) * NdotL;
   vec3 finalColor = diffuseColor + ambientColor;
     //gl_FragColor = vec4(NdotL, NdotL, 1.0, 1.0);
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
 ''';
   materialShader.depthState.depthBufferWriteEnabled = true;
+  materialShader.material.addConstant('color', 'vec3');
+  materialShader.material.constants['color'].value[0] = 0.7;
+  materialShader.material.constants['color'].value[1] = 0.7;
+  materialShader.material.constants['color'].value[2] = 0.7;
   var asset = assetManager['demoAssets'].registerAsset('simpleTextureShader',
                                                        'MaterialShader', '', {},
                                                        {});
+  print(Json.stringify(materialShader));
   asset.imported = materialShader;
 }
 
@@ -276,10 +288,12 @@ main() {
     var blitBackBuffer = new FullscreenLayer('blit');
     blitBackBuffer.renderTarget = 'frontBuffer';
     blitBackBuffer.material = assetManager['fullscreenEffects.blit'];
+    blitBackBuffer.material.addTexture('source');
     blitBackBuffer.material.textures['source'].texturePath =
         'renderer.colorBuffer';
     blitBackBuffer.material.textures['source'].sampler = renderer.NPOTSampler;
     layers.add(blitBackBuffer);
+    print(Json.stringify(layers));
     gameLoop.start();
   });
 }
