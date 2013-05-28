@@ -67,15 +67,12 @@ gl_FragColor = texture2D(source, samplePoint);
 attribute vec3 POSITION;
 attribute vec3 TEXCOORD0;
 uniform mat4 cameraProjectionViewRotation;
-
+uniform vec3 skyboxScale;
 varying vec3 samplePoint;
 
 void main(void)
 {
-  vec4 vPosition4 = vec4(POSITION.x*512.0,
-             POSITION.y*512.0,
-             POSITION.z*512.0,
-             1.0);
+  vec4 vPosition4 = vec4(POSITION*skyboxScale, 1.0);
   gl_Position = cameraProjectionViewRotation*vPosition4;
   samplePoint = TEXCOORD0;
 }
@@ -94,7 +91,11 @@ void main(void)
 ''';
   skyBox.rasterizerState.cullMode = CullMode.None;
   skyBox.blendState.enabled = false;
-
+  skyBox.material.addConstant('skyboxScale', 'vec3');
+  List value = skyBox.material.constants['skyboxScale'].value;
+  for (int i = 0; i < value.length; i++) {
+    value[i] = 512.0;
+  }
   renderer._materialShaderPack.registerAsset('skyBox',
       'materialShader',
       '',
