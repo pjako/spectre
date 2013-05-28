@@ -13,7 +13,6 @@ final String _canvasId = '#frontBuffer';
 
 // TODO:
 // Flesh out import / export.
-
 // Implement DynamicMeshRenderable, sub classes:
 //   Implement FullscreenRenderable
 //   Implement CubeRenderable
@@ -131,32 +130,13 @@ void resizeFrame(GameLoopHtml gameLoop) {
   camera.aspectRatio = canvas.width.toDouble()/canvas.height.toDouble();
 }
 
-SingleArrayIndexedMesh _skyboxMesh;
-ShaderProgram _skyboxShaderProgram;
-InputLayout _skyboxInputLayout;
-SamplerState _skyboxSampler;
-DepthState _skyboxDepthState;
-BlendState _skyboxBlendState;
-RasterizerState _skyboxRasterizerState;
-
 void _setupSkybox() {
-  MaterialShader materialShader = new MaterialShader('skyBox', renderer);
-  materialShader.vertexShader = assetManager['demoAssets.skyBoxVertexShader'];
-  materialShader.fragmentShader =
-      assetManager['demoAssets.skyBoxFragmentShader'];
-  materialShader.rasterizerState.cullMode = CullMode.None;
-  materialShader.blendState.enabled = false;
-  var asset = assetManager['demoAssets'].registerAsset('skyBoxShader',
-                                                       'MaterialShader', '', {},
-                                                       {});
-  asset.imported = materialShader;
-  MeshRenderable renderable = new MeshRenderable('Skybox', renderer,
-                                         'demoAssets.skyBox');
-  renderable.transform.setIdentity();
-  renderable.material = new Material('Skybox', materialShader, renderer);
-  renderable.material.addTexture('skyMap');
-  renderable.material.textures['skyMap'].texturePath = 'demoAssets.space';
-  renderables.add(renderable);
+  SkyboxRenderable skyBox = new SkyboxRenderable('skyBox', renderer);
+  MaterialShader skyBoxShader = renderer.materialShaders['skyBox'];
+  skyBox.material = new Material('Skybox', skyBoxShader, renderer);
+  skyBox.material.addTexture('skyMap');
+  skyBox.material.textures['skyMap'].texturePath = 'demoAssets.space';
+  renderables.add(skyBox);
 }
 
 void _buildCubes() {

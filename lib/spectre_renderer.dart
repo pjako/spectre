@@ -42,3 +42,4 @@ part 'src/spectre_renderer/mesh_renderable.dart';
 part 'src/spectre_renderer/renderable.dart';
 part 'src/spectre_renderer/renderer.dart';
 part 'src/spectre_renderer/scene_layer.dart';
+part 'src/spectre_renderer/skybox_renderable.dart';
