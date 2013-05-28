@@ -22,11 +22,9 @@ part of spectre_renderer;
 
 class DebugDrawLayer extends Layer {
   void render(Renderer renderer, List<Renderable> renderables, Camera camera) {
-    debugDraw.render(camera);
+    renderer.debugDrawManager.render(camera);
   }
   String get type => 'DebugDraw';
-  final DebugDrawManager debugDraw;
-  DebugDrawLayer(String name, this.debugDraw) : super(name) {
-  }
+  DebugDrawLayer(String name, Renderer renderer) : super(name, renderer);
 }
 

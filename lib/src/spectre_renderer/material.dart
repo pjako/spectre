@@ -31,6 +31,12 @@ class Material {
       new Map<String, MaterialTexture>();
 
   String name;
+  String _materialShaderPath;
+  get materialShaderPath => _materialShaderPath;
+  set materialShaderPath(String materialShaderPath) {
+    _materialShaderPath = materialShaderPath;
+    shader = renderer.assetManager[_materialShaderPath];
+  }
   MaterialShader shader;
 
   /// Add a new constant with [name] of [type].
@@ -94,6 +100,7 @@ class Material {
     Map json = new Map();
     json['name'] = name;
     json['shaderName'] = shader.name;
+    json['materialShaderPath'] = _materialShaderPath;
     json['constants'] = {};
     constants.forEach((k, v) {
       json['constants'][k] = v.toJson();

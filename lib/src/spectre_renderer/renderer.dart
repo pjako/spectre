@@ -31,7 +31,7 @@ class Renderer {
   final CanvasElement frontBuffer;
   final AssetManager assetManager;
   AssetPack _rendererPack;
-  AssetPack _fullscreenEffectsPack;
+  AssetPack _materialShaderPack;
   final Map<String, Texture2D> colorBuffers = new Map<String, Texture2D>();
   final Map<String, RenderBuffer> depthBuffers =
       new Map<String, RenderBuffer>();
@@ -40,16 +40,10 @@ class Renderer {
   final Map<String, MaterialShader> materialShaders =
       new Map<String, MaterialShader>();
 
+  SamplerState _renderTargetSampler;
+  SamplerState get renderTargetSampler => _renderTargetSampler;
   Viewport _frontBufferViewport;
   Viewport get frontBufferViewport => _frontBufferViewport;
-
-  MaterialShader _blitMaterialShader;
-
-  BlendState _clearBlendState;
-  DepthState _clearDepthState;
-  SamplerState NPOTSampler;
-  SingleArrayMesh _fullscreenMesh;
-  InputLayout _fullscreenMeshInputLayout;
 
   double time = 0.0;
 
@@ -153,13 +147,13 @@ class Renderer {
     Layer layer;
     switch (type) {
       case 'Fullscreen':
-        layer = new FullscreenLayer(name);
+        layer = new FullscreenLayer(name, this);
       break;
       case 'DebugDraw':
-        layer = new DebugDrawLayer(name, debugDrawManager);
+        layer = new DebugDrawLayer(name, this);
       break;
       case 'Scene':
-        layer = new SceneLayer(name);
+        layer = new SceneLayer(name, this);
       break;
       default:
         throw new UnimplementedError('Unknown layer type: $type');
@@ -221,22 +215,6 @@ class Renderer {
   void _sortDrawables(List<Renderable> visibleSet, int sortMode) {
   }
 
-  /// Draws a single triangle covering the entire viewport. Useful for
-  /// doing full screen passes.
-  void renderFullscreenMesh(Material material) {
-    _fullscreenMeshInputLayout.shaderProgram = material.shader.shader;
-    device.context.setInputLayout(_fullscreenMeshInputLayout);
-    device.context.setMesh(_fullscreenMesh);
-    device.context.drawMesh(_fullscreenMesh);
-  }
-
-  void _renderSceneLayer(Layer layer, List<Renderable> renderables,
-                         Camera camera) {
-    for (int i = 0; i < renderables.length; i++) {
-
-    }
-  }
-
   void _renderLayer(Layer layer, List<Renderable> renderables, Camera camera) {
     RenderTarget renderTarget = _rendererPack[layer.renderTarget];
     if (renderTarget == null) {
@@ -245,15 +223,7 @@ class Renderer {
       return;
     }
     device.context.setRenderTarget(renderTarget);
-    if (layer.clearColorTarget) {
-      device.context.setBlendState(_clearBlendState);
-      device.context.clearColorBuffer(layer.clearColorR, layer.clearColorG,
-                                      layer.clearColorB, layer.clearColorA);
-    }
-    if (layer.clearDepthTarget) {
-      device.context.setDepthState(_clearDepthState);
-      device.context.clearDepthBuffer(layer.clearDepthValue);
-    }
+    layer.clear();
     layer.render(this, renderables, camera);
   }
 
@@ -268,95 +238,14 @@ class Renderer {
     }
   }
 
-  void _buildFullscreenMesh() {
-    _fullscreenMesh = new SingleArrayMesh('Renderer.FullscreenMesh', device);
-    Float32List fullscreenVertexArray = new Float32List(12);
-    // Vertex 0
-    fullscreenVertexArray[0] = -1.0;
-    fullscreenVertexArray[1] = -1.0;
-    fullscreenVertexArray[2] = 0.0;
-    fullscreenVertexArray[3] = 0.0;
-    // Vertex 1
-    fullscreenVertexArray[4] = 3.0;
-    fullscreenVertexArray[5] = -1.0;
-    fullscreenVertexArray[6] = 2.0;
-    fullscreenVertexArray[7] = 0.0;
-    // Vertex 2
-    fullscreenVertexArray[8] = -1.0;
-    fullscreenVertexArray[9] = 3.0;
-    fullscreenVertexArray[10] = 0.0;
-    fullscreenVertexArray[11] = 2.0;
-    _fullscreenMesh.vertexArray.uploadData(fullscreenVertexArray,
-                                           UsagePattern.StaticDraw);
-
-    _fullscreenMesh.attributes['vPosition'] = new SpectreMeshAttribute(
-        'vPosition',
-        new VertexAttribute(0, 0, 0, 16, DataType.Float32, 2, false));
-    _fullscreenMesh.attributes['vTexCoord'] = new SpectreMeshAttribute(
-        'vTexCoord',
-        new VertexAttribute(0, 0, 8, 16, DataType.Float32, 2, false));
-    _fullscreenMesh.count = 3;
-    _fullscreenMeshInputLayout = new InputLayout('fullscreen', device);
-    _fullscreenMeshInputLayout.mesh = _fullscreenMesh;
-  }
-
-  void _buildFullscreenBlitMaterial() {
-    _blitMaterialShader = new MaterialShader('blit', this);
-    _blitMaterialShader.vertexShader = '''
-precision highp float;
-attribute vec2 vPosition;
-attribute vec2 vTexCoord;
-varying vec2 samplePoint;
-
-uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
-
-void main() {
-  vec4 vPosition4 = vec4(vPosition.x, vPosition.y, 1.0, 1.0);
-  gl_Position = vPosition4;
-  samplePoint = vTexCoord;
-}
-''';
-    _blitMaterialShader.fragmentShader = '''
-precision mediump float;
-
-uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
-
-varying vec2 samplePoint;
-uniform sampler2D source;
-
-void main() {
-  gl_FragColor = texture2D(source, samplePoint);
-}
-''';
-
-    var asset = _fullscreenEffectsPack.registerAsset('blit', 'materialShader',
-                                                     '', {}, {});
-    asset.imported = _blitMaterialShader;
-    materialShaders['blit'] = _blitMaterialShader;
-  }
-
-  void _buildFullscreenPassData() {
-    NPOTSampler = new SamplerState.linearClamp('Renderer.NPOTSampler', device);
-    _buildFullscreenMesh();
-    _buildFullscreenBlitMaterial();
-  }
-
   Renderer(this.frontBuffer, this.device, this.debugDrawManager,
            this.assetManager) {
-    _clearDepthState = new DepthState('clear depth state', device);
-    _clearDepthState.depthBufferWriteEnabled = true;
-    _clearBlendState = new BlendState('clear blend state', device);
-    _clearBlendState.writeRenderTargetRed = true;
-    _clearBlendState.writeRenderTargetGreen = true;
-    _clearBlendState.writeRenderTargetBlue = true;
-    _clearBlendState.writeRenderTargetAlpha = true;
+    _renderTargetSampler = new SamplerState.linearClamp(
+        'Renderer.renderTargetSampler',
+        device);
     _rendererPack = assetManager.registerPack('renderer', '');
-    _fullscreenEffectsPack = assetManager.registerPack('fullscreenEffects','');
-    _buildFullscreenPassData();
+    _materialShaderPack = assetManager.registerPack('materialShaders','');
+    _registerBuiltinMaterialShaders(this);
     _frontBufferViewport = new Viewport('Renderer.Viewport', device);
     _frontBufferViewport.width = frontBuffer.width;
     _frontBufferViewport.height = frontBuffer.height;

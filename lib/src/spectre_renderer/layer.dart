@@ -32,6 +32,7 @@ part of spectre_renderer;
  * fallback material for renderables that do not have a material.
  */
 abstract class Layer {
+  final Renderer renderer;
   static const int SortModeNone = 0;
   static const int SortModeBackToFront = 1;
   static const int SortModeFrontToBack = 2;
@@ -53,7 +54,11 @@ abstract class Layer {
   String get type;
 
   /// Material.
-  Material material;
+  Material _material;
+  set material(Material m) {
+    _material = m;
+  }
+  get material => _material;
 
   /// Force all renderables to rendered with the layer material?
   bool forceLayerMaterial = false;
@@ -76,12 +81,43 @@ abstract class Layer {
   /// Depth target clear value.
   num clearDepthValue = 1.0;
 
-  /// Construct a new layer, specifying [name] and [type].
-  Layer(this.name) {
+  static BlendState _clearBlendState;
+  static DepthState _clearDepthState;
+
+  static _layerStaticInit(GraphicsDevice device) {
+    if (_clearBlendState != null) {
+      return;
+    }
+    _clearDepthState = new DepthState('Layer._clearDepthState', device);
+    _clearDepthState.depthBufferWriteEnabled = true;
+    _clearBlendState = new BlendState('Layer._clearBlendState', device);
+    _clearBlendState.writeRenderTargetRed = true;
+    _clearBlendState.writeRenderTargetGreen = true;
+    _clearBlendState.writeRenderTargetBlue = true;
+    _clearBlendState.writeRenderTargetAlpha = true;
   }
 
-  Layer.json(Map json) : name = json['name'] {
+  /// Construct a new layer, specifying [name] and [type].
+  Layer(this.name, this.renderer) {
+    _layerStaticInit(renderer.device);
+  }
+
+  Layer.json(Map json, this.renderer) : name = json['name'] {
+    _layerStaticInit(renderer.device);
     fromJson(json);
+  }
+
+  void clear() {
+    GraphicsContext context = renderer.device.context;
+    if (clearColorTarget) {
+      context.setBlendState(Layer._clearBlendState);
+      context.clearColorBuffer(clearColorR, clearColorG, clearColorB,
+                               clearColorA);
+    }
+    if (clearDepthTarget) {
+      context.setDepthState(Layer._clearDepthState);
+      context.clearDepthBuffer(clearDepthValue);
+    }
   }
 
   void render(Renderer renderer, List<Renderable> renderables, Camera camera);

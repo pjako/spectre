@@ -69,7 +69,7 @@ Map renderer_config = {
  ]
 };
 
-List<Map> layer_config = Json.parse('[{"clearColorB":0.0,"clearColorTarget":true,"clearDepthValue":1.0,"name":"clear","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":true,"type":"Fullscreen","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"color","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Scene","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"debug","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"DebugDraw","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"blit","clearColorG":0.0,"renderTarget":"frontBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Fullscreen","material":{"constants":{},"name":"blit","shaderName":"blit","textures":{"source":{"texturePath":"renderer.colorBuffer","name":"source","sampler":{"addressU":"TextureAddressMode.Clamp","magFilter":"TextureMagFilter.Linear","addressV":"TextureAddressMode.Clamp","maxAnisotropy":1.0,"minFilter":"TextureMinFilter.Linear"}}}}}]');
+List<Map> layer_config = Json.parse('[{"clearColorB":0.0,"clearColorTarget":true,"clearDepthValue":1.0,"name":"clear","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":true,"type":"Fullscreen","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"color","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Scene","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"debug","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"DebugDraw","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"blit","clearColorG":0.0,"renderTarget":"frontBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Fullscreen","material":{"constants":{},"textures":{"source":{"name":"source","texturePath":"renderer.colorBuffer","sampler":{"addressU":"TextureAddressMode.Clamp","magFilter":"TextureMagFilter.Linear","addressV":"TextureAddressMode.Clamp","maxAnisotropy":1.0,"minFilter":"TextureMinFilter.Linear"}}},"name":"blit","shaderName":"blit","materialShaderPath":null}}]');
 
 void gameFrame(GameLoopHtml gameLoop) {
   double dt = gameLoop.dt;
@@ -279,33 +279,35 @@ main() {
     _buildCubes();
     _setupSkybox();
     if (true) {
+      // Load from JSON.
       for (int i = 0; i < layer_config.length; i++) {
         Layer layer = renderer.layerFactory(layer_config[i]);
         layers.add(layer);
       }
     } else {
       // Setup layers.
-      var clearBackBuffer = new FullscreenLayer('clear');
+      var clearBackBuffer = new FullscreenLayer('clear', renderer);
       clearBackBuffer.clearColorTarget = true;
       clearBackBuffer.clearDepthTarget = true;
       clearBackBuffer.renderTarget = 'backBuffer';
       layers.add(clearBackBuffer);
-      var colorBackBuffer = new SceneLayer('color');
+      var colorBackBuffer = new SceneLayer('color', renderer);
       colorBackBuffer.renderTarget = 'backBuffer';
       layers.add(colorBackBuffer);
-      var debugLayer = new DebugDrawLayer('debug', debugDrawManager);
+      var debugLayer = new DebugDrawLayer('debug', renderer);
       debugLayer.renderTarget = 'backBuffer';
       layers.add(debugLayer);
-      var blitBackBuffer = new FullscreenLayer('blit');
+      var blitBackBuffer = new FullscreenLayer('blit', renderer);
       blitBackBuffer.renderTarget = 'frontBuffer';
       blitBackBuffer.material = new Material(
           'blit',
-          assetManager['fullscreenEffects.blit'],
+          renderer.materialShaders['blit'],
           renderer);
       blitBackBuffer.material.addTexture('source');
       blitBackBuffer.material.textures['source'].texturePath =
           'renderer.colorBuffer';
-      blitBackBuffer.material.textures['source'].sampler = renderer.NPOTSampler;
+      blitBackBuffer.material.textures['source'].sampler =
+          renderer.renderTargetSampler;
       layers.add(blitBackBuffer);
       print(Json.stringify(layers));
     }

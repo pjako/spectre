@@ -30,6 +30,7 @@ import 'package:spectre/spectre.dart';
 import 'package:spectre/spectre_post.dart';
 
 part 'src/spectre_renderer/asset_pack.dart';
+part 'src/spectre_renderer/builtin_material_shaders.dart';
 part 'src/spectre_renderer/debugdraw_layer.dart';
 part 'src/spectre_renderer/fullscreen_layer.dart';
 part 'src/spectre_renderer/layer.dart';
