@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,11 +23,12 @@ library texture_min_filter_test;
 import 'package:unittest/unittest.dart';
 import 'package:spectre/spectre.dart';
 import 'dart:html';
+import 'dart:web_gl' as WebGL;
 
 void main() {
   test('values', () {
-    expect(TextureMinFilter.Linear, WebGLRenderingContext.LINEAR);
-    expect(TextureMinFilter.Point , WebGLRenderingContext.NEAREST);
+    expect(TextureMinFilter.Linear, WebGL.LINEAR);
+    expect(TextureMinFilter.Point , WebGL.NEAREST);
   });
 
   test('stringify', () {

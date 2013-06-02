@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@ part of spectre;
 class SpectreShader extends DeviceChild {
   final int _type;
   String _source = '';
-  WebGLShader _shader;
+  WebGL.Shader _shader;
 
   SpectreShader(String name, GraphicsDevice device, this._type) :
       super._internal(name, device) {
@@ -53,7 +53,7 @@ class SpectreShader extends DeviceChild {
   /** Shader successfully compiled? */
   bool get compiled {
     if (_shader != null) {
-      return device.gl.getShaderParameter(_shader, WebGLRenderingContext.COMPILE_STATUS);
+      return device.gl.getShaderParameter(_shader, WebGL.COMPILE_STATUS);
     }
     return false;
   }

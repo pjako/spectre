@@ -46,7 +46,7 @@ class SpectrePost {
       _passes = new Map<String, SpectrePostPass>();
       _arrayMesh = new SingleArrayMesh('SpectrePost.Mesh', _device);
       const int numFloats = 6 * (3+2);
-      Float32Array verts = new Float32Array(6*(3+2));
+      Float32List verts = new Float32List(6*(3+2));
       int index = 0;
       num depth = -1.0;
       // Triangle 1
@@ -96,7 +96,7 @@ class SpectrePost {
         verts[index++] = 1.0;
       }
       assert(index == numFloats);
-      _arrayMesh.vertexArray.uploadData(verts, SpectreBuffer.UsageStatic);
+      _arrayMesh.vertexArray.uploadData(verts, UsagePattern.StaticDraw);
       _arrayMesh.attributes['vPosition'] = new SpectreMeshAttribute('vPosition',
                                                                     'float',
                                                                     3, 0, 20,
@@ -109,15 +109,15 @@ class SpectrePost {
       _vertexShader.source = '''
 precision highp float;
 
-attribute vec3 vPosition;
-attribute vec2 vTexCoord;
+attribute Vector3 vPosition;
+attribute Vector2 vTexCoord;
 
-varying vec2 samplePoint;
+varying Vector2 samplePoint;
 
-uniform vec2 texScale;
+uniform Vector2 texScale;
 
 void main() {
-    vec4 vPosition4 = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
+    Vector4 vPosition4 = Vector4(vPosition.x, vPosition.y, vPosition.z, 1.0);
     gl_Position = vPosition4;
     samplePoint = vTexCoord * texScale;
 }
@@ -125,7 +125,7 @@ void main() {
       addFragmentPass('blit', '''
 precision mediump float;
 
-varying vec2 samplePoint;
+varying Vector2 samplePoint;
 uniform sampler2D blitSource;
 
 void main() {
@@ -134,31 +134,31 @@ void main() {
       addFragmentPass('testblit', '''
 precision mediump float;
 
-varying vec2 samplePoint;
+varying Vector2 samplePoint;
 uniform sampler2D blitSource;
 
 void main() {
-    gl_FragColor = vec4(1.0, 0.5, 0.5, 1.0);
+    gl_FragColor = Vector4(1.0, 0.5, 0.5, 1.0);
 }''');
       addFragmentPass('blur', '''
           precision mediump float;
 
           const float blurSize = 1.0/512.0;
 
-          varying vec2 samplePoint;
+          varying Vector2 samplePoint;
           uniform sampler2D RTScene;
 
           void main() {
-            vec2 vTexCoord = samplePoint;
-   vec4 sum = texture2D(RTScene, vec2(vTexCoord.x - 4.0*blurSize, vTexCoord.y)) * 0.05;
-   sum += texture2D(RTScene, vec2(vTexCoord.x - 3.0*blurSize, vTexCoord.y)) * 0.09;
-   sum += texture2D(RTScene, vec2(vTexCoord.x - 2.0*blurSize, vTexCoord.y)) * 0.12;
-   sum += texture2D(RTScene, vec2(vTexCoord.x - blurSize, vTexCoord.y)) * 0.15;
-   sum += texture2D(RTScene, vec2(vTexCoord.x, vTexCoord.y)) * 0.16;
-   sum += texture2D(RTScene, vec2(vTexCoord.x + blurSize, vTexCoord.y)) * 0.15;
-   sum += texture2D(RTScene, vec2(vTexCoord.x + 2.0*blurSize, vTexCoord.y)) * 0.12;
-   sum += texture2D(RTScene, vec2(vTexCoord.x + 3.0*blurSize, vTexCoord.y)) * 0.09;
-   sum += texture2D(RTScene, vec2(vTexCoord.x + 4.0*blurSize, vTexCoord.y)) * 0.05;
+            Vector2 vTexCoord = samplePoint;
+   Vector4 sum = texture2D(RTScene, Vector2(vTexCoord.x - 4.0*blurSize, vTexCoord.y)) * 0.05;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x - 3.0*blurSize, vTexCoord.y)) * 0.09;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x - 2.0*blurSize, vTexCoord.y)) * 0.12;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x - blurSize, vTexCoord.y)) * 0.15;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x, vTexCoord.y)) * 0.16;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x + blurSize, vTexCoord.y)) * 0.15;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x + 2.0*blurSize, vTexCoord.y)) * 0.12;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x + 3.0*blurSize, vTexCoord.y)) * 0.09;
+   sum += texture2D(RTScene, Vector2(vTexCoord.x + 4.0*blurSize, vTexCoord.y)) * 0.05;
 
    gl_FragColor = sum;
 

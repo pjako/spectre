@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,58 +20,23 @@
 
 part of spectre;
 
-/// Defines the winding used to determine whether a triangle is front or back facing.
-class FrontFace {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [Clockwise].
-  static const String _clockwiseName = 'FrontFace.Clockwise';
-  /// String representation of [CounterClockwise].
-  static const String _counterClockwiseName = 'FrontFace.CounterClockwise';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
+/// Defines the winding used to determine whether a triangle is front or
+/// back facing.
+class FrontFace extends Enum {
   /// Triangles are considered front-facing if its vertices are clockwise.
-  static const int Clockwise = WebGLRenderingContext.CW;
+  static const int Clockwise = WebGL.CW;
   /// Triangles are considered front-facing if its vertices are counter-clockwise.
-  static const int CounterClockwise = WebGLRenderingContext.CCW;
+  static const int CounterClockwise = WebGL.CCW;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'FrontFace.Clockwise' : Clockwise,
+    'FrontFace.CounterClockwise' : CounterClockwise
+  };
 
-  /// Convert from a [String] name to the corresponding [FrontFace] enumeration.
-  static int parse(String name) {
-    if (name == _clockwiseName) {
-      return Clockwise;
-    } else if (name == _counterClockwiseName) {
-      return CounterClockwise;
-    }
-
-    assert(false);
-    return Clockwise;
-  }
-
-  /// Converts the [Blend] enumeration to a [String].
-  static String stringify(int value) {
-    if (value == Clockwise) {
-      return _clockwiseName;
-    } else if (value == CounterClockwise) {
-      return _counterClockwiseName;
-    }
-
-    assert(false);
-    return _clockwiseName;
-  }
-
+  /// Convert a [String] to a [FrontFace].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [FrontFace] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    return ((value == Clockwise) || (value == CounterClockwise));
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }

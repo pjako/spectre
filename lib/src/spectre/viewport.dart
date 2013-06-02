@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,9 +20,9 @@
 
 part of spectre;
 
-/// The window dimensions of a render-target surface onto which a 3D volume projects.
-/// Create using [Device.createViewport]
-/// Set using [ImmediateContext.setViewport]
+/// The window dimensions of a render-target surface onto which a 3D
+/// volume projects.
+/// Set using [GraphicsContext.setViewport]
 class Viewport extends DeviceChild {
   //---------------------------------------------------------------------
   // Serialization names
@@ -45,9 +45,11 @@ class Viewport extends DeviceChild {
   // Member variables
   //---------------------------------------------------------------------
 
-  /// The x-coordinate of the upper left corner of the viewport on the render-target surface.
+  /// The x-coordinate of the upper left corner of the viewport on the
+  /// render-target surface.
   int _x = 0;
-  /// The y-coordinate of the upper left corner of the viewport on the render-target surface.
+  /// The y-coordinate of the upper left corner of the viewport on the
+  /// render-target surface.
   int _y = 0;
   /// The width of the viewport on the render-target surface, in pixels.
   int _width = 640;
@@ -68,24 +70,26 @@ class Viewport extends DeviceChild {
 
   /// Creates an instance of the [Viewport] class.
   /// The rectangular bounding box is specified.
-  Viewport.bounds(String name, GraphicsDevice device, int this._x, int this._y, int this._width, int this._height)
+  Viewport.bounds(String name, GraphicsDevice device, int this._x, int this._y,
+                  int this._width, int this._height)
     : super._internal(name, device);
 
   //---------------------------------------------------------------------
   // Properties
   //---------------------------------------------------------------------
 
-  /// The x-coordinate of the upper left corner of the viewport on the render-target surface.
+  /// The x-coordinate of the upper left corner of the viewport on the
+  /// render-target surface.
   int get x => _x;
   set x(int value) { _x = value; }
 
-  /// The y-coordinate of the upper left corner of the viewport on the render-target surface.
+  /// The y-coordinate of the upper left corner of the viewport on the
+  /// render-target surface.
   int get y => _y ;
   set y(int value) { _y = value; }
 
   /// The width of the viewport on the render-target surface, in pixels.
   /// Throws [ArgumentError] if [value] is not a positive number.
-  int get width => _width;
   set width(int value) {
     if (value < 0) {
       throw new ArgumentError('width must be a positive number');
@@ -93,10 +97,10 @@ class Viewport extends DeviceChild {
 
     _width = value;
   }
+  int get width => _width;
 
   /// The height of the viewport on the render-target surface, in pixels.
   /// Throws [ArgumentError] if [value] is not a positive number.
-  int get height => _height;
   set height(int value) {
     if (value < 0) {
       throw new ArgumentError('height must be a positive number');
@@ -104,10 +108,10 @@ class Viewport extends DeviceChild {
 
     _height = value;
   }
+  int get height => _height;
 
   /// The minimum depth of the viewport.
   /// Throws [ArgumentError] if [value] is not in the range [0, 1].
-  double get minDepth => _minDepth;
   set minDepth(double value) {
     if ((value >= 0.0) && (value <= 1.0)) {
       _minDepth = value;
@@ -116,13 +120,14 @@ class Viewport extends DeviceChild {
 
     throw new ArgumentError('minDepth must be in the range [0, 1]');
   }
+  double get minDepth => _minDepth;
+
 
   /// The aspect ratio used by the viewport.
   double get aspectRatio => width / height;
 
   /// The maximum depth of the viewport.
   /// Throws [ArgumentError] if [value] is not in the range [0, 1].
-  double get maxDepth => _maxDepth;
   set maxDepth(double value) {
     if ((value >= 0.0) && (value <= 1.0)) {
       _maxDepth = value;
@@ -131,6 +136,7 @@ class Viewport extends DeviceChild {
 
     throw new ArgumentError('maxDepth must be in the range [0, 1]');
   }
+  double get maxDepth => _maxDepth;
 
   //---------------------------------------------------------------------
   // Serialization

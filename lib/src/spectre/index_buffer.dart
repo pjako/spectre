@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@ part of spectre;
 /// IndexBuffer
 class IndexBuffer extends SpectreBuffer {
   IndexBuffer(String name, GraphicsDevice device)
-      : super(name, device, WebGLRenderingContext.ELEMENT_ARRAY_BUFFER,
-          WebGLRenderingContext.ELEMENT_ARRAY_BUFFER_BINDING) {
+      : super(name, device, WebGL.ELEMENT_ARRAY_BUFFER,
+          WebGL.ELEMENT_ARRAY_BUFFER_BINDING) {
   }
 }

@@ -1,6 +1,6 @@
 attribute vec3 POSITION;
 attribute vec3 TEXCOORD0;
-uniform mat4 cameraTransform;
+uniform mat4 cameraProjectionViewRotation;
 
 varying vec3 samplePoint;
 
@@ -10,6 +10,6 @@ void main(void)
 			       POSITION.y*512.0,
 			       POSITION.z*512.0,
 			       1.0);
-	gl_Position = cameraTransform*vPosition4;
+	gl_Position = cameraProjectionViewRotation*vPosition4;
 	samplePoint = TEXCOORD0;
 }

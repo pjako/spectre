@@ -27,30 +27,23 @@ part of spectre_renderer;
  */
 class Renderer {
   final GraphicsDevice device;
+  final DebugDrawManager debugDrawManager;
   final CanvasElement frontBuffer;
   final AssetManager assetManager;
   AssetPack _rendererPack;
-  AssetPack _fullscreenEffectsPack;
+  AssetPack _materialShaderPack;
   final Map<String, Texture2D> colorBuffers = new Map<String, Texture2D>();
   final Map<String, RenderBuffer> depthBuffers =
       new Map<String, RenderBuffer>();
   final Map<String, RenderTarget> renderTargets =
       new Map<String, RenderTarget>();
+  final Map<String, MaterialShader> materialShaders =
+      new Map<String, MaterialShader>();
 
+  SamplerState _renderTargetSampler;
+  SamplerState get renderTargetSampler => _renderTargetSampler;
   Viewport _frontBufferViewport;
   Viewport get frontBufferViewport => _frontBufferViewport;
-
-  VertexShader _blitVertexShader;
-  FragmentShader _blitFragmentShader;
-  ShaderProgram _blitShaderProgram;
-
-  VertexShader _blurVertexShader;
-  FragmentShader _blurFragmentShader;
-  ShaderProgram _blurShaderProgram;
-
-  SamplerState NPOTSampler;
-  SingleArrayMesh _fullscreenMesh;
-  InputLayout _fullscreenMeshInputLayout;
 
   double time = 0.0;
 
@@ -78,10 +71,10 @@ class Renderer {
       throw new ArgumentError('Invalid target description.');
     }
     Texture2D buffer = new Texture2D(name, device);
-    buffer.uploadPixelArray(width, height, null);
+    buffer.uploadPixelArray(width, height, new Uint8List(width*height*4));
     colorBuffers[name] = buffer;
     var asset =
-        _rendererPack.registerAsset(name, 'ColorBuffer', '', '', {}, {});
+        _rendererPack.registerAsset(name, 'ColorBuffer', '', {}, {});
     asset.imported = buffer;
   }
 
@@ -96,7 +89,7 @@ class Renderer {
     buffer.allocateStorage(width, height, RenderBuffer.FormatDepth);
     depthBuffers[name] = buffer;
     var asset =
-        _rendererPack.registerAsset(name, 'DepthBuffer', '', '', {}, {});
+        _rendererPack.registerAsset(name, 'DepthBuffer', '',  {}, {});
     asset.imported = buffer;
   }
 
@@ -119,7 +112,7 @@ class Renderer {
     renderTarget.colorTarget = colorBuffer;
     renderTarget.depthTarget = depthBuffer;
     renderTargets[name]= renderTarget;
-    var asset = _rendererPack.registerAsset(name, 'RenderTarget', '', '', {},
+    var asset = _rendererPack.registerAsset(name, 'RenderTarget', '', {},
                                             {});
     asset.imported = renderTarget;
   }
@@ -136,10 +129,37 @@ class Renderer {
     _frontBufferViewport.height = frontBuffer.height;
     renderTargets['frontBuffer'] = RenderTarget.systemRenderTarget;
     if (_rendererPack['frontBuffer'] == null) {
-      var asset = _rendererPack.registerAsset('frontBuffer', 'RenderTarget', '',
+      var asset = _rendererPack.registerAsset('frontBuffer', 'RenderTarget',
                                               '', {}, {});
       asset.imported =  RenderTarget.systemRenderTarget;
     }
+  }
+
+  Layer layerFactory(Map layerDescription) {
+    String type = layerDescription['type'];
+    if (type == null) {
+      throw new FormatException('Layer has no type.');
+    }
+    String name = layerDescription['name'];
+    if (name == null) {
+      throw new FormatException('Layer has no name.');
+    }
+    Layer layer;
+    switch (type) {
+      case 'Fullscreen':
+        layer = new FullscreenLayer(name, this);
+      break;
+      case 'DebugDraw':
+        layer = new DebugDrawLayer(name, this);
+      break;
+      case 'Scene':
+        layer = new SceneLayer(name, this);
+      break;
+      default:
+        throw new UnimplementedError('Unknown layer type: $type');
+    }
+    layer.fromJson(layerDescription, this);
+    return layer;
   }
 
   /// Clear render targets.
@@ -195,42 +215,6 @@ class Renderer {
   void _sortDrawables(List<Renderable> visibleSet, int sortMode) {
   }
 
-  void _applyMaterial(Material material) {
-    var constant = material.constants['time'];
-    if (constant != null) {
-      constant.value[0] = time / 1000.0;
-    }
-    material.apply(device);
-  }
-
-  /// Takes two materials [primary] and [fallback] and configures the GPU
-  /// to draw using the material. Any material properties not defined in
-  /// [primary] will be looked in [fallback] before falling back to the
-  /// defaults specified by the shader.
-  /// NOTE: [primary] and [fallback] must have the same shader.
-  void applyMaterial(Material primary, Material fallback) {
-    if (fallback != null) {
-      assert(primary.shader == fallback.shader);
-    }
-    _applyMaterial(primary);
-  }
-
-  /// Draws a single triangle covering the entire viewport. Useful for
-  /// doing full screen passes.
-  void renderFullscreenMesh(Material material) {
-    _fullscreenMeshInputLayout.shaderProgram = material.shader;
-    device.context.setInputLayout(_fullscreenMeshInputLayout);
-    device.context.setMesh(_fullscreenMesh);
-    device.context.drawMesh(_fullscreenMesh);
-  }
-
-  void _renderSceneLayer(Layer layer, List<Renderable> renderables,
-                         Camera camera) {
-    for (int i = 0; i < renderables.length; i++) {
-
-    }
-  }
-
   void _renderLayer(Layer layer, List<Renderable> renderables, Camera camera) {
     RenderTarget renderTarget = _rendererPack[layer.renderTarget];
     if (renderTarget == null) {
@@ -239,13 +223,7 @@ class Renderer {
       return;
     }
     device.context.setRenderTarget(renderTarget);
-    if (layer.clearColorTarget) {
-      device.context.clearColorBuffer(layer.clearColorR, layer.clearColorG,
-                                      layer.clearColorB, layer.clearColorA);
-    }
-    if (layer.clearDepthTarget) {
-      device.context.clearDepthBuffer(layer.clearDepthValue);
-    }
+    layer.clear();
     layer.render(this, renderables, camera);
   }
 
@@ -260,154 +238,14 @@ class Renderer {
     }
   }
 
-  void _buildFullscreenMesh() {
-    _fullscreenMesh = new SingleArrayMesh('Renderer.FullscreenMesh', device);
-    Float32Array fullscreenVertexArray = new Float32Array(12);
-    // Vertex 0
-    fullscreenVertexArray[0] = -1.0;
-    fullscreenVertexArray[1] = -1.0;
-    fullscreenVertexArray[2] = 0.0;
-    fullscreenVertexArray[3] = 0.0;
-    // Vertex 1
-    fullscreenVertexArray[4] = 3.0;
-    fullscreenVertexArray[5] = -1.0;
-    fullscreenVertexArray[6] = 2.0;
-    fullscreenVertexArray[7] = 0.0;
-    // Vertex 2
-    fullscreenVertexArray[8] = -1.0;
-    fullscreenVertexArray[9] = 3.0;
-    fullscreenVertexArray[10] = 0.0;
-    fullscreenVertexArray[11] = 2.0;
-    _fullscreenMesh.vertexArray.uploadData(fullscreenVertexArray,
-                                           SpectreBuffer.UsageStatic);
-    _fullscreenMesh.attributes['vPosition'] = new SpectreMeshAttribute(
-        'vPosition',
-        'float',
-        2,
-        0,
-        16,
-        false);
-    _fullscreenMesh.attributes['vTexCoord'] = new SpectreMeshAttribute(
-        'vTexCoord',
-        'float',
-        2,
-        8,
-        16,
-        false);
-    _fullscreenMesh.count = 3;
-    _fullscreenMeshInputLayout = new InputLayout('fullscreen', device);
-    _fullscreenMeshInputLayout.mesh = _fullscreenMesh;
-  }
-
-  void _buildFullscreenBlurMaterial() {
-    _blurVertexShader = new VertexShader('starfield', device);
-    _blurFragmentShader = new FragmentShader('starfield', device);
-    _blurShaderProgram = new ShaderProgram('starfield', device);
-    _blurShaderProgram.vertexShader = _blurVertexShader;
-    _blurShaderProgram.fragmentShader = _blurFragmentShader;
-    _blurVertexShader.source = '''
-precision highp float;
-attribute vec2 vPosition;
-attribute vec2 vTexCoord;
-varying vec2 samplePoint;
-
-uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
-
-void main() {
-    vec4 vPosition4 = vec4(vPosition.x, vPosition.y, 1.0, 1.0);
-    gl_Position = vPosition4;
-    samplePoint = vTexCoord;
-}
-''';
-    _blurFragmentShader.source = '''
-    precision mediump float;
-
-          const float blurSize = 1.0/512.0;
-
-          varying vec2 samplePoint;
-          uniform sampler2D source;
-
-          void main() {
-   vec4 sum = texture2D(source, vec2(samplePoint.x - 4.0*blurSize, samplePoint.y)) * 0.05;
-   sum += texture2D(source, vec2(samplePoint.x - 3.0*blurSize, samplePoint.y)) * 0.09;
-   sum += texture2D(source, vec2(samplePoint.x - 2.0*blurSize, samplePoint.y)) * 0.12;
-   sum += texture2D(source, vec2(samplePoint.x - blurSize, samplePoint.y)) * 0.15;
-   sum += texture2D(source, vec2(samplePoint.x, samplePoint.y)) * 0.16;
-   sum += texture2D(source, vec2(samplePoint.x + blurSize, samplePoint.y)) * 0.15;
-   sum += texture2D(source, vec2(samplePoint.x + 2.0*blurSize, samplePoint.y)) * 0.12;
-   sum += texture2D(source, vec2(samplePoint.x + 3.0*blurSize, samplePoint.y)) * 0.09;
-   sum += texture2D(source, vec2(samplePoint.x + 4.0*blurSize, samplePoint.y)) * 0.05;
-
-   gl_FragColor = sum;
-    }''';
-    print(_blurFragmentShader.compileLog);
-    _blurShaderProgram.link();
-    Material starFieldMaterial = new Material('blur',
-                                              _blurShaderProgram,
-                                              this);
-    var asset = _fullscreenEffectsPack.registerAsset('blur', 'material',
-                                                     '', '', {}, {});
-    asset.imported = starFieldMaterial;
-  }
-
-  void _buildFullscreenBlitMaterial() {
-    _blitVertexShader = new VertexShader('blit', device);
-    _blitFragmentShader = new FragmentShader('blit', device);
-    _blitShaderProgram = new ShaderProgram('blit', device);
-    _blitShaderProgram.vertexShader = _blitVertexShader;
-    _blitShaderProgram.fragmentShader = _blitFragmentShader;
-    _blitVertexShader.source = '''
-precision highp float;
-attribute vec2 vPosition;
-attribute vec2 vTexCoord;
-varying vec2 samplePoint;
-
-uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
-
-void main() {
-    vec4 vPosition4 = vec4(vPosition.x, vPosition.y, 1.0, 1.0);
-    gl_Position = vPosition4;
-    samplePoint = vTexCoord;
-}
-''';
-    _blitFragmentShader.source = '''
-precision mediump float;
-
-uniform float time;
-uniform vec2 cursor;
-uniform vec2 renderTargetResolution;
-
-varying vec2 samplePoint;
-uniform sampler2D source;
-
-void main() {
-    vec2 sample = gl_FragCoord.xy / renderTargetResolution;
-    gl_FragColor = texture2D(source, samplePoint);
-}
-''';
-    _blitShaderProgram.link();
-    Material blitMaterial = new Material('blit fullscreen', _blitShaderProgram,
-                                         this);
-    var asset = _fullscreenEffectsPack.registerAsset('blit', 'material', '', '',
-                                                     {}, {});
-    asset.imported = blitMaterial;
-  }
-
-  void _buildFullscreenPassData() {
-    NPOTSampler = new SamplerState.pointClamp('Renderer.NPOTSampler', device);
-    _buildFullscreenMesh();
-    _buildFullscreenBlitMaterial();
-    _buildFullscreenBlurMaterial();
-  }
-
-  Renderer(this.frontBuffer, this.device, this.assetManager) {
+  Renderer(this.frontBuffer, this.device, this.debugDrawManager,
+           this.assetManager) {
+    _renderTargetSampler = new SamplerState.linearClamp(
+        'Renderer.renderTargetSampler',
+        device);
     _rendererPack = assetManager.registerPack('renderer', '');
-    _fullscreenEffectsPack = assetManager.registerPack('fullscreenEffects','');
-    _buildFullscreenPassData();
+    _materialShaderPack = assetManager.registerPack('materialShaders','');
+    _registerBuiltinMaterialShaders(this);
     _frontBufferViewport = new Viewport('Renderer.Viewport', device);
     _frontBufferViewport.width = frontBuffer.width;
     _frontBufferViewport.height = frontBuffer.height;

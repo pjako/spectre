@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,8 +21,7 @@
 part of spectre;
 
 /// Contains depth state for the device.
-/// Create using [Device.createDepthState]
-/// Set using [ImmediateContext.setDepthState]
+/// Set using [GraphicsContext.setDepthState]
 class DepthState extends DeviceChild {
   //---------------------------------------------------------------------
   // Serialization names
@@ -44,7 +43,7 @@ class DepthState extends DeviceChild {
   bool _depthBufferEnabled = true;
   /// Whether writing to the depth buffer is enabled or disabled.
   /// The default is true.
-  bool _depthBufferWriteEnabled = false;
+  bool _depthBufferWriteEnabled = true;
   /// The comparison function for the depth-buffer test.
   /// The default is CompareFunction.LessEqual
   int _depthBufferFunction = CompareFunction.LessEqual;
@@ -110,7 +109,8 @@ class DepthState extends DeviceChild {
 
     json[_depthBufferEnabledName]      = _depthBufferEnabled;
     json[_depthBufferWriteEnabledName] = _depthBufferWriteEnabled;
-    json[_depthBufferFunctionName]     = CompareFunction.stringify(_depthBufferFunction);
+    json[_depthBufferFunctionName]     =
+        CompareFunction.stringify(_depthBufferFunction);
 
     return json;
   }
@@ -125,9 +125,11 @@ class DepthState extends DeviceChild {
     _depthBufferEnabled = (value != null) ? value : _depthBufferEnabled;
 
     value = values[_depthBufferWriteEnabledName];
-    _depthBufferWriteEnabled = (value != null) ? value : _depthBufferWriteEnabled;
+    _depthBufferWriteEnabled = (value != null) ?
+        value : _depthBufferWriteEnabled;
 
     value = values[_depthBufferFunctionName];
-    _depthBufferFunction = (value != null) ? CompareFunction.parse(value) : _depthBufferFunction;
+    _depthBufferFunction = (value != null) ?
+        CompareFunction.parse(value) : _depthBufferFunction;
   }
 }

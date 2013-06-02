@@ -1,0 +1,44 @@
+{
+  "simpleShader":{
+    "loadArguments":{},
+    "name":"simpleShader",
+    "url":"simple.shader",
+    "type":"shaderProgram",
+    "importArguments":{}
+  },
+  "normalMapSkinnedShader":{
+    "loadArguments":{},
+    "name":"normalMapSkinnedShader",
+    "url":"normal_map_skinned.shader",
+    "type":"shaderProgram",
+    "importArguments":{}
+  },
+  "floorDiffuse": {
+    "loadArguments":{},
+    "name":"floorDiffuse",
+    "url":"Floor.png",
+    "type":"tex2d",
+    "importArguments":{}
+  },
+  "ceilingDiffuse": {
+    "loadArguments":{},
+    "name":"floorNormal",
+    "url":"Ceiling.png",
+    "type":"tex2d",
+    "importArguments":{}
+  },
+  "wallDiffuse": {
+    "loadArguments":{},
+    "name":"floorSpecular",
+    "url":"Back.png",
+    "type":"tex2d",
+    "importArguments":{}
+  },
+  "config":{
+    "loadArguments":{},
+    "name":"config",
+    "url":"models.config",
+    "type":"config",
+    "importArguments":{}
+  }
+}

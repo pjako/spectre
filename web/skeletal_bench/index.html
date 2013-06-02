@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Spectre Sample: Skeletal Animation (CPU)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="toggle-switch.css">
+    <link href='http://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+    <div id="counter_wrap">
+      <div id="counter-frame">
+        <div id="counter" data-count="" data-count-next=""></div>  
+      </div>
+    </div>
+    <div id="simd_wrap">
+      <label id="simd_toggle" for="pose_simd" class="checkbox toggle android" onclick="">
+        <input id="pose_simd" type="checkbox" />
+        <p>
+          <span>SIMD</span>
+          <span>No SIMD</span>
+        </p>
+        <a class="slide-button"></a>
+      </label>
+    </div>
+    <canvas id="backBuffer"></canvas>
+    <div id="logo"></div>
+
+    <script type="application/dart" src="sample.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>

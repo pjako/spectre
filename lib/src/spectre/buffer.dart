@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -25,16 +25,10 @@ part of spectre;
  * or a [VertexBuffer].
  */
 class SpectreBuffer extends DeviceChild {
-  /** Hint that buffer data is used once and then discarded. */
-  static const UsageStream = WebGLRenderingContext.STREAM_DRAW;
-  /** Hint that buffer data is used few times and then discarded. */
-  static const UsageDynamic = WebGLRenderingContext.DYNAMIC_DRAW;
-  /** Hint that buffer data is used many times and never discarded. */
-  static const UsageStatic = WebGLRenderingContext.STATIC_DRAW;
-  WebGLBuffer _deviceBuffer;
+  WebGL.Buffer _deviceBuffer;
   final int _bindTarget;
   final int _bindingParam;
-  int _usage = UsageDynamic;
+  int _usage = UsagePattern.DynamicDraw;
   int _size = 0;
 
   SpectreBuffer(String name, GraphicsDevice device,
@@ -49,7 +43,7 @@ class SpectreBuffer extends DeviceChild {
     _deviceBuffer = null;
   }
 
-  WebGLBuffer _pushBind() {
+  WebGL.Buffer _pushBind() {
     var oldBind = device.gl.getParameter(_bindingParam);
     device.gl.bindBuffer(_bindTarget, _deviceBuffer);
     return oldBind;
@@ -59,12 +53,12 @@ class SpectreBuffer extends DeviceChild {
     device.gl.bindBuffer(_bindTarget, _deviceBuffer);
   }
 
-  void _popBind(WebGLBuffer oldBind) {
+  void _popBind(WebGL.Buffer oldBind) {
     device.gl.bindBuffer(_bindTarget, oldBind);
   }
 
   void _uploadData(dynamic data, int usage) {
-    _size = data.byteLength;
+    _size = data.lengthInBytes;
     _usage = usage;
     device.gl.bufferData(_bindTarget, data, usage);
   }
@@ -90,8 +84,9 @@ class SpectreBuffer extends DeviceChild {
     if (data == null) {
       throw new ArgumentError('data cannot be null.');
     }
-    if (offset + data.byteLength > _size) {
-      throw new RangeError('data is too large ${offset + data.byteLength} > ${_size}');
+    if (offset + data.lengthInBytes > _size) {
+      throw new RangeError('data is too large ${offset + data.lengthInBytes} '
+                           '> ${_size}');
     }
     var oldBind = _pushBind();
     _uploadSubData(offset, data);

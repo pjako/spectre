@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,12 +23,13 @@ library texture_address_mode_test;
 import 'package:unittest/unittest.dart';
 import 'package:spectre/spectre.dart';
 import 'dart:html';
+import 'dart:web_gl' as WebGL;
 
 void main() {
   test('values', () {
-    expect(TextureAddressMode.Clamp , WebGLRenderingContext.CLAMP_TO_EDGE);
-    expect(TextureAddressMode.Mirror, WebGLRenderingContext.MIRRORED_REPEAT);
-    expect(TextureAddressMode.Wrap  , WebGLRenderingContext.REPEAT);
+    expect(TextureAddressMode.Clamp , WebGL.CLAMP_TO_EDGE);
+    expect(TextureAddressMode.Mirror, WebGL.MIRRORED_REPEAT);
+    expect(TextureAddressMode.Wrap  , WebGL.REPEAT);
   });
 
   test('stringify', () {

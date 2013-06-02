@@ -20,109 +20,29 @@
 
 part of spectre_renderer;
 
-/**
- * The renderable class contains everything needed to render a mesh instance.
- * TODO(johnmccutchan): Factor this into a base interface and implement
- * MeshRenderable.
- */
 class Renderable {
   final Renderer renderer;
-  final String name;
-  Map<String, String> _materialPaths;
-  Map<String, Material> materials;
-  mat4 T = new mat4.identity();
+  String name;
+  Matrix4 transform = new Matrix4.identity();
 
-  /// Path to mesh asset.
-  String get meshPath => _meshPath;
-  void set meshPath(String o) {
-    _meshPath = o;
-    mesh = renderer.assetManager[_meshPath];
-  }
-  String _meshPath;
+  Renderable(this.name, this.renderer);
 
-  /// Path to material asset.
-  String get materialPath => _materialPath;
-  set materialPath(String o) {
-    _materialPath = o;
-    material = renderer.assetManager[_materialPath];
-  }
-  String _materialPath;
-
-  InputLayout get inputLayout => _inputLayout;
-  InputLayout _inputLayout;
-  // Bounding Box.
-
-  Renderable(this.name, this.renderer, this._meshPath, this._materialPaths) {
-    _inputLayout = new InputLayout(name, renderer.device);
-    mesh = renderer.assetManager[_meshPath];
-    _link();
-  }
-
-  Renderable.json(Map json, this.renderer) : name = json['name'] {
-    _inputLayout = new InputLayout(name, renderer.device);
+  Renderable.json(Map json, this.renderer) {
     fromJson(json);
-    _link();
   }
 
-  void cleanup() {
-    _inputLayout.dispose();
-  }
-
-  SpectreMesh get mesh => _mesh;
-  set mesh(SpectreMesh m) {
-    _mesh = m;
-    _link();
-  }
-  SpectreMesh _mesh;
-
-  Material get material => _material;
-  set material(Material m) {
-    _material = m;
-    _link();
-  }
-  Material _material;
-
-  void _link() {
-    _inputLayout.mesh = _mesh;
-    if (_material != null) {
-      _inputLayout.shaderProgram = _material.shader;
-    }
-  }
-
-  void render(Layer layer, Camera camera) {
-    if (_material == null) {
-      spectreLog.Error('Cannot render $name it has no material.');
-      return;
-    }
-    if (_mesh == null) {
-      spectreLog.Error('Cannot render $name it has no mesh.');
-      return;
-    }
-    if (_inputLayout.ready == false) {
-      spectreLog.Error('Cannot render $name inputs are invalid.');
-      return;
-    }
-    _material.updateCameraConstants(camera);
-    _material.updateObjectTransformConstant(T);
-    renderer._applyMaterial(_material);
-    renderer.device.context.setInputLayout(_inputLayout);
-    renderer.device.context.setIndexedMesh(_mesh);
-    renderer.device.context.drawIndexedMesh(_mesh);
-  }
+  void render(Layer layer, Camera camera);
 
   void fromJson(Map json) {
-    meshPath = json['meshPath'];
-    materialPath = json['materialPath'];
-    T.copyFromArray(json['T']);
+    name = json['name'];
+    transform.copyFromArray(json['transform']);
   }
 
   dynamic toJson() {
     Map map = new Map();
     map['name'] = name;
-    map['meshPath'] = meshPath;
-    map['materialPath'] = materialPath;
-    map['T'] = new List<num>();
-    T.copyIntoArray(map['T']);
+    map['transform'] = new List<num>();
+    transform.copyIntoArray(map['T']);
     return map;
   }
 }

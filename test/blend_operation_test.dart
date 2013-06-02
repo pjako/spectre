@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,12 +23,13 @@ library blend_operation_test;
 import 'package:unittest/unittest.dart';
 import 'package:spectre/spectre.dart';
 import 'dart:html';
+import 'dart:web_gl' as WebGL;
 
 void main() {
   test('values', () {
-    expect(BlendOperation.Add            , WebGLRenderingContext.FUNC_ADD);
-    expect(BlendOperation.ReverseSubtract, WebGLRenderingContext.FUNC_REVERSE_SUBTRACT);
-    expect(BlendOperation.Subtract       , WebGLRenderingContext.FUNC_SUBTRACT);
+    expect(BlendOperation.Add            , WebGL.FUNC_ADD);
+    expect(BlendOperation.ReverseSubtract, WebGL.FUNC_REVERSE_SUBTRACT);
+    expect(BlendOperation.Subtract       , WebGL.FUNC_SUBTRACT);
   });
 
   test('stringify', () {

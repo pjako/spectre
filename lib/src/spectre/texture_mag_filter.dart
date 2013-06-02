@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,88 +21,33 @@
 part of spectre;
 
 /// Defines filtering types for magnification during texture sampling.
-class TextureMagFilter {
-  //---------------------------------------------------------------------
-  // Serialization names
-  //---------------------------------------------------------------------
-
-  /// String representation of [Linear].
-  static const String _linearName = 'TextureMagFilter.Linear';
-  /// String representation of [Point].
-  static const String _pointName = 'TextureMagFilter.Point';
-  /// String representation of [PointMipPoint].
-  static const String _pointMipPointName = 'TextureMagFilter.PointMipPoint';
-  /// String representation of [PointMipLinear].
-  static const String _pointMipLinearName = 'TextureMagFilter.PointMipLinear';
-  /// String representation of [LinearMipPoint].
-  static const String _linearMipPointName = 'TextureMagFilter.LinearMipPoint';
-  /// String representation of [LinearMipLinear].
-  static const String _linearMipLinearName = 'TextureMagFilter.LinearMipLinear';
-
-  //---------------------------------------------------------------------
-  // Enumerations
-  //---------------------------------------------------------------------
-
+class TextureMagFilter extends Enum {
   /// Use linear filtering for magnification.
-  static const int Linear = WebGLRenderingContext.LINEAR;
+  static const int Linear = WebGL.LINEAR;
   /// Use point filtering for magnification.
-  static const int Point = WebGLRenderingContext.NEAREST;
+  static const int Point = WebGL.NEAREST;
   /// Use point filtering to expand, and point filtering between mipmap levels.
-  static const int PointMipPoint = WebGLRenderingContext.NEAREST_MIPMAP_NEAREST;
+  static const int PointMipPoint = WebGL.NEAREST_MIPMAP_NEAREST;
   /// Use point filtering to expand, and linear filtering between mipmap levels.
-  static const int PointMipLinear = WebGLRenderingContext.NEAREST_MIPMAP_LINEAR;
+  static const int PointMipLinear = WebGL.NEAREST_MIPMAP_LINEAR;
   /// Use linear filtering to expand, and point filtering between mipmap levels.
-  static const int LinearMipPoint = WebGLRenderingContext.LINEAR_MIPMAP_NEAREST;
+  static const int LinearMipPoint = WebGL.LINEAR_MIPMAP_NEAREST;
   /// Use linear filtering to expand, and linear filtering between mipmap levels.
-  static const int LinearMipLinear = WebGLRenderingContext.LINEAR_MIPMAP_LINEAR;
+  static const int LinearMipLinear = WebGL.LINEAR_MIPMAP_LINEAR;
 
-  //---------------------------------------------------------------------
-  // Class methods
-  //---------------------------------------------------------------------
+  static Map<String, int> _values = {
+    'TextureMagFilter.Linear' : Linear,
+    'TextureMagFilter.Point' : Point,
+    'TextureMagFilter.PointMipPoint' : PointMipPoint,
+    'TextureMagFilter.PointMipLinear' : PointMipLinear,
+    'TextureMagFilter.LinearMipPoint' : LinearMipPoint,
+    'TextureMagFilter.LinearMipLinear' : LinearMipLinear,
+  };
 
-  /// Convert from a [String] name to the corresponding [TextureMinFilter] enumeration.
-  static int parse(String name) {
-    switch (name) {
-      case _linearName         : return Linear;
-      case _pointName          : return Point;
-      case _pointMipPointName  : return PointMipPoint;
-      case _pointMipLinearName : return PointMipLinear;
-      case _linearMipPointName : return LinearMipPoint;
-      case _linearMipLinearName: return LinearMipLinear;
-    }
-
-    assert(false);
-    return Linear;
-  }
-
-  /// Converts the [TextureMinFilter] enumeration to a [String].
-  static String stringify(int value) {
-    switch (value) {
-      case Linear         : return _linearName;
-      case Point          : return _pointName;
-      case PointMipPoint  : return _pointMipPointName;
-      case PointMipLinear : return _pointMipLinearName;
-      case LinearMipPoint : return _linearMipPointName;
-      case LinearMipLinear: return _linearMipLinearName;
-    }
-
-    assert(false);
-    return _linearName;
-  }
-
+  /// Convert a [String] to a [TextureMagFilter].
+  static int parse(String name) => Enum._parse(_values, name);
+  /// Convert a [TextureMagFilter] to a [String].
+  static String stringify(int value) => Enum._stringify(_values, value);
   /// Checks whether the value is a valid enumeration.
-  ///
-  /// Should be gotten rid of when enums are supported properly.
-  static bool isValid(int value) {
-    switch (value) {
-      case Linear         :
-      case Point          :
-      case PointMipPoint  :
-      case PointMipLinear :
-      case LinearMipPoint :
-      case LinearMipLinear: return true;
-    }
-
-    return false;
-  }
+  static bool isValid(int value) => Enum._isValid(_values, value);
 }
