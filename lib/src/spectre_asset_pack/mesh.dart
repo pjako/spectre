@@ -33,10 +33,10 @@ class MeshImporter extends AssetImporter {
   SpectreMesh _processMesh(Asset asset, Map json) {
     final String name = asset.name;
     SingleArrayIndexedMesh mesh = new SingleArrayIndexedMesh(name, device);
-    var vertexArray = new Float32Array.fromList(json['vertices']);
-    var indexArray = new Uint16Array.fromList(json['indices']);
-    mesh.vertexArray.uploadData(vertexArray, SpectreBuffer.UsageStatic);
-    mesh.indexArray.uploadData(indexArray, SpectreBuffer.UsageStatic);
+    var vertexArray = new Float32List.fromList(json['vertices']);
+    var indexArray = new Uint16List.fromList(json['indices']);
+    mesh.vertexArray.uploadData(vertexArray, UsagePattern.StaticDraw);
+    mesh.indexArray.uploadData(indexArray, UsagePattern.StaticDraw);
     mesh.count = indexArray.length;
     List attributes = json['attributes'];
 
@@ -54,24 +54,20 @@ class MeshImporter extends AssetImporter {
 
       SpectreMeshAttribute attribute = new SpectreMeshAttribute(
           name,
-          'float',
-          count,
-          offset,
-          stride,
-          false);
-
+          new VertexAttribute(0, 0, offset, stride, DataType.Float32, count,
+                              false));
       mesh.attributes[name] = attribute;
     });
     return mesh;
   }
 
-  SpectreMesh _processMeshes(Asset asset, List meshes) {
+  SpectreMesh _processMeshes(Asset asset, List meshes, AssetPackTrace tracer) {
     final String name = asset.name;
     SingleArrayIndexedMesh mesh = new SingleArrayIndexedMesh(name, device);
-    var vertexArray = new Float32Array.fromList(meshes[0]['vertices']);
-    var indexArray = new Uint16Array.fromList(meshes[0]['indices']);
-    mesh.vertexArray.uploadData(vertexArray, SpectreBuffer.UsageStatic);
-    mesh.indexArray.uploadData(indexArray, SpectreBuffer.UsageStatic);
+    var vertexArray = new Float32List.fromList(meshes[0]['vertices']);
+    var indexArray = new Uint16List.fromList(meshes[0]['indices']);
+    mesh.vertexArray.uploadData(vertexArray, UsagePattern.StaticDraw);
+    mesh.indexArray.uploadData(indexArray, UsagePattern.StaticDraw);
     mesh.count = indexArray.length;
     meshes[0]['attributes'].forEach((k, v) {
       var attribute = new SpectreMeshAttribute(v['name'],
@@ -94,7 +90,7 @@ class MeshImporter extends AssetImporter {
     assert(false);
   }
 
-  Future<Asset> import(dynamic payload, Asset asset) {
+  Future<Asset> import(dynamic payload, Asset asset, AssetPackTrace tracer) {
     if (payload is String) {
       try {
         Map parsed = JSON.parse(payload);
@@ -114,9 +110,11 @@ class MeshImporter extends AssetImporter {
         if (mesh != null) {
           asset.imported = mesh;
         }
-      } catch (_) {}
+      } on FormatException catch (e) {
+        tracer.assetImportError(asset, e.message);
+      }
     }
-    return new Future.immediate(asset);
+    return new Future.value(asset);
   }
 
   void delete(SpectreMesh imported) {

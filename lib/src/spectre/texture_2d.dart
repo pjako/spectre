@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -21,8 +21,7 @@
 part of spectre;
 
 /// Texture2D defines the storage for a 2D texture including Mipmaps
-/// Create using [Device.createTexture2D]
-/// Set using [immediateContext.setTextures]
+/// Set using [GraphicsContext.setTextures]
 /// NOTE: Unlike OpenGL, Spectre textures do not describe how they are sampled
 class Texture2D extends SpectreTexture {
   bool _loadError = false;
@@ -31,9 +30,8 @@ class Texture2D extends SpectreTexture {
   bool get loadError => _loadError;
 
   Texture2D(String name, GraphicsDevice device) :
-      super(name, device, WebGLRenderingContext.TEXTURE_2D,
-          WebGLRenderingContext.TEXTURE_BINDING_2D,
-          WebGLRenderingContext.TEXTURE_2D);
+      super(name, device, WebGL.TEXTURE_2D, WebGL.TEXTURE_BINDING_2D,
+            WebGL.TEXTURE_2D);
 
   Texture2D._cube(String name, GraphicsDevice device, int bindTarget,
                   int bindParam, int textureTarget) :
@@ -123,7 +121,8 @@ class Texture2D extends SpectreTexture {
   /// A call to this method will only generate mipmap data if the
   /// texture is a power of two. If not then this call is ignored.
   void generateMipmap() {
-    if (SpectreTexture._isPowerOfTwo(_width) && SpectreTexture._isPowerOfTwo(_height)) {
+    if (SpectreTexture._isPowerOfTwo(_width) &&
+        SpectreTexture._isPowerOfTwo(_height)) {
       var oldBind = _pushBind();
       _generateMipmap();
       _popBind(oldBind);

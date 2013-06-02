@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -101,10 +101,10 @@ bool materialEquals(Material a, Material b) {
 
 void testMaterialConstruct() {
   expect(() {
-    Material mateiral = new Material(_renderer, 'null shader', null);
+    Material mateiral = new Material('null shader', null, _renderer);
   }, throws);
   ShaderProgram sp = new ShaderProgram('unlinked program', _graphicsDevice);
-  Material material = new Material(_renderer, 'unlinked shader', sp);
+  Material material = new Material('unlinked shader', sp, _renderer);
   expect(0, material.constants.length);
   expect(0, material.textures.length);
   sp.vertexShader = new VertexShader('vs', _graphicsDevice);
@@ -115,23 +115,23 @@ void testMaterialConstruct() {
 precision highp float;
 
 // Input attributes
-attribute vec3 vPosition;
-attribute vec4 vColor;
+attribute Vector3 vPosition;
+attribute Vector4 vColor;
 // Input uniforms
-uniform mat4 cameraTransform;
+uniform Matrix4 cameraTransform;
 // Varying outputs
-varying vec4 fColor;
+varying Vector4 fColor;
 
 void main() {
     fColor = vColor;
-    vec4 vPosition4 = vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
+    Vector4 vPosition4 = Vector4(vPosition.x, vPosition.y, vPosition.z, 1.0);
     gl_Position = cameraTransform*vPosition4;
 }
 ''';
   sp.fragmentShader.source = '''
 precision mediump float;
 uniform sampler2D texture;
-varying vec4 fColor;
+varying Vector4 fColor;
 
 void main() {
     gl_FragColor = fColor + texture2D(texture, fColor.xy);

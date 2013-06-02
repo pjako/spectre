@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -24,11 +24,13 @@
 library spectre;
 
 import 'dart:html';
+import 'dart:web_gl' as WebGL;
 import 'dart:json' as JSON;
 import 'dart:async';
 import 'dart:math' as Math;
-import 'dart:typeddata';
+import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart';
+import 'package:vector_math/vector_math_operations.dart';
 import 'package:spectre/disposable.dart';
 
 part 'src/spectre/device_child.dart';
@@ -40,8 +42,10 @@ part 'src/spectre/camera.dart';
 part 'src/spectre/camera_controller.dart';
 part 'src/spectre/compare_function.dart';
 part 'src/spectre/cull_mode.dart';
+part 'src/spectre/data_type.dart';
 part 'src/spectre/debug_draw_manager.dart';
 part 'src/spectre/depth_state.dart';
+part 'src/spectre/enum.dart';
 part 'src/spectre/shader.dart';
 part 'src/spectre/fragment_shader.dart';
 part 'src/spectre/front_face.dart';
@@ -54,6 +58,7 @@ part 'src/spectre/input_layout.dart';
 part 'src/spectre/logger.dart';
 part 'src/spectre/fps_fly_camera_controller.dart';
 part 'src/spectre/orbit_camera_controller.dart';
+part 'src/spectre/primitive_topology.dart';
 part 'src/spectre/rasterizer_state.dart';
 part 'src/spectre/render_buffer.dart';
 part 'src/spectre/render_target.dart';
@@ -67,8 +72,12 @@ part 'src/spectre/texture_cube.dart';
 part 'src/spectre/texture_mag_filter.dart';
 part 'src/spectre/texture_min_filter.dart';
 part 'src/spectre/texture_2d.dart';
+part 'src/spectre/usage_pattern.dart';
 part 'src/spectre/vertex_buffer.dart';
 part 'src/spectre/vertex_shader.dart';
 part 'src/spectre/viewport.dart';
 part 'src/spectre/mesh.dart';
+part 'src/spectre/skeleton.dart';
+part 'src/spectre/skeleton_animation.dart';
 part 'src/spectre/skinned_mesh.dart';
+part 'src/spectre/vertex_attribute.dart';

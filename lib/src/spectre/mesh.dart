@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -22,39 +22,17 @@ part of spectre;
 
 class SpectreMeshAttribute {
   final String name;
-  final String componentType;
-  final int componentCount;
-  final int offset;
-  final int stride;
-  final bool normalized;
+  final VertexAttribute attribute;
+  SpectreMeshAttribute(this.name, this.attribute);
 
-  SpectreMeshAttribute(this.name, this.componentType, this.componentCount,
-                       this.offset, this.stride, this.normalized);
-
-  DeviceFormat get deviceFormat {
-    assert(componentType == 'float');
-    switch (componentCount) {
-      case 1:
-        return GraphicsDevice.DeviceFormatFloat1;
-      case 2:
-        return GraphicsDevice.DeviceFormatFloat2;
-      case 3:
-        return GraphicsDevice.DeviceFormatFloat3;
-      case 4:
-        return GraphicsDevice.DeviceFormatFloat4;
-      default:
-        throw new FallThroughError();
-    }
-  }
-
-  String toString() => '$name $componentType$componentCount $offset $stride';
+  String toString() => '$name $attribute';
 }
 
 abstract class SpectreMesh extends DeviceChild {
   final Map<String, SpectreMeshAttribute> attributes =
       new Map<String, SpectreMeshAttribute>();
   int count = 0;
-  int primitiveTopology = GraphicsContext.PrimitiveTopologyTriangles;
+  int primitiveTopology = PrimitiveTopology.Triangles;
   SpectreMesh(String name, GraphicsDevice device)
       : super._internal(name, device);
   void finalize() {

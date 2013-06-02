@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -64,9 +64,8 @@ typedef void SamplerCallback(ShaderProgramSampler sampler);
 typedef UniformSetFunction(device, location, argument);
 
 /** A shader program specifies the behaviour of the programmable GPU pipeline.
- * You can create an instance by calling [Graphicsdevice.createShaderProgram].
  * You can apply a shader program to the GPU pipeline with
- * [ImmediateContext.setShaderProgram].
+ * [GraphicsContext.setShaderProgram].
  *
  */
 class ShaderProgram extends DeviceChild {
@@ -98,7 +97,7 @@ class ShaderProgram extends DeviceChild {
     _fragmentShader = fs;
     _attach(_fragmentShader);
   }
-  WebGLProgram _program;
+  WebGL.Program _program;
 
   ShaderProgram(String name, GraphicsDevice device) :
     super._internal(name, device) {
@@ -138,7 +137,7 @@ class ShaderProgram extends DeviceChild {
     // Update the flag.
     _isLinked = device.gl.getProgramParameter(
         _program,
-        WebGLRenderingContext.LINK_STATUS);
+        WebGL.LINK_STATUS);
     if (_linkLog == '') {
       spectreLog.Info('ShaderProgram.Link($name): OKAY.');
     } else {
@@ -154,63 +153,63 @@ $_linkLog''');
   }
 
   bool _isUniformType(int type) {
-    return type == WebGLRenderingContext.FLOAT ||
-           type == WebGLRenderingContext.FLOAT_VEC2 ||
-           type == WebGLRenderingContext.FLOAT_VEC3 ||
-           type == WebGLRenderingContext.FLOAT_VEC4 ||
-           type == WebGLRenderingContext.FLOAT_MAT2 ||
-           type == WebGLRenderingContext.FLOAT_MAT3 ||
-           type == WebGLRenderingContext.FLOAT_MAT4 ||
-           type == WebGLRenderingContext.BOOL ||
-           type == WebGLRenderingContext.BOOL_VEC2 ||
-           type == WebGLRenderingContext.BOOL_VEC3 ||
-           type == WebGLRenderingContext.BOOL_VEC4 ||
-           type == WebGLRenderingContext.INT ||
-           type == WebGLRenderingContext.INT_VEC2 ||
-           type == WebGLRenderingContext.INT_VEC3 ||
-           type == WebGLRenderingContext.INT_VEC4;
+    return type == WebGL.FLOAT ||
+           type == WebGL.FLOAT_VEC2 ||
+           type == WebGL.FLOAT_VEC3 ||
+           type == WebGL.FLOAT_VEC4 ||
+           type == WebGL.FLOAT_MAT2 ||
+           type == WebGL.FLOAT_MAT3 ||
+           type == WebGL.FLOAT_MAT4 ||
+           type == WebGL.BOOL ||
+           type == WebGL.BOOL_VEC2 ||
+           type == WebGL.BOOL_VEC3 ||
+           type == WebGL.BOOL_VEC4 ||
+           type == WebGL.INT ||
+           type == WebGL.INT_VEC2 ||
+           type == WebGL.INT_VEC3 ||
+           type == WebGL.INT_VEC4;
   }
 
   bool _isSamplerType(int type) {
-    return type == WebGLRenderingContext.SAMPLER_2D ||
-           type == WebGLRenderingContext.SAMPLER_CUBE;
+    return type == WebGL.SAMPLER_2D ||
+           type == WebGL.SAMPLER_CUBE;
   }
 
   String _convertType(int type) {
     switch (type) {
-      case WebGLRenderingContext.FLOAT:
+      case WebGL.FLOAT:
         return 'float';
-      case WebGLRenderingContext.FLOAT_VEC2:
+      case WebGL.FLOAT_VEC2:
         return 'vec2';
-      case WebGLRenderingContext.FLOAT_VEC3:
+      case WebGL.FLOAT_VEC3:
         return 'vec3';
-      case WebGLRenderingContext.FLOAT_VEC4:
+      case WebGL.FLOAT_VEC4:
         return 'vec4';
-      case WebGLRenderingContext.FLOAT_MAT2:
+      case WebGL.FLOAT_MAT2:
         return 'mat2';
-      case WebGLRenderingContext.FLOAT_MAT3:
+      case WebGL.FLOAT_MAT3:
         return 'mat3';
-      case WebGLRenderingContext.FLOAT_MAT4:
+      case WebGL.FLOAT_MAT4:
         return 'mat4';
-      case WebGLRenderingContext.BOOL:
+      case WebGL.BOOL:
         return 'bool';
-      case WebGLRenderingContext.BOOL_VEC2:
+      case WebGL.BOOL_VEC2:
         return 'bvec2';
-      case WebGLRenderingContext.BOOL_VEC3:
+      case WebGL.BOOL_VEC3:
         return 'bvec3';
-      case WebGLRenderingContext.BOOL_VEC4:
+      case WebGL.BOOL_VEC4:
         return 'bvec4';
-      case WebGLRenderingContext.INT:
+      case WebGL.INT:
         return 'int';
-      case WebGLRenderingContext.INT_VEC2:
+      case WebGL.INT_VEC2:
         return 'ivec2';
-      case WebGLRenderingContext.INT_VEC3:
+      case WebGL.INT_VEC3:
         return 'ivec3';
-      case WebGLRenderingContext.INT_VEC4:
+      case WebGL.INT_VEC4:
         return 'ivec4';
-      case WebGLRenderingContext.SAMPLER_2D:
+      case WebGL.SAMPLER_2D:
         return 'sampler2D';
-      case WebGLRenderingContext.SAMPLER_CUBE:
+      case WebGL.SAMPLER_CUBE:
         return 'samplerCube';
       default:
         throw new FallThroughError();
@@ -219,35 +218,35 @@ $_linkLog''');
 
   UniformSetFunction _findUniformSetForType(int type) {
     switch (type) {
-      case WebGLRenderingContext.FLOAT:
+      case WebGL.FLOAT:
         return _setUniform1f;
-      case WebGLRenderingContext.FLOAT_VEC2:
+      case WebGL.FLOAT_VEC2:
         return _setUniform2f;
-      case WebGLRenderingContext.FLOAT_VEC3:
+      case WebGL.FLOAT_VEC3:
         return _setUniform3f;
-      case WebGLRenderingContext.FLOAT_VEC4:
+      case WebGL.FLOAT_VEC4:
         return _setUniform4f;
-      case WebGLRenderingContext.FLOAT_MAT2:
+      case WebGL.FLOAT_MAT2:
         return _setUniformMatrix2;
-      case WebGLRenderingContext.FLOAT_MAT3:
+      case WebGL.FLOAT_MAT3:
         return _setUniformMatrix3;
-      case WebGLRenderingContext.FLOAT_MAT4:
+      case WebGL.FLOAT_MAT4:
         return _setUniformMatrix4;
-      case WebGLRenderingContext.BOOL:
+      case WebGL.BOOL:
         return _setUniform1i;
-      case WebGLRenderingContext.BOOL_VEC2:
+      case WebGL.BOOL_VEC2:
         return _setUniform2i;
-      case WebGLRenderingContext.BOOL_VEC3:
+      case WebGL.BOOL_VEC3:
         return _setUniform3i;
-      case WebGLRenderingContext.BOOL_VEC4:
+      case WebGL.BOOL_VEC4:
         return _setUniform4i;
-      case WebGLRenderingContext.INT:
+      case WebGL.INT:
         return _setUniform1i;
-      case WebGLRenderingContext.INT_VEC2:
+      case WebGL.INT_VEC2:
         return _setUniform2i;
-      case WebGLRenderingContext.INT_VEC3:
+      case WebGL.INT_VEC3:
         return _setUniform3i;
-      case WebGLRenderingContext.INT_VEC4:
+      case WebGL.INT_VEC4:
         return _setUniform4i;
       default:
         throw new FallThroughError();
@@ -263,17 +262,17 @@ $_linkLog''');
   void refreshUniforms() {
     var numUniforms = device.gl.getProgramParameter(
         _program,
-        WebGLRenderingContext.ACTIVE_UNIFORMS);
+        WebGL.ACTIVE_UNIFORMS);
     uniforms.clear();
     samplers.clear();
     if (numUniforms == null) {
       return;
     }
     int numSamplers = 0;
-    var oldBind = device.gl.getParameter(WebGLRenderingContext.CURRENT_PROGRAM);
+    var oldBind = device.gl.getParameter(WebGL.CURRENT_PROGRAM);
     device.gl.useProgram(_program);
     for (int i = 0; i < numUniforms; i++) {
-      WebGLActiveInfo activeUniform = device.gl.getActiveUniform(_program, i);
+      WebGL.ActiveInfo activeUniform = device.gl.getActiveUniform(_program, i);
       var location = device.gl.getUniformLocation(_program, activeUniform.name);
       if (_isSamplerType(activeUniform.type)) {
         ShaderProgramSampler sampler = new ShaderProgramSampler(
@@ -302,15 +301,15 @@ $_linkLog''');
   void refreshAttributes() {
     var numAttributes = device.gl.getProgramParameter(
         _program,
-        WebGLRenderingContext.ACTIVE_ATTRIBUTES);
+        WebGL.ACTIVE_ATTRIBUTES);
     attributes.clear();
     if (numAttributes == null) {
       return;
     }
-    var oldBind = device.gl.getParameter(WebGLRenderingContext.CURRENT_PROGRAM);
+    var oldBind = device.gl.getParameter(WebGL.CURRENT_PROGRAM);
     device.gl.useProgram(_program);
     for (int i = 0; i < numAttributes; i++) {
-      WebGLActiveInfo activeAttribute = device.gl.getActiveAttrib(_program, i);
+      WebGL.ActiveInfo activeAttribute = device.gl.getActiveAttrib(_program, i);
       var location = device.gl.getAttribLocation(_program,
                                                  activeAttribute.name);
       ShaderProgramAttribute attribute = new ShaderProgramAttribute(
@@ -390,7 +389,7 @@ $_linkLog''');
   }
 
   void _setUniform1f(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniform1fv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -404,7 +403,7 @@ $_linkLog''');
   }
 
   void _setUniform2f(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniform2fv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -415,7 +414,7 @@ $_linkLog''');
   }
 
   void _setUniform3f(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniform3fv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -426,7 +425,7 @@ $_linkLog''');
   }
 
   void _setUniform4f(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniform4fv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -438,7 +437,7 @@ $_linkLog''');
   }
 
   void _setUniform1i(GraphicsDevice device, var index, var argument) {
-    if (argument is Int32Array) {
+    if (argument is Int32List) {
       device.gl.uniform1iv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -452,7 +451,7 @@ $_linkLog''');
   }
 
   void _setUniform2i(GraphicsDevice device, var index, var argument) {
-    if (argument is Int32Array) {
+    if (argument is Int32List) {
       device.gl.uniform2iv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -463,7 +462,7 @@ $_linkLog''');
   }
 
   void _setUniform3i(GraphicsDevice device, var index, var argument) {
-    if (argument is Int32Array) {
+    if (argument is Int32List) {
       device.gl.uniform3iv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -474,7 +473,7 @@ $_linkLog''');
   }
 
   void _setUniform4i(GraphicsDevice device, var index, var argument) {
-    if (argument is Int32Array) {
+    if (argument is Int32List) {
       device.gl.uniform4iv(index, argument);
       return;
     } else if (argument is List<num>) {
@@ -486,7 +485,7 @@ $_linkLog''');
   }
 
   void _setUniformMatrix2(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniformMatrix2fv(index, false, argument);
       return;
     }
@@ -494,7 +493,7 @@ $_linkLog''');
   }
 
   void _setUniformMatrix3(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniformMatrix3fv(index, false, argument);
       return;
     }
@@ -502,22 +501,26 @@ $_linkLog''');
   }
 
   void _setUniformMatrix4(GraphicsDevice device, var index, var argument) {
-    if (argument is Float32Array) {
+    if (argument is Float32List) {
       device.gl.uniformMatrix4fv(index, false, argument);
       return;
     }
     throw new FallThroughError();
   }
 
+  /// Update the stored value for [uniform] with [argument].
+  void updateUniform(ShaderProgramUniform uniform, var argument) {
+    uniform._apply(device, uniform.location, argument);
+  }
   /// Set Uniform variable [name] in this [ShaderProgram].
   void setConstant(String name, var argument) {
     var uniform = uniforms[name];
     if (uniform == null) {
       return;
     }
-    var oldBind = device.gl.getParameter(WebGLRenderingContext.CURRENT_PROGRAM);
+    var oldBind = device.gl.getParameter(WebGL.CURRENT_PROGRAM);
     device.gl.useProgram(_program);
-    uniform._apply(device, uniform.location, argument);
+    updateUniform(uniform, argument);
     device.gl.useProgram(oldBind);
   }
 
@@ -526,6 +529,6 @@ $_linkLog''');
     if (sampler == null) {
       return;
     }
-    // Set
+    throw new FallThroughError();
   }
 }

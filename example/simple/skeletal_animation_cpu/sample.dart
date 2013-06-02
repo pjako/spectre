@@ -1,12 +1,12 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
   arising from the use of this software.
 
   Permission is granted to anyone to use this software for any purpose,
-  including commercial applications, and to alter it and redistribute it
+  including commerci  al applications, and to alter it and redistribute it
   freely, subject to the following restrictions:
 
   1. The origin of this software must not be misrepresented; you must not
@@ -27,8 +27,9 @@ library skeletal_animation_cpu;
 import 'dart:html';
 import 'dart:math' as Math;
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart';
-import 'package:game_loop/game_loop.dart';
+import 'package:game_loop/game_loop_html.dart';
 import 'package:asset_pack/asset_pack.dart';
 import 'package:spectre/spectre.dart';
 import 'package:spectre/spectre_asset_pack.dart';
@@ -45,7 +46,7 @@ part 'ui.dart';
 
 /// The sample application.
 class Application {
-  
+
   //---------------------------------------------------------------------
   // Class variables
   //---------------------------------------------------------------------
@@ -65,7 +66,6 @@ class Application {
 
   /// The [GraphicsDevice] used by the application.
   ///
-  /// All [GraphicsResource]s are created through the [GraphicsDevice].
   GraphicsDevice _graphicsDevice;
   /// The [GraphicsContext] used by the application.
   ///
@@ -74,7 +74,7 @@ class Application {
   GraphicsContext _graphicsContext;
   /// The [AssetManager] used by the application.
   ///
-  /// The [AssetManager] is used to import [GraphicsResource]s into the
+  /// The [AssetManager] is used to import resources into the
   /// the application. Typically assets are imported by loading in a .pack
   /// file which contains references to the locations of the assets. Once
   /// loaded they can be used by the application.
@@ -128,13 +128,13 @@ class Application {
   /// same way that a free-look FPS operates.
   OrbitCameraController _cameraController;
   /// The Model-View-Projection matrix.
-  mat4 _modelViewProjectionMatrix;
-  /// [Float32Array] storage for the Model-View matrix.
-  Float32Array _modelViewMatrixArray;
-  /// [Float32Array] storage for the Model-View-Projection matrix.
-  Float32Array _modelViewProjectionMatrixArray;
-  /// [Float32Array] storage for the normal matrix.
-  Float32Array _normalMatrixArray;
+  Matrix4 _modelViewProjectionMatrix;
+  /// [Float32List] storage for the Model-View matrix.
+  Float32List _modelViewMatrixArray;
+  /// [Float32List] storage for the Model-View-Projection matrix.
+  Float32List _modelViewProjectionMatrixArray;
+  /// [Float32List] storage for the normal matrix.
+  Float32List _normalMatrixArray;
 
   //---------------------------------------------------------------------
   // Mesh drawing variables
@@ -142,17 +142,21 @@ class Application {
 
   /// The [ShaderProgram] to use to draw the mesh.
   ///
-  /// The models all contain a normal and specular map. The [ShaderProgram] uses the
-  /// normal map to add additional detail to the surface, and the specular map to
-  /// provide a variable shininess, which is used in Phong lighting, across the mesh.
+  /// The models all contain a normal and specular map. The [ShaderProgram]
+  /// uses the normal map to add additional detail to the surface, and the
+  /// specular map to provide a variable shininess, which is used in Phong
+  /// lighting, across the mesh.
   ShaderProgram _shaderProgram;
   /// The [InputLayout] of the mesh.
   InputLayout _inputLayout;
   /// The [SkinnedMesh]es being used by the application.
   List<SkinnedMesh> _meshes;
-  /// The [Texture]s to use on the meshes.
+  /// Posed meshes.
+  List<SkinnedMeshInstance> _meshInstances;
+  /// The [SpectreTexture]s to use on the meshes.
   ///
-  /// Each mesh and their respective submeshes have [Texture]s to be set within the
+  /// Each mesh and their respective submeshes have [SpectreTexture]s to be set
+  /// within the
   /// pipeline. Each submesh has a diffuse map, a normal map, and a specular map.
   List<List<List<Texture2D>>> _textures;
   /// The index of the [SkinnedMesh] to draw.
@@ -254,26 +258,26 @@ class Application {
   void _createCamera() {
     // Create the Camera
     _camera = new Camera();
-    _camera.position = new vec3.raw(150.0, 60.0, 0.0);
-    _camera.focusPosition = new vec3.raw(0.0, 60.0, 0.0);
+    _camera.position = new Vector3(150.0, 60.0, 0.0);
+    _camera.focusPosition = new Vector3(0.0, 60.0, 0.0);
 
     // Create the CameraController and set the velocity of the movement
     _cameraController = new OrbitCameraController();
     _cameraController.radius = 150.0;
 
-    // Create the mat4 holding the Model-View-Projection matrix
-    _modelViewProjectionMatrix = new mat4();
+    // Create the Matrix4 holding the Model-View-Projection matrix
+    _modelViewProjectionMatrix = new Matrix4.zero();
 
-    // Create the Float32Arrays that store the constant values for the matrices
-    _modelViewMatrixArray = new Float32Array(16);
-    _modelViewProjectionMatrixArray = new Float32Array(16);
-    _normalMatrixArray = new Float32Array(16);
+    // Create the Float32Lists that store the constant values for the matrices
+    _modelViewMatrixArray = new Float32List(16);
+    _modelViewProjectionMatrixArray = new Float32List(16);
+    _normalMatrixArray = new Float32List(16);
   }
 
   /// Load the resources held in the .pack files.
   void _loadResources() {
     // Load the base pack
-    _assetManager.loadPack('base', 'assets/base.pack').then((assetPack) {
+    _assetManager.loadPack('base', 'assets/base/_.pack').then((assetPack) {
       // Get the ShaderProgram
       //
       // Any uniforms that are constant throughout running the program
@@ -306,6 +310,7 @@ class Application {
       Future.wait(requests).then((_) {
         // Create the list that holds the SkinnedMeshes
         _meshes = new List<SkinnedMesh>(modelCount);
+        _meshInstances = new List<SkinnedMeshInstance>(modelCount);
         // Create the list that holds the Textures
         _textures = new List<List<List<Texture2D>>>();
 
@@ -315,7 +320,6 @@ class Application {
         // compilation so just query the actual values.
         int diffuseIndex  = _shaderProgram.samplers['uDiffuse'].textureUnit;
         int specularIndex = _shaderProgram.samplers['uSpecular'].textureUnit;
-
         for (int i = 0; i < modelCount; ++i) {
           // Get the matching AssetPack
           Map modelRequest = models[i];
@@ -326,7 +330,9 @@ class Application {
           _applicationControls.addModel(modelPack['config']['name'], 'assets/${modelName}/icon.png');
 
           // Import the mesh
-          _meshes[i] = importSkinnedMesh('${modelName}_Mesh', _graphicsDevice, modelPack['mesh']);
+          _meshes[i] = importSkinnedMesh2('${modelName}_Mesh', _graphicsDevice, modelPack['mesh']);
+          importAnimation(_meshes[i], modelPack['anim'][0]);
+          _meshInstances[i] = new SkinnedMeshInstance(_meshes[i]);
 
           // Get the textures to use on the mesh.
           //
@@ -391,10 +397,11 @@ class Application {
     _debugDrawManager.update(dt);
 
     // Update the mesh
-    _meshes[_meshIndex].update(dt);
-  
+    _meshInstances[_meshIndex].update(dt, true);
+    _meshInstances[_meshIndex].skin(true);
+
     Mouse mouse = _gameLoop.mouse;
-    
+
     if (mouse.isDown(Mouse.LEFT) || _gameLoop.pointerLock.locked) {
       _cameraController.accumDX = mouse.dx;
       _cameraController.accumDY = mouse.dy;
@@ -421,20 +428,20 @@ class Application {
     // is because the model matrix is currently the identity matrix. The model
     // has no rotation, no scaling, and is sitting at (0, 0, 0).
 
-    // Copy the Model-View-Projection matrix into a Float32Array so it can be
+    // Copy the Model-View-Projection matrix into a Float32List so it can be
     // passed in as a constant to the ShaderProgram.
     _modelViewProjectionMatrix.copyIntoArray(_modelViewProjectionMatrixArray);
 
-    // Copy the View matrix from the camera into the Float32Array.
+    // Copy the View matrix from the camera into the Float32List.
     _camera.copyViewMatrixIntoArray(_modelViewMatrixArray);
 
-    // Copy the Normal matrix from the camera into the Float32Array.
+    // Copy the Normal matrix from the camera into the Float32List.
     _camera.copyNormalMatrixIntoArray(_normalMatrixArray);
-    
-    _debugDrawManager.addCircle(new vec3(0.0, 4.0, 0.0),
-                                new vec3(0.0, 1.0, 0.0),
-                                8.0, new vec4(1.0, 0.0, 0.0, 1.0));
-    _debugDrawManager.addAxes(new mat4.identity(), 3.0);
+
+    _debugDrawManager.addCircle(new Vector3(0.0, 4.0, 0.0),
+                                new Vector3(0.0, 1.0, 0.0),
+                                8.0, new Vector4(1.0, 0.0, 0.0, 1.0));
+    _debugDrawManager.addAxes(new Matrix4.identity(), 3.0);
   }
 
   /// Renders the scene.
@@ -473,7 +480,7 @@ class Application {
     _graphicsContext.setVertexBuffers(0, [mesh.vertexArray]);
     _graphicsContext.setIndexBuffer(mesh.indexArray);
     _graphicsContext.setInputLayout(_inputLayout);
-    _graphicsContext.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
+    _graphicsContext.setPrimitiveTopology(PrimitiveTopology.Triangles);
 
     // Draw each part of the mesh
     int meshCount = mesh.meshes.length;
@@ -519,8 +526,8 @@ class Application {
 Application _application;
 /// Instance of the [ApplicationControls].
 ApplicationControls _applicationControls;
-/// Instance of the [GameLoop] controlling the application flow.
-GameLoop _gameLoop;
+/// Instance of the [GameLoopHtml] controlling the application flow.
+GameLoopHtml _gameLoop;
 /// Identifier of the [CanvasElement] the application is rendering to.
 final String _canvasId = '#backBuffer';
 
@@ -539,14 +546,14 @@ void onRender(GameLoop gameLoop) {
 }
 
 /// Callback for when the canvas is resized.
-void onResize(GameLoop gameLoop) {
+void onResize(GameLoopHtml gameLoop) {
   _application.onResize(gameLoop.width, gameLoop.height);
 }
 
 /// Callback for when the pointer lock changes.
 ///
 /// Used to show/hide the options UI.
-void onPointerLockChange(GameLoop gameLoop) {
+void onPointerLockChange(GameLoopHtml gameLoop) {
   if (gameLoop.pointerLock.locked) {
     _applicationControls.hide();
   } else {
@@ -567,16 +574,16 @@ void main() {
 
   // Hook up the game loop
   // The loop isn't started until the start method is called.
-  _gameLoop = new GameLoop(canvas);
-  
+  _gameLoop = new GameLoopHtml(canvas);
+
   _gameLoop.onResize = onResize;
   _gameLoop.onUpdate = onFrame;
   _gameLoop.onRender = onRender;
   _gameLoop.onPointerLockChange = onPointerLockChange;
-  
+
   // This application doesn't need pointer lock, so disable it.
   // If you want to use pointer lock, however, comment this line
   _gameLoop.pointerLock.lockOnClick = false;
-  
+
   //_gameLoop.start();
 }

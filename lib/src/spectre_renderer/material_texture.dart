@@ -23,7 +23,6 @@ part of spectre_renderer;
 class MaterialTexture {
   final Renderer renderer;
   final String name;
-  final int textureUnit;
   String _texturePath;
 
   /** The asset path used when linking the texture */
@@ -38,8 +37,7 @@ class MaterialTexture {
   SamplerState sampler;
 
   /** Construct a new texture */
-  MaterialTexture(this.renderer, this.name, this._texturePath,
-                  this.textureUnit) {
+  MaterialTexture(this.renderer, this.name, this._texturePath) {
     sampler = new SamplerState(name, renderer.device);
     link();
   }
@@ -47,16 +45,15 @@ class MaterialTexture {
   /** Construct a clone of [other] */
   MaterialTexture.clone(MaterialTexture other)
       : renderer = other.renderer,
-        name = other.name,
-        textureUnit = other.textureUnit {
+        name = other.name {
     sampler = new SamplerState(name, renderer.device);
     sampler.fromJson(sampler.toJson());
     link();
   }
 
   MaterialTexture.json(this.renderer, Map json) :
-      name = json['name'],
-      textureUnit = json['textureUnit'] {
+      name = json['name'] {
+    sampler = new SamplerState(name, renderer.device);
     fromJson(json);
   }
 
@@ -76,12 +73,13 @@ class MaterialTexture {
   dynamic toJson() {
     Map json = new Map();
     json['name'] = name;
-    json['_texturePath'] = texturePath;
+    json['texturePath'] = texturePath;
     json['sampler'] = sampler.toJson();
     return json;
   }
 
   void fromJson(dynamic json) {
+    print('$name ${json['texturePath']}');
     texturePath = json['texturePath'];
     sampler.fromJson(json['sampler']);
   }

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -70,7 +70,7 @@ class FpsFlyCameraController extends CameraController {
       return;
     }
     scale = scale * dt * floatVelocity;
-    vec3 upDirection = new vec3.raw(0.0, 1.0, 0.0);
+    Vector3 upDirection = new Vector3(0.0, 1.0, 0.0);
     upDirection.scale(scale);
     cam.focusPosition.add(upDirection);
     cam.position.add(upDirection);
@@ -88,10 +88,10 @@ class FpsFlyCameraController extends CameraController {
       return;
     }
     scale = scale * dt * strafeVelocity;
-    vec3 frontDirection = cam.frontDirection;
+    Vector3 frontDirection = cam.frontDirection;
     frontDirection.normalize();
-    vec3 upDirection = new vec3.raw(0.0, 1.0, 0.0);
-    vec3 strafeDirection = frontDirection.cross(upDirection);
+    Vector3 upDirection = new Vector3(0.0, 1.0, 0.0);
+    Vector3 strafeDirection = frontDirection.cross(upDirection);
     strafeDirection.scale(scale);
     cam.focusPosition.add(strafeDirection);
     cam.position.add(strafeDirection);
@@ -110,7 +110,7 @@ class FpsFlyCameraController extends CameraController {
     }
     scale = scale * dt * forwardVelocity;
 
-    vec3 frontDirection = cam.frontDirection;
+    Vector3 frontDirection = cam.frontDirection;
     frontDirection.normalize();
     frontDirection.scale(scale);
     cam.focusPosition.add(frontDirection);
@@ -118,10 +118,10 @@ class FpsFlyCameraController extends CameraController {
   }
 
   void _RotateView(num dt, Camera cam) {
-    vec3 frontDirection = cam.frontDirection;
+    Vector3 frontDirection = cam.frontDirection;
     frontDirection.normalize();
-    vec3 upDirection = new vec3.raw(0.0, 1.0, 0.0);
-    vec3 strafeDirection = frontDirection.cross(upDirection);
+    Vector3 upDirection = new Vector3(0.0, 1.0, 0.0);
+    Vector3 strafeDirection = frontDirection.cross(upDirection);
     strafeDirection.normalize();
 
     num mouseYawDelta = accumDX/mouseSensitivity;
@@ -130,7 +130,7 @@ class FpsFlyCameraController extends CameraController {
     accumDY = 0;
 
     final num f_dot_up = frontDirection.dot(upDirection);
-    final num pitchAngle = acos(f_dot_up);
+    final num pitchAngle = Math.acos(f_dot_up);
     final num minPitchAngle = 0.785398163;
     final num maxPitchAngle = 2.35619449;
     final num pitchDegrees = degrees(pitchAngle);
@@ -143,9 +143,9 @@ class FpsFlyCameraController extends CameraController {
     _RotateEyeAndLook(mouseYawDelta, upDirection, cam);
   }
 
-  void _RotateEyeAndLook(num delta_angle, vec3 axis, Camera cam) {
-    quat q = new quat(axis, delta_angle);
-    vec3 frontDirection = cam.frontDirection;
+  void _RotateEyeAndLook(num delta_angle, Vector3 axis, Camera cam) {
+    Quaternion q = new Quaternion.axisAngle(axis, delta_angle);
+    Vector3 frontDirection = cam.frontDirection;
     frontDirection.normalize();
     q.rotate(frontDirection);
     frontDirection.normalize();

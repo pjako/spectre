@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,35 +20,8 @@
 
 part of spectre;
 
-/// Format describing a vertex buffer element
-class DeviceFormat {
-  final int type;
-  final int count;
-  final bool normalized;
-  const DeviceFormat(this.type, this.count, this.normalized);
-  String toString() {
-    return '($type, $count, $normalized)';
-  }
-}
-
 /// Spectre GPU Device
-
-/// All GPU resources are created and destroyed through a Device.
-
-/// Each resource requires a unique name.
-
-/// An existing resource can be looked up using its name.
 class GraphicsDevice {
-  static const DeviceFormat DeviceFormatFloat1 =
-                    const DeviceFormat(WebGLRenderingContext.FLOAT, 1, false);
-  static const DeviceFormat DeviceFormatFloat2 =
-                    const DeviceFormat(WebGLRenderingContext.FLOAT, 2, false);
-  static const DeviceFormat DeviceFormatFloat3 =
-                    const DeviceFormat(WebGLRenderingContext.FLOAT, 3, false);
-  static const DeviceFormat DeviceFormatFloat4 =
-                    const DeviceFormat(WebGLRenderingContext.FLOAT, 4, false);
-
-
   CanvasElement _surface;
   GraphicsContext _context;
   GraphicsContext get context => _context;
@@ -56,8 +29,8 @@ class GraphicsDevice {
   GraphicsDeviceCapabilities _capabilities;
   GraphicsDeviceCapabilities get capabilities => _capabilities;
 
-  WebGLRenderingContext _gl;
-  WebGLRenderingContext get gl => _gl;
+  WebGL.RenderingContext _gl;
+  WebGL.RenderingContext get gl => _gl;
 
   int get canvasWidth => _surface.width;
   int get canvasHeight => _surface.height;
@@ -79,7 +52,8 @@ class GraphicsDevice {
     children.remove(child);
   }
 
-  void _drawSquare(CanvasRenderingContext2D context2d, int x, int y, int w, int h) {
+  void _drawSquare(CanvasRenderingContext2D context2d, int x, int y, int w,
+                   int h) {
     context2d.save();
     context2d.beginPath();
     context2d.translate(x, y);
@@ -88,16 +62,19 @@ class GraphicsDevice {
     context2d.restore();
   }
 
-  void _drawGrid(CanvasRenderingContext2D context2d, int width, int height, int horizSlices, int vertSlices) {
+  void _drawGrid(CanvasRenderingContext2D context2d, int width, int height,
+                 int horizSlices, int vertSlices) {
     int sliceWidth = width ~/ horizSlices;
     int sliceHeight = height ~/ vertSlices;
     int sliceHalfWidth = sliceWidth ~/ 2;
     for (int i = 0; i < horizSlices; i++) {
       for (int j = 0; j < vertSlices; j++) {
         if (j % 2 == 0) {
-          _drawSquare(context2d, i * sliceWidth, j * sliceHeight, sliceHalfWidth, sliceHeight);
+          _drawSquare(context2d, i * sliceWidth, j * sliceHeight,
+                      sliceHalfWidth, sliceHeight);
         } else {
-          _drawSquare(context2d, i * sliceWidth + sliceHalfWidth, j * sliceHeight, sliceHalfWidth, sliceHeight);
+          _drawSquare(context2d, i * sliceWidth + sliceHalfWidth,
+                      j * sliceHeight, sliceHalfWidth, sliceHeight);
         }
       }
     }
@@ -105,20 +82,21 @@ class GraphicsDevice {
 
   /// Initializes an instance of the [GraphicsDevice] class.
   ///
-  /// A [WebGLRenderingContext] is created from the given [surface]. Additionally an
-  /// optional instance of [GraphicsDeviceConfig] can be passed in to control the creation
-  /// of the underlying frame buffer.
+  /// A [WebGL.RenderingContext] is created from the given [surface].
+  /// Additionally an
+  /// optional instance of [GraphicsDeviceConfig] can be passed in to control
+  /// the creation of the underlying frame buffer.
   GraphicsDevice(CanvasElement surface, [GraphicsDeviceConfig config = null]) {
     assert(surface != null);
     _surface = surface;
-    // Get the WebGL context
+    // Get the WebGL context.
     if (config == null) {
       config = new GraphicsDeviceConfig();
     }
     _gl = surface.getContext3d(stencil: config.stencilBuffer);
     _capabilities = new GraphicsDeviceCapabilities._fromContext(gl);
     print(_capabilities);
-    // Create the associated GraphicsContext
+    // Create the associated GraphicsContext.
     _context = new GraphicsContext(this);
     RenderTarget._systemRenderTarget = new RenderTarget.systemTarget(
         'WebGLFrontBuffer',

@@ -1,7 +1,9 @@
 import 'dart:html';
 import 'dart:math';
+import 'dart:json' as Json;
+import 'dart:typed_data';
 import 'package:vector_math/vector_math.dart';
-import 'package:game_loop/game_loop.dart';
+import 'package:game_loop/game_loop_html.dart';
 import 'package:asset_pack/asset_pack.dart';
 import 'package:spectre/spectre.dart';
 import 'package:spectre/spectre_asset_pack.dart';
@@ -10,20 +12,23 @@ import 'package:spectre/spectre_renderer.dart';
 final String _canvasId = '#frontBuffer';
 
 // TODO:
-// Material constants are decoupled from shader constants.
-// Material is a property sheet.
-// Shader looks up current value in material.
-// Look up material settings first in renderable then layer.
-// A shader has a default material property sheet.
-// Add Material->apply(). Possible for a material to override it.
-// Fix renderable interface.
-// Add layer list importer and material importer.
+// Flesh out import / export.
+// Implement DynamicMeshRenderable, sub classes:
+//   Implement FullscreenRenderable
+//   Implement CubeRenderable
+//   Implement SphereRenderable
+//   Implement CapsuleRenderable
+//   Implement ConvexHullRenderable
+//   Implement CubeRenderable
+
+// ^^ Above mesh properties (cube extents, etc) are mutable- regenerate mesh.
+
 // Only update material camera transform, time uniforms once.
 
 GraphicsDevice graphicsDevice;
 GraphicsContext graphicsContext;
 DebugDrawManager debugDrawManager;
-GameLoop gameLoop;
+GameLoopHtml gameLoop;
 AssetManager assetManager;
 Renderer renderer;
 final List<Layer> layers = new List<Layer>();
@@ -63,7 +68,9 @@ Map renderer_config = {
  ]
 };
 
-void gameFrame(GameLoop gameLoop) {
+List<Map> layer_config = Json.parse('[{"clearColorB":0.0,"clearColorTarget":true,"clearDepthValue":1.0,"name":"clear","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":true,"type":"Fullscreen","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"color","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Scene","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"debug","clearColorG":0.0,"renderTarget":"backBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"DebugDraw","material":null},{"clearColorB":0.0,"clearColorTarget":false,"clearDepthValue":1.0,"name":"blit","clearColorG":0.0,"renderTarget":"frontBuffer","clearColorR":0.0,"clearColorA":1.0,"clearDepthTarget":false,"type":"Fullscreen","material":{"constants":{},"textures":{"source":{"name":"source","texturePath":"renderer.colorBuffer","sampler":{"addressU":"TextureAddressMode.Clamp","magFilter":"TextureMagFilter.Linear","addressV":"TextureAddressMode.Clamp","maxAnisotropy":1.0,"minFilter":"TextureMinFilter.Linear"}}},"name":"blit","shaderName":"blit","materialShaderPath":null}}]');
+
+void gameFrame(GameLoopHtml gameLoop) {
   double dt = gameLoop.dt;
   cameraController.forwardVelocity = 25.0;
   cameraController.strafeVelocity = 25.0;
@@ -89,24 +96,24 @@ void renderFrame(GameLoop gameLoop) {
   renderer.render(layers, renderables, camera);
 
   // Add three lines, one for each axis.
-  debugDrawManager.addLine(new vec3.raw(0.0, 0.0, 0.0),
-                           new vec3.raw(10.0, 0.0, 0.0),
-                           new vec4.raw(1.0, 0.0, 0.0, 1.0));
-  debugDrawManager.addLine(new vec3.raw(0.0, 0.0, 0.0),
-                           new vec3.raw(0.0, 10.0, 0.0),
-                           new vec4.raw(0.0, 1.0, 0.0, 1.0));
-  debugDrawManager.addLine(new vec3.raw(0.0, 0.0, 0.0),
-                           new vec3.raw(0.0, 0.0, 10.0),
-                           new vec4.raw(0.0, 0.0, 1.0, 1.0));
-  debugDrawManager.addSphere(new vec3(20.0, 20.0, 20.0), 20.0,
-                             new vec4(0.0, 1.0, 0.0, 1.0));
+  debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                           new Vector3(10.0, 0.0, 0.0),
+                           new Vector4(1.0, 0.0, 0.0, 1.0));
+  debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                           new Vector3(0.0, 10.0, 0.0),
+                           new Vector4(0.0, 1.0, 0.0, 1.0));
+  debugDrawManager.addLine(new Vector3(0.0, 0.0, 0.0),
+                           new Vector3(0.0, 0.0, 10.0),
+                           new Vector4(0.0, 0.0, 1.0, 1.0));
+  debugDrawManager.addSphere(new Vector3(20.0, 20.0, 20.0), 20.0,
+                             new Vector4(0.0, 1.0, 0.0, 1.0));
   if (_circleDrawn == false) {
     _circleDrawn = true;
     // Draw a circle that lasts for 5 seconds.
-    debugDrawManager.addCircle(new vec3.raw(0.0, 0.0, 0.0),
-                               new vec3.raw(0.0, 1.0, 0.0),
+    debugDrawManager.addCircle(new Vector3(0.0, 0.0, 0.0),
+                               new Vector3(0.0, 1.0, 0.0),
                                2.0,
-                               new vec4.raw(1.0, 1.0, 1.0, 1.0),
+                               new Vector4(1.0, 1.0, 1.0, 1.0),
                                duration:5.0);
   }
   // Prepare the debug draw manager for rendering
@@ -114,7 +121,7 @@ void renderFrame(GameLoop gameLoop) {
 }
 
 // Handle resizes
-void resizeFrame(GameLoop gameLoop) {
+void resizeFrame(GameLoopHtml gameLoop) {
   CanvasElement canvas = gameLoop.element;
   // Set the canvas width and height to match the dom elements
   canvas.width = canvas.client.width;
@@ -123,50 +130,37 @@ void resizeFrame(GameLoop gameLoop) {
   camera.aspectRatio = canvas.width.toDouble()/canvas.height.toDouble();
 }
 
-SingleArrayIndexedMesh _skyboxMesh;
-ShaderProgram _skyboxShaderProgram;
-InputLayout _skyboxInputLayout;
-SamplerState _skyboxSampler;
-DepthState _skyboxDepthState;
-BlendState _skyboxBlendState;
-RasterizerState _skyboxRasterizerState;
-
 void _setupSkybox() {
-  _skyboxShaderProgram = assetManager['demoAssets.skyBoxShader'];
-  assert(_skyboxShaderProgram.linked == true);
-  _skyboxMesh = assetManager['demoAssets.skyBox'];
-  _skyboxInputLayout = new InputLayout('Skybox', graphicsDevice);
-  _skyboxInputLayout.mesh = _skyboxMesh;
-  _skyboxInputLayout.shaderProgram = _skyboxShaderProgram;
-  assert(_skyboxInputLayout.ready == true);
-  _skyboxSampler = new SamplerState('Skybox', graphicsDevice);
-  _skyboxDepthState = new DepthState('Skybox', graphicsDevice);
-  _skyboxBlendState = new BlendState('Skybox', graphicsDevice);
-  _skyboxBlendState.enabled = false;
-  _skyboxRasterizerState = new RasterizerState('skybox.rs', graphicsDevice);
-  _skyboxRasterizerState.cullMode = CullMode.None;
+  SkyboxRenderable skyBox = new SkyboxRenderable('skyBox', renderer);
+  MaterialShader skyBoxShader = renderer.materialShaders['skyBox'];
+  skyBox.material = new Material('Skybox', skyBoxShader, renderer);
+  skyBox.material.addTexture('skyMap');
+  skyBox.material.textures['skyMap'].texturePath = 'demoAssets.space';
+  renderables.add(skyBox);
 }
 
 void _buildCubes() {
   renderables.length = 100;
   for (int i = 0; i < 100; i++) {
-    Renderable renderable = new Renderable('box $i', renderer,
-                                           'demoAssets.unitCube', {});
-    renderable.T.setIdentity();
-    renderable.T.translate(i.toDouble() * 2.0, 0.0, 0.0);
-    renderable.materialPath = 'demoAssets.simpleTexture';
+    MeshRenderable renderable = new MeshRenderable('box $i', renderer,
+                                           'demoAssets.unitCube');
+    renderable.transform.setIdentity();
+    renderable.transform.translate(i.toDouble() * 2.0, 0.0, 0.0);
+    MaterialShader shader = assetManager['demoAssets.simpleTextureShader'];
+    renderable.material = new Material('Cube $i', shader, renderer);
+    if (i > 50) {
+      renderable.material.addConstant('color', 'vec3');
+      renderable.material.constants['color'].value[0] = i / 100;
+      renderable.material.constants['color'].value[1] = 0.5;
+      renderable.material.constants['color'].value[2] = 0.5;
+    }
     renderables[i] = renderable;
   }
 }
 
 void _makeMaterial() {
-  var shaderProgram = new ShaderProgram('simpleTexture', graphicsDevice);
-  var vertexShader = new VertexShader('simpleTexture', graphicsDevice);
-  var fragmentShader = new FragmentShader('simpleTexture', graphicsDevice);
-  Material material = new Material('simpleTexture', shaderProgram, renderer);
-  shaderProgram.vertexShader = vertexShader;
-  shaderProgram.fragmentShader = fragmentShader;
-  vertexShader.source = '''
+  MaterialShader materialShader = new MaterialShader('simpleTexture', renderer);
+  materialShader.vertexShader = '''
 precision highp float;
 
 attribute vec3 POSITION;
@@ -198,14 +192,14 @@ void main() {
     gl_Position = M*vPosition4;
 }
 ''';
-  fragmentShader.source = '''
+  materialShader.fragmentShader = '''
 precision mediump float;
 
 varying vec3 surfaceNormal;
 varying vec2 samplePoint;
 
 varying vec3 lightDir;
-
+uniform vec3 color;
 uniform sampler2D diffuse;
 
 void main() {
@@ -213,48 +207,24 @@ void main() {
   vec3 light = normalize(lightDir);
   float NdotL = max(dot(normal, -light), 0.3);
   vec3 ambientColor = vec3(0.1, 0.1, 0.1);
-  //vec3 diffuseColor = vec3(1.0, 0.0, 0.0) * NdotL;
+  //Vector3 diffuseColor = vec3(1.0, 0.0, 0.0) * NdotL;
   vec3 diffuseColor = vec3(texture2D(diffuse, samplePoint)) * NdotL;
   vec3 finalColor = diffuseColor + ambientColor;
     //gl_FragColor = vec4(NdotL, NdotL, 1.0, 1.0);
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 }
 ''';
-  print(fragmentShader.compileLog);
-  shaderProgram.link();
-  assert(shaderProgram.linked);
-  material.link();
-  var asset = assetManager['demoAssets'].registerAsset('simpleTexture',
-                                                       'shader', '', '', {},
+  materialShader.depthState.depthBufferWriteEnabled = true;
+  materialShader.material.addConstant('color', 'vec3');
+  materialShader.material.constants['color'].value[0] = 0.7;
+  materialShader.material.constants['color'].value[1] = 0.7;
+  materialShader.material.constants['color'].value[2] = 0.7;
+  var asset = assetManager['demoAssets'].registerAsset('simpleTextureShader',
+                                                       'MaterialShader', '', {},
                                                        {});
-  asset.imported = material;
+  print(Json.stringify(materialShader));
+  asset.imported = materialShader;
 }
-
-Float32Array _cameraTransform = new Float32Array(16);
-
-void _drawSkybox() {
-  var context = graphicsDevice.context;
-  context.setInputLayout(_skyboxInputLayout);
-  context.setPrimitiveTopology(GraphicsContext.PrimitiveTopologyTriangles);
-  context.setShaderProgram(_skyboxShaderProgram);
-  context.setTextures(0, [assetManager['demoAssets.space']]);
-  context.setSamplers(0, [_skyboxSampler]);
-  {
-    mat4 P = camera.projectionMatrix;
-    mat4 LA = makeViewMatrix(new vec3.zero(),
-        camera.frontDirection,
-        new vec3(0.0, 1.0, 0.0));
-    P.multiply(LA);
-    P.copyIntoArray(_cameraTransform, 0);
-  }
-  context.setConstant('cameraTransform', _cameraTransform);
-  context.setBlendState(_skyboxBlendState);
-  context.setRasterizerState(_skyboxRasterizerState);
-  context.setDepthState(_skyboxDepthState);
-  context.setIndexedMesh(_skyboxMesh);
-  context.drawIndexedMesh(_skyboxMesh);
-}
-
 
 main() {
   CanvasElement canvas = query(_canvasId);
@@ -273,43 +243,54 @@ main() {
 
   assetManager = new AssetManager();
   registerSpectreWithAssetManager(graphicsDevice, assetManager);
-  renderer = new Renderer(canvas, graphicsDevice, assetManager);
+  renderer = new Renderer(canvas, graphicsDevice, debugDrawManager,
+                          assetManager);
   renderer.fromJson(renderer_config);
-  gameLoop = new GameLoop(canvas);
+  gameLoop = new GameLoopHtml(canvas);
   gameLoop.onUpdate = gameFrame;
   gameLoop.onRender = renderFrame;
   gameLoop.onResize = resizeFrame;
-  assetManager.loadPack('demoAssets', 'assets.pack').then((assetPack) {
-    // All assets are loaded.
-    _setupSkybox();
+  assetManager.loadPack('demoAssets', 'assets/_.pack').then((assetPack) {
     // Setup camera.
     camera.aspectRatio = canvas.width.toDouble()/canvas.height.toDouble();
-    camera.position = new vec3.raw(2.0, 2.0, 2.0);
-    camera.focusPosition = new vec3.raw(1.0, 1.0, 1.0);
+    camera.position = new Vector3(2.0, 2.0, 2.0);
+    camera.focusPosition = new Vector3(1.0, 1.0, 1.0);
     _makeMaterial();
     _buildCubes();
-    // Setup layers.
-    var clearBackBuffer = new FullscreenLayer('clear');
-    clearBackBuffer.clearColorTarget = true;
-    clearBackBuffer.clearDepthTarget = true;
-    clearBackBuffer.renderTarget = 'backBuffer';
-    layers.add(clearBackBuffer);
-    var colorBackBuffer = new SceneLayer('color');
-    colorBackBuffer.clearColorTarget = true;
-    colorBackBuffer.clearDepthTarget = true;
-    colorBackBuffer.renderTarget = 'backBuffer';
-    layers.add(colorBackBuffer);
-    var debugLayer = new DebugDrawLayer('debug', debugDrawManager);
-    debugLayer.renderTarget = 'backBuffer';
-    layers.add(debugLayer);
-    var blitBackBuffer = new FullscreenLayer('blit');
-    blitBackBuffer.renderTarget = 'frontBuffer';
-    blitBackBuffer.clearColorTarget = true;
-    blitBackBuffer.material = assetManager['fullscreenEffects.blit'];
-    blitBackBuffer.material.textures['source'].texturePath =
-        'renderer.colorBuffer';
-    blitBackBuffer.material.textures['source'].sampler = renderer.NPOTSampler;
-    layers.add(blitBackBuffer);
+    _setupSkybox();
+    if (true) {
+      // Load from JSON.
+      for (int i = 0; i < layer_config.length; i++) {
+        Layer layer = renderer.layerFactory(layer_config[i]);
+        layers.add(layer);
+      }
+    } else {
+      // Setup layers.
+      var clearBackBuffer = new FullscreenLayer('clear', renderer);
+      clearBackBuffer.clearColorTarget = true;
+      clearBackBuffer.clearDepthTarget = true;
+      clearBackBuffer.renderTarget = 'backBuffer';
+      layers.add(clearBackBuffer);
+      var colorBackBuffer = new SceneLayer('color', renderer);
+      colorBackBuffer.renderTarget = 'backBuffer';
+      layers.add(colorBackBuffer);
+      var debugLayer = new DebugDrawLayer('debug', renderer);
+      debugLayer.renderTarget = 'backBuffer';
+      layers.add(debugLayer);
+      var blitBackBuffer = new FullscreenLayer('blit', renderer);
+      blitBackBuffer.renderTarget = 'frontBuffer';
+      blitBackBuffer.material = new Material(
+          'blit',
+          renderer.materialShaders['blit'],
+          renderer);
+      blitBackBuffer.material.addTexture('source');
+      blitBackBuffer.material.textures['source'].texturePath =
+          'renderer.colorBuffer';
+      blitBackBuffer.material.textures['source'].sampler =
+          renderer.renderTargetSampler;
+      layers.add(blitBackBuffer);
+      print(Json.stringify(layers));
+    }
     gameLoop.start();
   });
 }

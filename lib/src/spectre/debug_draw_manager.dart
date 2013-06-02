@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -113,7 +113,7 @@ class _DebugLineCollection {
     }
   }
 
-  void _addLine(vec3 start, vec3 finish) {
+  void _addLine(Vector3 start, Vector3 finish) {
     addVertex(finish.x, finish.y, finish.z);
     addVertex(start.x, start.y, start.z);
   }
@@ -132,7 +132,7 @@ class _DebugDrawLineManager {
   SingleArrayMesh _lineMesh;
   InputLayout _lineMeshInputLayout;
 
-  Float32Array _vboStorage;
+  Float32List _vboStorage;
 
   _DebugDrawLineManager(this.device, int maxVertices,
                         ShaderProgram shaderProgram) {
@@ -140,17 +140,17 @@ class _DebugDrawLineManager {
       // Keep an even number of vertices.
       maxVertices += 1;
     }
-    _vboStorage = new Float32Array(maxVertices*DebugDrawVertexSize);
+    _vboStorage = new Float32List(maxVertices*DebugDrawVertexSize);
     _lineMesh = new SingleArrayMesh('_DebugDrawLineManager', device);
-    _lineMesh.primitiveTopology = GraphicsContext.PrimitiveTopologyLines;
+    _lineMesh.primitiveTopology = PrimitiveTopology.Lines;
     _lineMesh.vertexArray.allocate(_vboStorage.length*4,
-                                   SpectreBuffer.UsageDynamic);
-    _lineMesh.attributes['vPosition'] = new SpectreMeshAttribute('vPosition',
-                                                                 'float', 3,
-                                                                 0, 28, false);
-    _lineMesh.attributes['vColor'] = new SpectreMeshAttribute('vColor',
-                                                              'float', 4,
-                                                              12, 28, false);
+                                   UsagePattern.DynamicDraw);
+    _lineMesh.attributes['vPosition'] = new SpectreMeshAttribute(
+        'vPosition',
+        new VertexAttribute(0, 0, 0, 28, DataType.Float32, 3, false));
+    _lineMesh.attributes['vColor'] = new SpectreMeshAttribute(
+        'vColor',
+        new VertexAttribute(0, 0, 12, 28, DataType.Float32, 4, false));
     _lineMeshInputLayout = new InputLayout('_DebugDrawLineManager', device);
     _lineMeshInputLayout.shaderProgram = shaderProgram;
     _lineMeshInputLayout.mesh = _lineMesh;
@@ -223,7 +223,7 @@ class DebugDrawManager {
   _DebugDrawLineManager _depthEnabledLines;
   _DebugDrawLineManager _depthDisabledLines;
 
-  Float32Array _cameraMatrix = new Float32Array(16);
+  Float32List _cameraMatrix = new Float32List(16);
 
   final GraphicsDevice device;
 
@@ -257,7 +257,7 @@ class DebugDrawManager {
    *
    * Optional parameters: [duration] and [depthEnabled].
    */
-  void addLine(vec3 start, vec3 finish, vec4 color,
+  void addLine(Vector3 start, Vector3 finish, Vector4 color,
                {num duration: 0.0, bool depthEnabled: true}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
@@ -270,18 +270,18 @@ class DebugDrawManager {
    *
    * Optional paremeters: [size], [duration], and [depthEnabled].
    */
-  void addCross(vec3 point, vec4 color,
+  void addCross(Vector3 point, Vector4 color,
                 {num size: 1.0, num duration: 0.0, bool depthEnabled:true}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
                                       duration);
     num half_size = size * 0.5;
-    lineManager.lines._addLine(point, point + new vec3(half_size, 0.0, 0.0));
-    lineManager.lines._addLine(point, point + new vec3(-half_size, 0.0, 0.0));
-    lineManager.lines._addLine(point, point + new vec3(0.0, half_size, 0.0));
-    lineManager.lines._addLine(point, point + new vec3(0.0, -half_size, 0.0));
-    lineManager.lines._addLine(point, point + new vec3(0.0, 0.0, half_size));
-    lineManager.lines._addLine(point, point + new vec3(0.0, 0.0, -half_size));
+    lineManager.lines._addLine(point, point + new Vector3(half_size, 0.0, 0.0));
+    lineManager.lines._addLine(point, point + new Vector3(-half_size, 0.0, 0.0));
+    lineManager.lines._addLine(point, point + new Vector3(0.0, half_size, 0.0));
+    lineManager.lines._addLine(point, point + new Vector3(0.0, -half_size, 0.0));
+    lineManager.lines._addLine(point, point + new Vector3(0.0, 0.0, half_size));
+    lineManager.lines._addLine(point, point + new Vector3(0.0, 0.0, -half_size));
     lineManager.lines.finishLineObject();
   }
 
@@ -289,7 +289,7 @@ class DebugDrawManager {
    *
    * Optional paremeters: [duration] and [depthEnabled].
    */
-  void addSphere(vec3 center, num radius, vec4 color,
+  void addSphere(Vector3 center, num radius, Vector4 color,
                  {num duration: 0.0, bool depthEnabled: true}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
@@ -299,7 +299,7 @@ class DebugDrawManager {
     int lonSegments = 8;
     num twoPi = (2.0 * Math.PI);
 
-    vec3 lastVertex, vertex, upperVertex;
+    Vector3 lastVertex, vertex, upperVertex;
 
     for (int y = 0; y < latSegments; ++y) {
       lastVertex = null;
@@ -308,16 +308,16 @@ class DebugDrawManager {
         num v = y / latSegments;
         num v2 = (y+1) / latSegments;
 
-        vertex = new vec3.raw(
-            radius * cos(u * twoPi) * sin(v * Math.PI),
-            radius * cos(v * Math.PI),
-            radius * sin(u * twoPi) * sin(v * Math.PI)
+        vertex = new Vector3(
+            radius * Math.cos(u * twoPi) * Math.sin(v * Math.PI),
+            radius * Math.cos(v * Math.PI),
+            radius * Math.sin(u * twoPi) * Math.sin(v * Math.PI)
         ) + center;
 
-        upperVertex = new vec3.raw(
-            radius * cos(u * twoPi) * sin(v2 * Math.PI),
-            radius * cos(v2 * Math.PI),
-            radius * sin(u * twoPi) * sin(v2 * Math.PI)
+        upperVertex = new Vector3(
+            radius * Math.cos(u * twoPi) * Math.sin(v2 * Math.PI),
+            radius * Math.cos(v2 * Math.PI),
+            radius * Math.sin(u * twoPi) * Math.sin(v2 * Math.PI)
         ) + center;
 
         if(lastVertex != null) {
@@ -335,8 +335,8 @@ class DebugDrawManager {
     lineManager.lines.finishLineObject();
   }
 
-  final vec3 _circle_u = new vec3.zero();
-  final vec3 _circle_v = new vec3.zero();
+  final Vector3 _circle_u = new Vector3.zero();
+  final Vector3 _circle_v = new Vector3.zero();
 
   /** Add an arc primitive at [center] in the plane whose normal is
    * [planeNormal] with a [radius]. The arc begins at [startAngle] and extends
@@ -344,8 +344,8 @@ class DebugDrawManager {
    *
    * Optional parameters: [duration], [depthEnabled], and [numSegments].
    */
-  void addArc(vec3 center, vec3 planeNormal, num radius, num startAngle,
-              num stopAngle, vec4 color, {num duration: 0.0,
+  void addArc(Vector3 center, Vector3 planeNormal, num radius, num startAngle,
+              num stopAngle, Vector4 color, {num duration: 0.0,
               bool depthEnabled: true, int numSegments: 16}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
@@ -357,15 +357,15 @@ class DebugDrawManager {
     num _step = twoPi/numSegments;
 
     alpha = startAngle;
-    double cosScale = cos(alpha) * radius;
-    double sinScale = sin(alpha) * radius;
+    double cosScale = Math.cos(alpha) * radius;
+    double sinScale = Math.sin(alpha) * radius;
     double lastX = center.x + cosScale * _circle_u.x + sinScale * _circle_v.x;
     double lastY = center.y + cosScale * _circle_u.y + sinScale * _circle_v.y;
     double lastZ = center.z + cosScale * _circle_u.z + sinScale * _circle_v.z;
 
     for (alpha = startAngle; alpha <= stopAngle+_step; alpha += _step) {
-      cosScale = cos(alpha) * radius;
-      sinScale = sin(alpha) * radius;
+      cosScale = Math.cos(alpha) * radius;
+      sinScale = Math.sin(alpha) * radius;
       double pX = center.x + cosScale * _circle_u.x + sinScale * _circle_v.x;
       double pY = center.y + cosScale * _circle_u.y + sinScale * _circle_v.y;
       double pZ = center.z + cosScale * _circle_u.z + sinScale * _circle_v.z;
@@ -382,7 +382,7 @@ class DebugDrawManager {
    *
    * Optional parameters: [duration], [depthEnabled], and [numSegments].
    */
-  void addCircle(vec3 center, vec3 planeNormal, num radius, vec4 color,
+  void addCircle(Vector3 center, Vector3 planeNormal, num radius, Vector4 color,
                  {num duration: 0.0, bool depthEnabled: true,
                  int numSegments: 16}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
@@ -399,8 +399,8 @@ class DebugDrawManager {
     double lastZ = center.z + _circle_u.z * radius;
 
     for (alpha = 0.0; alpha <= twoPi; alpha += _step) {
-      double cosScale = cos(alpha) * radius;
-      double sinScale = sin(alpha) * radius;
+      double cosScale = Math.cos(alpha) * radius;
+      double sinScale = Math.sin(alpha) * radius;
       double pX = center.x + cosScale * _circle_u.x + sinScale * _circle_v.x;
       double pY = center.y + cosScale * _circle_u.y + sinScale * _circle_v.y;
       double pZ = center.z + cosScale * _circle_u.z + sinScale * _circle_v.z;
@@ -421,34 +421,34 @@ class DebugDrawManager {
   /// X,Y, and Z axes are colored Red,Green, and Blue
   ///
   /// Optional paremeters: [duration], and [depthEnabled]
-  void addAxes(mat4 xform, num size,
+  void addAxes(Matrix4 xform, num size,
                {num duration: 0.0, bool depthEnabled: true}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
 
-    vec4 origin = new vec4.raw(0.0, 0.0, 0.0, 1.0);
+    Vector4 origin = new Vector4(0.0, 0.0, 0.0, 1.0);
     num size_90p = 0.9 * size;
     num size_10p = 0.1 * size;
 
-    vec4 color;
+    Vector4 color;
 
-    vec4 X = new vec4.raw(size, 0.0, 0.0, 1.0);
-    vec4 X_head_0 = new vec4.raw(size_90p, size_10p, 0.0, 1.0);
-    vec4 X_head_1 = new vec4.raw(size_90p, -size_10p, 0.0, 1.0);
-    vec4 X_head_2 = new vec4.raw(size_90p, 0.0, size_10p, 1.0);
-    vec4 X_head_3 = new vec4.raw(size_90p, 0.0, -size_10p, 1.0);
+    Vector4 X = new Vector4(size, 0.0, 0.0, 1.0);
+    Vector4 X_head_0 = new Vector4(size_90p, size_10p, 0.0, 1.0);
+    Vector4 X_head_1 = new Vector4(size_90p, -size_10p, 0.0, 1.0);
+    Vector4 X_head_2 = new Vector4(size_90p, 0.0, size_10p, 1.0);
+    Vector4 X_head_3 = new Vector4(size_90p, 0.0, -size_10p, 1.0);
 
-    vec4 Y = new vec4.raw(0.0, size, 0.0, 1.0);
-    vec4 Y_head_0 = new vec4.raw(size_10p, size_90p, 0.0, 1.0);
-    vec4 Y_head_1 = new vec4.raw(-size_10p, size_90p, 0.0, 1.0);
-    vec4 Y_head_2 = new vec4.raw(0.0, size_90p, size_10p, 1.0);
-    vec4 Y_head_3 = new vec4.raw(0.0, size_90p, -size_10p, 1.0);
+    Vector4 Y = new Vector4(0.0, size, 0.0, 1.0);
+    Vector4 Y_head_0 = new Vector4(size_10p, size_90p, 0.0, 1.0);
+    Vector4 Y_head_1 = new Vector4(-size_10p, size_90p, 0.0, 1.0);
+    Vector4 Y_head_2 = new Vector4(0.0, size_90p, size_10p, 1.0);
+    Vector4 Y_head_3 = new Vector4(0.0, size_90p, -size_10p, 1.0);
 
 
-    vec4 Z = new vec4.raw(0.0, 0.0, size, 1.0);
-    vec4 Z_head_0 = new vec4.raw(size_10p, 0.0, size_90p, 1.0);
-    vec4 Z_head_1 = new vec4.raw(-size_10p, 0.0, size_90p, 1.0);
-    vec4 Z_head_2 = new vec4.raw(0.0, size_10p, size_90p, 1.0);
-    vec4 Z_head_3 = new vec4.raw(0.0, -size_10p, size_90p, 1.0);
+    Vector4 Z = new Vector4(0.0, 0.0, size, 1.0);
+    Vector4 Z_head_0 = new Vector4(size_10p, 0.0, size_90p, 1.0);
+    Vector4 Z_head_1 = new Vector4(-size_10p, 0.0, size_90p, 1.0);
+    Vector4 Z_head_2 = new Vector4(0.0, size_10p, size_90p, 1.0);
+    Vector4 Z_head_3 = new Vector4(0.0, -size_10p, size_90p, 1.0);
 
     origin = xform * origin;
 
@@ -458,7 +458,7 @@ class DebugDrawManager {
     X_head_2 = xform * X_head_2;
     X_head_3 = xform * X_head_3;
 
-    color = new vec4.raw(1.0, 0.0, 0.0, 1.0);
+    color = new Vector4(1.0, 0.0, 0.0, 1.0);
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
         duration);
     lineManager.lines._addLine(origin.xyz, X.xyz);
@@ -474,7 +474,7 @@ class DebugDrawManager {
     Y_head_2 = xform * Y_head_2;
     Y_head_3 = xform * Y_head_3;
 
-    color = new vec4.raw(0.0, 1.0, 0.0, 1.0);
+    color = new Vector4(0.0, 1.0, 0.0, 1.0);
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
         duration);
     lineManager.lines._addLine(origin.xyz, Y.xyz);
@@ -490,7 +490,7 @@ class DebugDrawManager {
     Z_head_2 = xform * Z_head_2;
     Z_head_3 = xform * Z_head_3;
 
-    color = new vec4.raw(0.0, 0.0, 1.0, 1.0);
+    color = new Vector4(0.0, 0.0, 1.0, 1.0);
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
         duration);
     lineManager.lines._addLine(origin.xyz, Z.xyz);
@@ -505,7 +505,7 @@ class DebugDrawManager {
   /// and [vertex2]. Filled with [color].
   ///
   /// Optional parameters: [duration] and [depthEnabled]
-  void addTriangle(vec3 vertex0, vec3 vertex1, vec3 vertex2, vec4 color,
+  void addTriangle(Vector3 vertex0, Vector3 vertex1, Vector3 vertex2, Vector4 color,
                    {num duration: 0.0, bool depthEnabled: true}) {
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
@@ -520,57 +520,57 @@ class DebugDrawManager {
   /// Filled with [color].
   ///
   /// Option parameters: [duration] and [depthEnabled]
-  void addAABB(vec3 boxMin, vec3 boxMax, vec4 color,
+  void addAABB(Vector3 boxMin, Vector3 boxMax, Vector4 color,
                {num duration: 0.0, bool depthEnabled: true}) {
-    vec3 vertex_a;
-    vec3 vertex_b;
+    Vector3 vertex_a;
+    Vector3 vertex_b;
 
     var lineManager = depthEnabled ? _depthEnabledLines : _depthDisabledLines;
     lineManager.lines.startLineObject(color.r, color.g, color.b, color.a,
         duration);
 
-    vertex_a = new vec3.copy(boxMin);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_a = new Vector3.copy(boxMin);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[0] = boxMax[0];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[1] = boxMax[1];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[2] = boxMax[2];
     lineManager.lines._addLine(vertex_a, vertex_b);
     vertex_a[1] = boxMax[1];
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[0] = boxMax[0];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[2] = boxMax[2];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_a = new vec3.copy(boxMin);
+    vertex_a = new Vector3.copy(boxMin);
     vertex_a[0] = boxMax[0];
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[1] = boxMax[1];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_a = new vec3.copy(boxMax);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_a = new Vector3.copy(boxMax);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[0] = boxMin[0];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[1] = boxMin[1];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[2] = boxMin[2];
     lineManager.lines._addLine(vertex_a, vertex_b);
     vertex_a[1] = boxMin[1];
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[0] = boxMin[0];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[2] = boxMin[2];
     lineManager.lines._addLine(vertex_a, vertex_b);
-    vertex_a = new vec3.copy(boxMin);
+    vertex_a = new Vector3.copy(boxMin);
     vertex_a[2] = boxMax[2];
-    vertex_b = new vec3.copy(vertex_a);
+    vertex_b = new Vector3.copy(vertex_a);
     vertex_b[1] = boxMax[1];
     lineManager.lines._addLine(vertex_a, vertex_b);
     lineManager.lines.finishLineObject();
@@ -584,15 +584,14 @@ class DebugDrawManager {
 
   /// Render debug primitives for [Camera] [cam]
   void render(Camera cam) {
-    mat4 pm = cam.projectionMatrix;
-    mat4 la = cam.viewMatrix;
+    Matrix4 pm = cam.projectionMatrix;
+    Matrix4 la = cam.viewMatrix;
     pm.multiply(la);
     pm.copyIntoArray(_cameraMatrix);
     device.context.setShaderProgram(_lineShaderProgram);
     device.context.setConstant('cameraTransform', _cameraMatrix);
     _depthState.depthBufferEnabled = true;
     _depthState.depthBufferWriteEnabled = true;
-    _depthState.depthBufferFunction = CompareFunction.LessEqual;
     device.context.setDepthState(_depthState);
     device.context.setBlendState(_blendState);
     device.context.setRasterizerState(_rasterizerState);

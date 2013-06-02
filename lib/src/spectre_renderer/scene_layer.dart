@@ -27,6 +27,5 @@ class SceneLayer extends Layer {
     });
   }
   String get type => 'Scene';
-  SceneLayer(String name) : super(name) {
-  }
+  SceneLayer(String name, Renderer renderer) : super(name, renderer);
 }

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,7 +23,6 @@ part of spectre;
 /// Defines storage for vertex data
 class VertexBuffer extends SpectreBuffer {
   VertexBuffer(String name, GraphicsDevice device)
-      : super(name, device, WebGLRenderingContext.ARRAY_BUFFER,
-              WebGLRenderingContext.ARRAY_BUFFER_BINDING) {
+      : super(name, device, WebGL.ARRAY_BUFFER, WebGL.ARRAY_BUFFER_BINDING) {
   }
 }

@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2013 Spectre Authors
+  Copyright (C) 2013 John McCutchan
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -23,6 +23,6 @@ part of spectre;
 /// VertexShader
 class VertexShader extends SpectreShader {
   VertexShader(String name, GraphicsDevice device)
-      : super(name, device, WebGLRenderingContext.VERTEX_SHADER) {
+      : super(name, device, WebGL.VERTEX_SHADER) {
   }
 }
