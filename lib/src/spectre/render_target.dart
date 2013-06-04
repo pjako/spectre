@@ -31,9 +31,10 @@ class RenderTarget extends DeviceChild {
   final int _bindingParam = WebGL.FRAMEBUFFER_BINDING;
 
   WebGL.Framebuffer _deviceFramebuffer;
-  DeviceChild _colorTarget;
+  DeviceChild _colorBufferTarget;
+  List<int> _colorTargets;
   DeviceChild _depthTarget;
-  DeviceChild get colorTarget => _colorTarget;
+  DeviceChild get colorBufferTarget => _colorBufferTarget;
   DeviceChild get depthTarget => _depthTarget;
   DeviceChild get stencilTarget => null;
 
@@ -48,10 +49,12 @@ class RenderTarget extends DeviceChild {
   RenderTarget(String name, GraphicsDevice device) :
     super._internal(name, device) {
     _deviceFramebuffer = device.gl.createFramebuffer();
+    _colorTargets = new List<int>(device._maxColorAttachments);
   }
 
   RenderTarget.systemTarget(String name, GraphicsDevice device) :
     super._internal(name, device) {
+    _colorTargets = new List<int>(device._maxColorAttachments);
     _renderable = true;
   }
 
@@ -96,10 +99,16 @@ class RenderTarget extends DeviceChild {
    *
    * A null color buffer indicates the system provided color buffer.
    */
-  set colorTarget(dynamic colorBuffer) {
+  void setColorTarget(int colorAttachment, int targetIndex) {
+    if (_colorTargets.length <= targetIndex) {
+      throw new RangeError.range(targetIndex, 0, _colorTargets.length - 1);
+    }
+    _colorTargets[targetIndex] = colorAttachment;
+  }
+  set colorBufferTarget(dynamic colorBuffer) {
     var oldBind = _pushBind();
     if (colorBuffer == null) {
-      _colorTarget = null;
+      _colorBufferTarget = null;
       device.gl.framebufferRenderbuffer(_bindTarget,
                                         WebGL.COLOR_ATTACHMENT0,
                                         WebGL.RENDERBUFFER,
@@ -111,14 +120,14 @@ class RenderTarget extends DeviceChild {
     }
     if (colorBuffer is RenderBuffer) {
       RenderBuffer rb = colorBuffer as RenderBuffer;
-      _colorTarget = rb;
+      _colorBufferTarget = rb;
       device.gl.framebufferRenderbuffer(_bindTarget,
                                         WebGL.COLOR_ATTACHMENT0,
                                         WebGL.RENDERBUFFER,
                                         rb._buffer);
     } else if (colorBuffer is Texture2D) {
       Texture2D t2d = colorBuffer as Texture2D;
-      _colorTarget = t2d;
+      _colorBufferTarget = t2d;
       device.gl.framebufferTexture2D(_bindTarget,
                                      WebGL.COLOR_ATTACHMENT0,
                                      t2d._textureTarget,

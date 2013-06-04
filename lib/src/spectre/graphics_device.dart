@@ -25,6 +25,9 @@ class GraphicsDevice {
   CanvasElement _surface;
   GraphicsContext _context;
   GraphicsContext get context => _context;
+  WebGL.ExtDrawBuffers _drawBuffers;
+  int _maxColorAttachments = 0;
+  int _maxDrawBuffers = 0;
 
   GraphicsDeviceCapabilities _capabilities;
   GraphicsDeviceCapabilities get capabilities => _capabilities;
@@ -98,6 +101,11 @@ class GraphicsDevice {
     print(_capabilities);
     // Create the associated GraphicsContext.
     _context = new GraphicsContext(this);
+    _drawBuffers = GraphicsDeviceCapabilities._getExtension( _gl, 'EXT_draw_buffers');
+    if(_drawBuffers != null) {
+      _maxColorAttachments = WebGL.ExtDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT;
+      _maxDrawBuffers = WebGL.ExtDrawBuffers.MAX_DRAW_BUFFERS_EXT;
+    }
     RenderTarget._systemRenderTarget = new RenderTarget.systemTarget(
         'WebGLFrontBuffer',
         this);
